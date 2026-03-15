@@ -73,13 +73,17 @@ export class ProveedoresListComponent implements OnInit {
     });
   }
 
-  delete(id: number): void {
-    if (!confirm('¿Eliminar este proveedor? Esta acción no se puede deshacer.')) return;
-    this.svc.delete(id).subscribe({
-      next:  () => { this.toast.success('Proveedor eliminado'); this.loadData(); },
-      error: (e) => this.toast.error(e?.error?.error || 'Error al eliminar')
-    });
-  }
+delete(id: number): void {
+  if (!confirm('¿Eliminar este proveedor? Esta acción no se puede deshacer.')) return;
+  this.svc.delete(id).subscribe({
+    next: () => {
+      this.toast.success('Proveedor eliminado');
+      this.items = this.items.filter(p => p.id !== id);
+      this.totalItems = Math.max(0, this.totalItems - 1);
+    },
+    error: (e) => this.toast.error(e?.error?.error || 'Error al eliminar')
+  });
+}
 
   add():           void { this.router.navigate(['/proveedores/nuevo']); }
   view(id: number):void { this.router.navigate(['/proveedores', id]); }

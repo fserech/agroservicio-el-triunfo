@@ -129,13 +129,18 @@ export class ClientesListComponent implements OnInit {
     this.getPageItems(this.sortConfig.sortOrder, this.sortConfig.sortBy, this.page, this.pageSize, this.filters);
   }
 
-  delete(id: number): void {
-    if (!confirm('¿Eliminar este cliente? Esta acción no se puede deshacer.')) return;
-    this.svc.delete(id).subscribe({
-      next:  () => { this.toast.success('Cliente eliminado'); this.getPageItems(this.sortConfig.sortOrder, this.sortConfig.sortBy, this.page, this.pageSize, this.filters); },
-      error: (e) => this.toast.error(e?.error?.error || 'Error al eliminar')
-    });
-  }
+ delete(id: number): void {
+  if (!confirm('¿Eliminar este cliente? Esta acción no se puede deshacer.')) return;
+  this.svc.delete(id).subscribe({
+    next: () => {
+      this.toast.success('Cliente eliminado');
+      this.ItemsList = this.ItemsList.filter(c => c.id !== id);
+      this.totalItems = Math.max(0, this.totalItems - 1);
+      this.updateIndexes();
+    },
+    error: (e) => this.toast.error(e?.error?.error || 'Error al eliminar')
+  });
+}
 
   selectOption(option: OptionsChatBubble): void {
     if (option.action === 'view')   this.view(option.id!);
@@ -151,6 +156,7 @@ export class ClientesListComponent implements OnInit {
   add():            void { this.router.navigate(['/clientes/nuevo']); }
   view(id: number): void { this.router.navigate(['/clientes', id]); }
   edit(id: number): void { this.router.navigate(['/clientes', id, 'editar']); }
+  
 
   nextPage():     void { if (this.page < this.totalPages) this.getPageItems(this.sortConfig.sortOrder, this.sortConfig.sortBy, this.page + 1, this.pageSize, this.filters); }
   previousPage(): void { if (this.page > 1)              this.getPageItems(this.sortConfig.sortOrder, this.sortConfig.sortBy, this.page - 1, this.pageSize, this.filters); }

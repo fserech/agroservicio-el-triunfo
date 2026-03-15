@@ -48,13 +48,16 @@ export class UsuariosListComponent implements OnInit {
     });
   }
 
-  delete(id: number): void {
-    if (!confirm('¿Eliminar este usuario? Esta acción es permanente.')) return;
-    this.svc.delete(id).subscribe({
-      next:  () => { this.toast.success('Usuario eliminado'); this.loadData(); },
-      error: (e) => this.toast.error(e?.error?.error || 'Error al eliminar')
-    });
-  }
+ delete(id: number): void {
+  if (!confirm('¿Eliminar este usuario? Esta acción es permanente.')) return;
+  this.svc.delete(id).subscribe({
+    next: () => {
+      this.toast.success('Usuario eliminado');
+      this.items = this.items.filter(u => u.id !== id);
+    },
+    error: (e) => this.toast.error(e?.error?.error || 'Error al eliminar')
+  });
+}
 
   add():           void { this.router.navigate(['/usuarios/nuevo']); }
   edit(id: number):void { this.router.navigate(['/usuarios', id, 'editar']); }
