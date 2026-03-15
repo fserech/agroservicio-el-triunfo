@@ -1,4 +1,3 @@
-// clientes-list.component.ts — igual al modelo de referencia
 import { CUSTOM_ELEMENTS_SCHEMA, Component, OnInit, inject } from '@angular/core';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { SearchInputTextComponent } from '../../../shared/components/search-input-text/search-input-text.component';
@@ -36,11 +35,9 @@ export class ClientesListComponent implements OnInit {
   private toast  = inject(ToastService);
   private router = inject(Router);
 
-  // FormGroup igual al modelo
   form: FormGroup;
   tipoFilter = '';
 
-  // Items y paginación — mismos nombres que BaseForm del modelo
   ItemsList: Cliente[] = [];
   load        = false;
   page        = 1;
@@ -57,9 +54,10 @@ export class ClientesListComponent implements OnInit {
 
   actionsGrid: OptionsChatBubble[] = ACTIONS_GRID_MAIN_VIEW;
 
-  get totalFacturado() { return this.ItemsList.reduce((a, c) => a + (c.total_compras || 0), 0); }
-  get saldoPendiente() { return this.ItemsList.reduce((a, c) => a + (c.saldo_pendiente || 0), 0); }
-  get conCredito()     { return this.ItemsList.filter(c => c.credito_maximo > 0).length; }
+  // La API devuelve estos campos como string — Number() los convierte
+  get totalFacturado() { return this.ItemsList.reduce((a, c) => a + Number(c.total_compras  || 0), 0); }
+  get saldoPendiente() { return this.ItemsList.reduce((a, c) => a + Number(c.saldo_pendiente || 0), 0); }
+  get conCredito()     { return this.ItemsList.filter(c => Number(c.credito_maximo) > 0).length; }
 
   constructor() {
     this.form = new FormGroup({ name: new FormControl() });
@@ -75,7 +73,14 @@ export class ClientesListComponent implements OnInit {
     const nombre = this.form.get('name')?.value || '';
     this.svc.getAll(nombre, this.tipoFilter, page, pageSize).subscribe({
       next: r => {
-        this.ItemsList  = r.data;
+        // Castear campos numéricos que la API puede devolver como string
+        this.ItemsList = r.data.map(c => ({
+          ...c,
+          total_compras:   Number(c.total_compras   ?? 0),
+          saldo_pendiente: Number(c.saldo_pendiente  ?? 0),
+          credito_maximo:  Number(c.credito_maximo   ?? 0),
+          dias_credito:    Number(c.dias_credito     ?? 0),
+        }));
         this.totalPages = Math.max(1, Math.ceil(r.total / pageSize));
         this.totalItems = r.total;
         this.page       = page;
@@ -124,13 +129,13 @@ export class ClientesListComponent implements OnInit {
   }
 
   getTipoLabel(t: string): string {
-    return { individual: 'Individual', empresa: 'Empresa',
-             cooperativa: 'Cooperativa', finca: 'Finca' }[t] || t || 'N/A';
+    return ({ individual: 'Individual', empresa: 'Empresa',
+              cooperativa: 'Cooperativa', finca: 'Finca' } as Record<string,string>)[t] || t || 'N/A';
   }
 
-  add():          void { this.router.navigate(['/clientes/nuevo']); }
-  view(id:number):void { this.router.navigate(['/clientes', id]); }
-  edit(id:number):void { this.router.navigate(['/clientes', id, 'editar']); }
+  add():           void { this.router.navigate(['/clientes/nuevo']); }
+  view(id: number):void { this.router.navigate(['/clientes', id]); }
+  edit(id: number):void { this.router.navigate(['/clientes', id, 'editar']); }
 
   nextPage():     void { if (this.page < this.totalPages) this.getPageItems(this.sortConfig.sortOrder, this.sortConfig.sortBy, this.page + 1, this.pageSize, this.filters); }
   previousPage(): void { if (this.page > 1)              this.getPageItems(this.sortConfig.sortOrder, this.sortConfig.sortBy, this.page - 1, this.pageSize, this.filters); }
