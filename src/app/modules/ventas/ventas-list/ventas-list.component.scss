@@ -1,18 +1,118 @@
-// ventas-list.component.scss
-:host { display: block; }
+/* ventas-detail.component.scss */
 
-.sort-btn {
-  display: flex; align-items: center; gap: 3px; background: none; border: none;
-  cursor: pointer; font-size: 11px; font-weight: 600; color: var(--text-2);
-  text-transform: uppercase; letter-spacing: .04em; font-family: var(--font);
-  padding: 0; white-space: nowrap;
-  &:hover { color: var(--text); }
+// ── Modal overlay ──────────────────────────────────────────────────────────
+.print-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1000;
+  backdrop-filter: blur(2px);
 }
 
-.ventas-row-enter { animation: fadeIn .2s ease; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+// ── Panel del modal ────────────────────────────────────────────────────────
+.print-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1001;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  width: 420px;
+  max-width: 95vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
-// Responsive table overflow
-@media (max-width: 640px) {
-  .table-wrap { overflow-x: auto; }
+// ── Barra superior del modal ───────────────────────────────────────────────
+.print-modal-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+  border-radius: 12px 12px 0 0;
+  flex-shrink: 0;
+}
+
+// ── Área del recibo (scrollable) ───────────────────────────────────────────
+.print-receipt {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  color: #111;
+  background: #fff;
+}
+
+// ── Estilos del recibo ─────────────────────────────────────────────────────
+.r-center  { text-align: center; }
+.r-right   { text-align: right; }
+.r-bold    { font-weight: 700; }
+.r-title   { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+.r-sub     { font-size: 11px; color: #555; }
+.r-note    { font-size: 11px; color: #555; margin: 6px 0; }
+.r-discount{ color: #10b981; }
+
+.r-line {
+  border-top: 1px dashed #888;
+  margin: 8px 0;
+}
+
+.r-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 3px 0;
+  font-size: 11px;
+}
+
+.r-total {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.r-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 4px 0;
+
+  td, th { font-size: 11px; padding: 2px 3px; }
+
+  .r-th-left   { text-align: left;   border-bottom: 1px solid #333; }
+  .r-th-center { text-align: center; border-bottom: 1px solid #333; }
+  .r-th-right  { text-align: right;  border-bottom: 1px solid #333; }
+}
+
+// ── Media print: solo imprime el recibo ───────────────────────────────────
+@media print {
+  // Ocultar todo lo que no sea el recibo
+  app-header,
+  .p-2.m-2,
+  .print-overlay,
+  .print-modal-bar,
+  .no-print {
+    display: none !important;
+  }
+
+  // El modal ocupa toda la hoja
+  .print-modal {
+    position: static;
+    transform: none;
+    box-shadow: none;
+    border-radius: 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .print-receipt {
+    overflow: visible;
+    padding: 0;
+  }
 }

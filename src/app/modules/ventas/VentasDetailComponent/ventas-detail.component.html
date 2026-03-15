@@ -1,0 +1,167 @@
+<app-header headerTitle="Detalle de Venta"
+  headerDescription="Información completa de la venta seleccionada.">
+</app-header>
+
+<div class="p-2 m-2">
+
+  <!-- SKELETON -->
+  @if (load) {
+    <div class="card p-4 animate-pulse space-y-4">
+      <div class="h-5 bg-gray-300 dark:bg-slate-700 rounded w-1/3"></div>
+      <div class="h-3 bg-gray-200 dark:bg-slate-800 rounded w-1/2"></div>
+      <div class="h-3 bg-gray-200 dark:bg-slate-800 rounded w-2/3"></div>
+      <div class="h-24 bg-gray-200 dark:bg-slate-800 rounded"></div>
+    </div>
+  }
+
+  @if (!load && venta) {
+
+    <!-- CABECERA -->
+    <div class="card mb-3">
+      <div class="card-header">
+        <div class="flex flex-col">
+          <span class="card-title font-mono" style="color:var(--primary)">{{ venta.numero_recibo }}</span>
+          <span class="text-xs text-gray-400 mt-0.5">{{ venta.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="flex gap-2 items-center flex-wrap justify-end">
+          <span class="badge text-xs"
+            [ngClass]="{
+              'badge-danger':  venta.estado==='PENDING',
+              'badge-warning': venta.estado==='IN_PROCESS',
+              'badge-success': venta.estado==='FINALIZED',
+              'badge-gray':    venta.estado==='CANCEL'}">
+            {{ getStatusLabel(venta.estado) }}
+          </span>
+          @if (venta.estado === 'PENDING') {
+            <button class="btn-action" (click)="finalizar()" title="Finalizar">
+              <ng-icon class="text-emerald-500" size="20" name="bootstrapCheckCircleFill"></ng-icon>
+            </button>
+            <button class="btn-action" (click)="cancelar()" title="Anular">
+              <ng-icon class="text-red-500" size="20" name="bootstrapXCircle"></ng-icon>
+            </button>
+          }
+          @if (venta.estado === 'FINALIZED') {
+            <button class="btn-action" (click)="print()" title="Imprimir recibo">
+              <ng-icon class="text-purple-500" size="20" name="matPrintOutline"></ng-icon>
+            </button>
+          }
+          <button class="btn-action" (click)="back()" title="Volver">
+            <ng-icon class="text-gray-500" size="20" name="matArrowBackOutline"></ng-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DATOS PRINCIPALES -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+      <div class="card p-4">
+        <div class="flex items-center gap-2 mb-2">
+          <ng-icon class="text-gray-400" size="18" name="matPersonOutline"></ng-icon>
+          <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Cliente</span>
+        </div>
+        <p class="font-semibold text-gray-700 dark:text-gray-300">{{ venta.cliente_nombre || 'Consumidor final' }}</p>
+        @if (venta.cliente_nit) {
+          <p class="text-xs text-gray-400 mt-0.5">NIT: {{ venta.cliente_nit }}</p>
+        }
+      </div>
+      <div class="card p-4">
+        <div class="flex items-center gap-2 mb-2">
+          <ng-icon class="text-gray-400" size="18" name="matPaymentsOutline"></ng-icon>
+          <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Método de pago</span>
+        </div>
+        <p class="font-semibold text-gray-700 dark:text-gray-300">{{ getMetodoLabel(venta.metodo_pago) }}</p>
+      </div>
+      <div class="card p-4">
+        <div class="flex items-center gap-2 mb-2">
+          <ng-icon class="text-gray-400" size="18" name="matCalendarTodayOutline"></ng-icon>
+          <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Fecha</span>
+        </div>
+        <p class="font-semibold text-gray-700 dark:text-gray-300">{{ venta.fecha | date:'dd/MM/yyyy' }}</p>
+        <p class="text-xs text-gray-400">{{ venta.fecha | date:'HH:mm' }} hrs</p>
+      </div>
+    </div>
+
+    <!-- TABLA DE PRODUCTOS -->
+    <div class="card mb-3">
+      <div class="card-header">
+        <span class="card-title">Productos</span>
+      </div>
+      <div class="p-0">
+        <table class="table-grid w-full">
+          <thead>
+            <tr>
+              <th><div class="bg-gray-100 dark:bg-slate-950 rounded p-1 text-xs text-gray-500">Producto</div></th>
+              <th><div class="bg-gray-100 dark:bg-slate-950 rounded p-1 text-xs text-gray-500 text-center">Cant.</div></th>
+              <th><div class="bg-gray-100 dark:bg-slate-950 rounded p-1 text-xs text-gray-500 text-right">P. Unitario</div></th>
+              <th><div class="bg-gray-100 dark:bg-slate-950 rounded p-1 text-xs text-gray-500 text-right">Subtotal</div></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of items; track $index; let odd = $odd) {
+              <tr [ngClass]="{'bg-gray-50 dark:bg-slate-950': odd}">
+                <td class="rounded">
+                  <p class="font-medium text-sm text-gray-700 dark:text-gray-300">{{ item.producto_nombre || item.nombre }}</p>
+                  @if (item.unidad_medida || item.unidad) {
+                    <p class="text-xs text-gray-400">{{ item.unidad_medida || item.unidad }}</p>
+                  }
+                </td>
+                <td class="rounded text-center font-mono text-sm">{{ item.cantidad }}</td>
+                <td class="rounded text-right font-mono text-sm">Q {{ item.precio_unitario | number:'1.2-2' }}</td>
+                <td class="rounded text-right font-mono text-sm font-semibold" style="color:var(--primary)">
+                  Q {{ item.subtotal | number:'1.2-2' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TOTALES -->
+    <div class="card p-4 max-w-sm ml-auto mb-3">
+      <div class="space-y-2">
+        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+          <span>Subtotal</span>
+          <span class="font-mono">Q {{ subtotal | number:'1.2-2' }}</span>
+        </div>
+        @if (descuento > 0) {
+          <div class="flex justify-between text-sm" style="color:var(--success)">
+            <span>Descuento</span>
+            <span class="font-mono">− Q {{ descuento | number:'1.2-2' }}</span>
+          </div>
+        }
+        @if (iva > 0) {
+          <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+            <span>IVA (12%)</span>
+            <span class="font-mono">Q {{ iva | number:'1.2-2' }}</span>
+          </div>
+        }
+        <div class="border-t dark:border-slate-700 pt-2 flex justify-between font-bold text-base" style="color:var(--primary)">
+          <span>TOTAL</span>
+          <span class="font-mono">Q {{ total | number:'1.2-2' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- OBSERVACIONES -->
+    @if (venta.observaciones) {
+      <div class="card p-4 mb-3">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Observaciones</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400">{{ venta.observaciones }}</p>
+      </div>
+    }
+
+    <!-- BOTÓN VOLVER -->
+    <div class="flex justify-start mt-2">
+      <button (click)="back()" type="button" class="btn-back h-10 px-6">
+        <div class="flex items-center gap-2">
+          <ng-icon size="16" name="matArrowBackOutline"></ng-icon>
+          <span>Volver a Ventas</span>
+        </div>
+      </button>
+    </div>
+
+  }
+</div>
+
+<!-- La impresión se genera en una ventana nueva desde openPrintWindow() en el TS -->

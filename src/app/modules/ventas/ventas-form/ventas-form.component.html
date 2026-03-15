@@ -6,7 +6,7 @@
 <div class="p-2 m-2">
   <div class="ventas-form-layout">
 
-    <!-- PANEL IZQUIERDO: Selector de productos -->
+    <!-- PANEL IZQUIERDO: Catálogo de productos -->
     <div class="card">
       <div class="card-header">
         <span class="card-title">Catálogo de Productos</span>
@@ -17,19 +17,32 @@
           <input class="search-input" style="width:100%" type="text"
             placeholder="Buscar producto..." [(ngModel)]="searchProd" (input)="filterProductos()">
         </div>
+
         <div class="productos-grid">
           @for (p of productosFiltrados; track p.id) {
-            <div class="prod-card" (click)="addToCart(p)"
-              [class.prod-card-low]="p.estado_stock === 'critico' || p.estado_stock === 'sin_stock'">
-              <div class="prod-card-name">{{ p.nombre }}</div>
-              <div class="prod-card-cat">{{ p.cat_nombre }} · {{ p.unidad_medida }}</div>
-              <div class="prod-card-price">Q {{ p.precio_venta | number:'1.2-2' }}</div>
-              <div class="prod-card-stock"
-                [class.text-red-500]="p.estado_stock !== 'normal'"
-                [class.text-green-600]="p.estado_stock === 'normal'">
-                Stock: {{ p.stock_actual ?? 0 }} {{ p.unidad_medida }}
+
+            @if (sinStock(p)) {
+              <div class="prod-card prod-card-disabled" title="Sin stock disponible">
+                <div class="prod-card-name text-gray-400">{{ p.nombre }}</div>
+                <div class="prod-card-cat text-gray-300">{{ p.cat_nombre }} · {{ p.unidad_medida }}</div>
+                <div class="prod-card-price text-gray-300">Q {{ p.precio_venta | number:'1.2-2' }}</div>
+                <div class="prod-card-stock text-red-400 font-semibold">Sin stock</div>
               </div>
-            </div>
+            } @else {
+              <div class="prod-card"
+                (click)="addToCart(p)"
+                [class.prod-card-low]="p.estado_stock === 'critico'">
+                <div class="prod-card-name">{{ p.nombre }}</div>
+                <div class="prod-card-cat">{{ p.cat_nombre }} · {{ p.unidad_medida }}</div>
+                <div class="prod-card-price">Q {{ p.precio_venta | number:'1.2-2' }}</div>
+                <div class="prod-card-stock"
+                  [class.text-yellow-500]="p.estado_stock === 'critico'"
+                  [class.text-green-600]="p.estado_stock === 'normal' || p.estado_stock === 'bajo'">
+                  Stock: {{ p.stock_actual ?? 0 }} {{ p.unidad_medida }}
+                </div>
+              </div>
+            }
+
           }
           @if (productosFiltrados.length === 0) {
             <div class="col-span-full text-center text-gray-400 py-8 text-sm">Sin productos</div>
@@ -48,14 +61,18 @@
       </div>
       <div class="p-4">
 
-        <!-- Cliente y datos -->
+        <!-- Cliente -->
         <div class="form-group">
           <label>Cliente</label>
           <select [(ngModel)]="selectedClienteId">
             <option [value]="null">Consumidor final</option>
-            @for (c of clientes; track c.id) { <option [value]="c.id">{{ c.nombre }}</option> }
+            @for (c of clientes; track c.id) {
+              <option [value]="c.id">{{ c.nombre }}</option>
+            }
           </select>
         </div>
+
+        <!-- Método de pago + Descuento -->
         <div class="form-grid-2">
           <div class="form-group">
             <label>Método de pago</label>
@@ -72,9 +89,30 @@
           </div>
         </div>
 
+        <!-- Toggle IVA -->
+        <div class="flex items-center justify-between px-1 py-2 mb-2 rounded-lg"
+          style="background:var(--bg-2, #f8fafc);border:1px solid var(--border)">
+          <div>
+            <p class="text-sm font-medium" style="color:var(--text-1)">Aplicar IVA (12%)</p>
+            <p class="text-xs" style="color:var(--text-3)">
+              @if (ivaActivo) { IVA incluido en el total }
+              @else { Venta exenta de IVA }
+            </p>
+          </div>
+          <!-- Toggle switch -->
+          <button type="button"
+            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+            [style.background]="ivaActivo ? 'var(--success)' : '#d1d5db'"
+            (click)="ivaActivo = !ivaActivo">
+            <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform"
+              [style.transform]="ivaActivo ? 'translateX(22px)' : 'translateX(2px)'">
+            </span>
+          </button>
+        </div>
+
         <hr style="border-color:var(--border);margin:12px 0">
 
-        <!-- Carrito -->
+        <!-- Carrito vacío -->
         @if (cart.length === 0) {
           <div class="cart-empty">
             <ng-icon name="matShoppingCartOutline" size="32" style="color:var(--text-3)"></ng-icon>
@@ -82,18 +120,25 @@
           </div>
         }
 
+        <!-- Carrito con items -->
         @if (cart.length > 0) {
           <div class="cart-items">
             @for (item of cart; track $index) {
               <div class="cart-item">
                 <div class="cart-item-info">
                   <div class="font-medium text-sm">{{ item.nombre }}</div>
-                  <div class="text-xs text-gray-400">Q {{ item.precio_unitario | number:'1.2-2' }} / {{ item.unidad }}</div>
+                  <div class="text-xs text-gray-400">
+                    Q {{ item.precio_unitario | number:'1.2-2' }} / {{ item.unidad }}
+                    · Disp: {{ item.stock_disponible }}
+                  </div>
                 </div>
                 <div class="cart-item-qty">
                   <button class="qty-btn" (click)="changeQty(item, -1)">−</button>
                   <span class="qty-val">{{ item.cantidad }}</span>
-                  <button class="qty-btn" (click)="changeQty(item, 1)">+</button>
+                  <button class="qty-btn"
+                    [disabled]="item.cantidad >= item.stock_disponible"
+                    [class.opacity-40]="item.cantidad >= item.stock_disponible"
+                    (click)="changeQty(item, 1)">+</button>
                 </div>
                 <div class="cart-item-sub">Q {{ item.subtotal | number:'1.2-2' }}</div>
                 <button class="btn-action" (click)="removeFromCart($index)">
@@ -103,23 +148,52 @@
             }
           </div>
 
+          <!-- Totales -->
           <div class="totales-box mt-3">
-            <div class="totales-row"><span>Subtotal</span><span>Q {{ subtotal | number:'1.2-2' }}</span></div>
+            <div class="totales-row">
+              <span>Subtotal ({{ cart.length }} producto{{ cart.length !== 1 ? 's' : '' }})</span>
+              <span>Q {{ subtotal | number:'1.2-2' }}</span>
+            </div>
             @if (descuento > 0) {
-              <div class="totales-row" style="color:var(--success)"><span>Descuento</span><span>− Q {{ descuento | number:'1.2-2' }}</span></div>
+              <div class="totales-row" style="color:var(--success)">
+                <span>Descuento</span>
+                <span>− Q {{ descuento | number:'1.2-2' }}</span>
+              </div>
+              <div class="totales-row text-xs" style="color:var(--text-3)">
+                <span>Base imponible</span>
+                <span>Q {{ baseImponible | number:'1.2-2' }}</span>
+              </div>
             }
-            <div class="totales-row"><span>IVA (12%)</span><span>Q {{ iva | number:'1.2-2' }}</span></div>
-            <div class="totales-row totales-total"><span>TOTAL</span><span>Q {{ total | number:'1.2-2' }}</span></div>
+            <div class="totales-row" [style.color]="ivaActivo ? 'inherit' : 'var(--text-3)'">
+              <span>
+                IVA (12%)
+                @if (!ivaActivo) { <span class="text-xs ml-1">(inactivo)</span> }
+              </span>
+              <span>Q {{ iva | number:'1.2-2' }}</span>
+            </div>
+            <div class="totales-row totales-total">
+              <span>TOTAL</span>
+              <span>Q {{ total | number:'1.2-2' }}</span>
+            </div>
           </div>
 
+          <!-- Observaciones -->
           <div class="form-group mt-3">
             <label>Observaciones</label>
             <textarea [(ngModel)]="observaciones" rows="2" placeholder="Notas de la venta..."></textarea>
           </div>
 
-          <button class="btn btn-primary w-full mt-2" style="padding:12px;font-size:14px" (click)="save()" [disabled]="saving">
-            @if (saving) { <span class="spinner-sm"></span> Procesando... }
-            @else { <ng-icon name="matShoppingCartOutline" size="18"></ng-icon> Procesar Venta · Q {{ total | number:'1.2-2' }} }
+          <!-- Botón procesar -->
+          <button class="btn btn-primary w-full mt-2"
+            style="padding:12px;font-size:14px"
+            (click)="save()"
+            [disabled]="saving">
+            @if (saving) {
+              <span class="spinner-sm"></span> Procesando...
+            } @else {
+              <ng-icon name="matShoppingCartOutline" size="18"></ng-icon>
+              Procesar Venta · Q {{ total | number:'1.2-2' }}
+            }
           </button>
         }
 

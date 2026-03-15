@@ -1,4 +1,4 @@
-<!-- ventas-list.component.html — Diseño Librería Yami + backend Agroservicio -->
+<!-- ventas-list.component.html -->
 <app-header headerTitle="Ventas"
   headerDescription="Gestión de ventas: ingresa, cambia estado y finaliza cada venta.">
 </app-header>
@@ -8,7 +8,6 @@
   <!-- FILTROS Y BÚSQUEDA -->
   <div class="sticky top-0 z-10 grid grid-cols-1 gap-4 md:grid-cols-1 p-1 bg-white dark:bg-slate-900 border-b dark:border-slate-600">
 
-    <!-- BOTÓN NUEVO MÓVIL + DESKTOP -->
     <div class="border dark:border-slate-700 border-none border-t-0 border-l-0 border-r-0 m-0 p-0 pb-2 w-full">
       <button (click)="add()" type="button" class="btn-primary h-10 float-right w-28">
         <div class="flex text-center justify-center align-middle">
@@ -56,35 +55,20 @@
   <!-- TABS DE TIEMPO -->
   <div class="flex gap-2 my-3 px-1">
     <button (click)="setActiveTimeTab('month')" class="flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-colors"
-      [class.bg-blue-400]="activeTimeTab==='month'"
-      [class.text-white]="activeTimeTab==='month'"
-      [class.bg-white]="activeTimeTab!=='month'"
-      [class.dark:bg-slate-900]="activeTimeTab!=='month'"
-      [class.border]="activeTimeTab!=='month'"
-      [class.dark:border-slate-700]="activeTimeTab!=='month'"
-      [class.text-gray-600]="activeTimeTab!=='month'">
-      Mes
-    </button>
+      [class.bg-blue-400]="activeTimeTab==='month'" [class.text-white]="activeTimeTab==='month'"
+      [class.bg-white]="activeTimeTab!=='month'" [class.dark:bg-slate-900]="activeTimeTab!=='month'"
+      [class.border]="activeTimeTab!=='month'" [class.dark:border-slate-700]="activeTimeTab!=='month'"
+      [class.text-gray-600]="activeTimeTab!=='month'">Mes</button>
     <button (click)="setActiveTimeTab('week')" class="flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-colors"
-      [class.bg-blue-400]="activeTimeTab==='week'"
-      [class.text-white]="activeTimeTab==='week'"
-      [class.bg-white]="activeTimeTab!=='week'"
-      [class.dark:bg-slate-900]="activeTimeTab!=='week'"
-      [class.border]="activeTimeTab!=='week'"
-      [class.dark:border-slate-700]="activeTimeTab!=='week'"
-      [class.text-gray-600]="activeTimeTab!=='week'">
-      Semana
-    </button>
+      [class.bg-blue-400]="activeTimeTab==='week'" [class.text-white]="activeTimeTab==='week'"
+      [class.bg-white]="activeTimeTab!=='week'" [class.dark:bg-slate-900]="activeTimeTab!=='week'"
+      [class.border]="activeTimeTab!=='week'" [class.dark:border-slate-700]="activeTimeTab!=='week'"
+      [class.text-gray-600]="activeTimeTab!=='week'">Semana</button>
     <button (click)="setActiveTimeTab('day')" class="flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-colors"
-      [class.bg-blue-400]="activeTimeTab==='day'"
-      [class.text-white]="activeTimeTab==='day'"
-      [class.bg-white]="activeTimeTab!=='day'"
-      [class.dark:bg-slate-900]="activeTimeTab!=='day'"
-      [class.border]="activeTimeTab!=='day'"
-      [class.dark:border-slate-700]="activeTimeTab!=='day'"
-      [class.text-gray-600]="activeTimeTab!=='day'">
-      Día
-    </button>
+      [class.bg-blue-400]="activeTimeTab==='day'" [class.text-white]="activeTimeTab==='day'"
+      [class.bg-white]="activeTimeTab!=='day'" [class.dark:bg-slate-900]="activeTimeTab!=='day'"
+      [class.border]="activeTimeTab!=='day'" [class.dark:border-slate-700]="activeTimeTab!=='day'"
+      [class.text-gray-600]="activeTimeTab!=='day'">Día</button>
   </div>
 
   <!-- STATUS TABS -->
@@ -155,6 +139,7 @@
   <!-- TABLA CON DATOS -->
   @if (!load && ItemsList.length > 0) {
     <div class="rounded-lg">
+
       <!-- TABLE DESKTOP -->
       <table class="table-grid w-full mt-4 hidden sm:table">
         <thead>
@@ -194,27 +179,36 @@
                 Q {{ order.total | number:'1.2-2' }}
               </td>
               <td class="rounded text-sm">{{ order.fecha | date:'dd/MM/yyyy' }}</td>
+
+              <!-- ACCIONES DESKTOP -->
               <td class="rounded">
-                <div class="w-full c-actions">
-                  <button (click)="view(order.id)" class="btn-action content-desktop" title="Ver detalle">
-                    <ng-icon class="text-blue-500 font-bold" size="20" name="matRemoveRedEyeOutline"></ng-icon>
+                <div class="flex items-center justify-center gap-1 flex-nowrap">
+
+                  <!-- Ver: siempre visible -->
+                  <button (click)="view(order.id)" class="btn-action" title="Ver detalle">
+                    <ng-icon class="text-blue-500" size="20" name="matRemoveRedEyeOutline"></ng-icon>
                   </button>
+
+                  <!-- Editar: solo PENDING -->
                   @if (order.estado === 'PENDING') {
-                    <button (click)="edit(order.id)" class="btn-action content-desktop" title="Editar">
-                      <ng-icon class="text-yellow-500 font-bold" size="20" name="matModeEditOutline"></ng-icon>
+                    <button (click)="edit(order.id)" class="btn-action" title="Editar">
+                      <ng-icon class="text-yellow-500" size="20" name="matModeEditOutline"></ng-icon>
                     </button>
-                    <button (click)="finalizedOrder(order.id)" class="btn-action content-desktop" title="Finalizar">
-                      <ng-icon class="text-emerald-500 font-bold" size="20" name="bootstrapCheckCircleFill"></ng-icon>
+                    <button (click)="finalizedOrder(order.id)" class="btn-action" title="Finalizar">
+                      <ng-icon class="text-emerald-500" size="20" name="bootstrapCheckCircleFill"></ng-icon>
                     </button>
-                    <button (click)="cancelOrder(order.id)" class="btn-action content-desktop" title="Anular">
-                      <ng-icon class="text-red-500 font-bold" size="20" name="bootstrapXCircle"></ng-icon>
+                    <button (click)="cancelOrder(order.id)" class="btn-action" title="Anular">
+                      <ng-icon class="text-red-500" size="20" name="bootstrapXCircle"></ng-icon>
                     </button>
                   }
+
+                  <!-- Imprimir: solo FINALIZED -->
                   @if (order.estado === 'FINALIZED') {
-                    <button (click)="printReceipt(order.id)" class="btn-action content-desktop" title="Imprimir recibo">
-                      <ng-icon class="text-purple-500 font-bold" size="20" name="matReceiptLongOutline"></ng-icon>
+                    <button (click)="printReceipt(order.id)" class="btn-action" title="Imprimir recibo">
+                      <ng-icon class="text-purple-500" size="20" name="matPrintOutline"></ng-icon>
                     </button>
                   }
+
                 </div>
               </td>
             </tr>
@@ -222,72 +216,85 @@
         </tbody>
       </table>
 
-      <!-- SKELETON DESKTOP -->
-      @if (load) {
-        <table class="table-grid w-full mt-4 hidden sm:table">
-          <thead><tr>@for(i of [1,2,3,4,5,6]; track i){<td><div class="rounded pt-2 pb-2 p-1"><div class="animate-pulse flex"><div class="flex-1 py-1"><div class="h-7 bg-gray-400 dark:bg-slate-500 rounded"></div></div></div></div></td>}</tr></thead>
-          <tbody>@for(i of [1,2,3,4,5,6,7,8]; track i){<tr [ngClass]="{'bg-gray-200 dark:bg-slate-950':$odd}">@for(col of [1,2,3,4,5]; track col){<td class="w-20"><div class="animate-pulse h-2 m-2 bg-gray-400 dark:bg-slate-800 rounded"></div></td>}<td class="w-20"><div class="flex gap-1 p-1"><div class="animate-pulse rounded-md bg-emerald-400 h-5 w-5"></div><div class="animate-pulse rounded-md bg-blue-400 h-5 w-5"></div><div class="animate-pulse rounded-md bg-red-400 h-5 w-5"></div></div></td></tr>}</tbody>
-        </table>
-      }
-
       <!-- TABLE MOBILE -->
-      @if (!load) {
-        <table class="table-grid w-full mt-4 sm:hidden">
-          <thead>
-            <tr>
-              <th>
-                <button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"
-                        (click)="changeSortOrderBy('fecha')">
-                  <p>Ventas</p>
-                  @if(sortConfig.sortBy==='fecha'&&sortConfig.sortOrder==='desc'){<ng-icon size="22" name="matArrowDownwardOutline"></ng-icon>}
-                  @if(sortConfig.sortBy==='fecha'&&sortConfig.sortOrder==='asc'){<ng-icon size="22" name="matArrowUpwardOutline"></ng-icon>}
-                </button>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (order of ItemsList; track order.id; let odd = $odd) {
-              <tr class="text-gray-500 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800"
-                  [ngClass]="{'bg-gray-200 dark:bg-slate-950': odd}">
-                <td class="rounded">
-                  <div class="flex justify-between mt-4 mb-4 px-1">
-                    <div>
-                      <p class="font-bold text-gray-400 flex items-center gap-1 mb-1">
-                        @if (order.estado === 'FINALIZED') { <span class="inline-flex rounded-full h-2 w-2 bg-emerald-400"></span> }
-                        @if (order.estado === 'IN_PROCESS'){ <span class="inline-flex rounded-full h-2 w-2 bg-yellow-400"></span> }
-                        @if (order.estado === 'PENDING')   { <span class="inline-flex rounded-full h-2 w-2 bg-red-400"></span> }
-                        @if (order.estado === 'CANCEL')    { <span class="inline-flex rounded-full h-2 w-2 bg-gray-400"></span> }
-                        <b class="font-semibold text-xs text-gray-400 font-mono">{{ order.numero_factura }}</b>
-                      </p>
-                      <p class="font-bold text-gray-700 dark:text-gray-300">{{ order.cliente_nombre || 'Consumidor final' }}</p>
-                      <p class="text-xs text-gray-400">{{ order.fecha | date:'dd/MM/yyyy' }}</p>
-                      <p class="text-sm font-bold mt-1" style="color:var(--primary)">Q {{ order.total | number:'1.2-2' }}</p>
-                    </div>
-                    <div class="flex flex-col gap-1 items-end">
-                      <span class="badge text-xs"
-                        [ngClass]="{
-                          'badge-danger':  order.estado==='PENDING',
-                          'badge-warning': order.estado==='IN_PROCESS',
-                          'badge-success': order.estado==='FINALIZED',
-                          'badge-gray':    order.estado==='CANCEL'}">
-                        {{ getStatusLabel(order.estado) }}
-                      </span>
-                      <div class="flex gap-1 mt-2">
-                        <button (click)="view(order.id)" class="btn-action"><ng-icon class="text-blue-500" size="18" name="matRemoveRedEyeOutline"></ng-icon></button>
-                        @if (order.estado === 'PENDING') {
-                          <button (click)="finalizedOrder(order.id)" class="btn-action"><ng-icon class="text-emerald-500" size="18" name="bootstrapCheckCircleFill"></ng-icon></button>
-                          <button (click)="cancelOrder(order.id)" class="btn-action"><ng-icon class="text-red-500" size="18" name="bootstrapXCircle"></ng-icon></button>
-                        }
-                      </div>
+      <table class="table-grid w-full mt-4 sm:hidden">
+        <thead>
+          <tr>
+            <th>
+              <button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"
+                      (click)="changeSortOrderBy('fecha')">
+                <p>Ventas</p>
+                @if(sortConfig.sortBy==='fecha'&&sortConfig.sortOrder==='desc'){<ng-icon size="22" name="matArrowDownwardOutline"></ng-icon>}
+                @if(sortConfig.sortBy==='fecha'&&sortConfig.sortOrder==='asc'){<ng-icon size="22" name="matArrowUpwardOutline"></ng-icon>}
+              </button>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of ItemsList; track order.id; let odd = $odd) {
+            <tr class="text-gray-500 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800"
+                [ngClass]="{'bg-gray-200 dark:bg-slate-950': odd}">
+              <td class="rounded">
+                <div class="flex justify-between mt-4 mb-4 px-1">
+                  <div>
+                    <p class="font-bold text-gray-400 flex items-center gap-1 mb-1">
+                      @if (order.estado === 'FINALIZED') { <span class="inline-flex rounded-full h-2 w-2 bg-emerald-400"></span> }
+                      @if (order.estado === 'IN_PROCESS'){ <span class="inline-flex rounded-full h-2 w-2 bg-yellow-400"></span> }
+                      @if (order.estado === 'PENDING')   { <span class="inline-flex rounded-full h-2 w-2 bg-red-400"></span> }
+                      @if (order.estado === 'CANCEL')    { <span class="inline-flex rounded-full h-2 w-2 bg-gray-400"></span> }
+                      <b class="font-semibold text-xs text-gray-400 font-mono">{{ order.numero_factura }}</b>
+                    </p>
+                    <p class="font-bold text-gray-700 dark:text-gray-300">{{ order.cliente_nombre || 'Consumidor final' }}</p>
+                    <p class="text-xs text-gray-400">{{ order.fecha | date:'dd/MM/yyyy' }}</p>
+                    <p class="text-sm font-bold mt-1" style="color:var(--primary)">Q {{ order.total | number:'1.2-2' }}</p>
+                  </div>
+                  <div class="flex flex-col gap-1 items-end">
+                    <span class="badge text-xs"
+                      [ngClass]="{
+                        'badge-danger':  order.estado==='PENDING',
+                        'badge-warning': order.estado==='IN_PROCESS',
+                        'badge-success': order.estado==='FINALIZED',
+                        'badge-gray':    order.estado==='CANCEL'}">
+                      {{ getStatusLabel(order.estado) }}
+                    </span>
+                    <div class="flex gap-1 mt-2 flex-wrap justify-end">
+                      <!-- Ver: siempre -->
+                      <button (click)="view(order.id)" class="btn-action">
+                        <ng-icon class="text-blue-500" size="18" name="matRemoveRedEyeOutline"></ng-icon>
+                      </button>
+                      <!-- Acciones PENDING -->
+                      @if (order.estado === 'PENDING') {
+                        <button (click)="finalizedOrder(order.id)" class="btn-action">
+                          <ng-icon class="text-emerald-500" size="18" name="bootstrapCheckCircleFill"></ng-icon>
+                        </button>
+                        <button (click)="cancelOrder(order.id)" class="btn-action">
+                          <ng-icon class="text-red-500" size="18" name="bootstrapXCircle"></ng-icon>
+                        </button>
+                      }
+                      <!-- Imprimir FINALIZED -->
+                      @if (order.estado === 'FINALIZED') {
+                        <button (click)="printReceipt(order.id)" class="btn-action" title="Imprimir recibo">
+                          <ng-icon class="text-purple-500" size="18" name="matPrintOutline"></ng-icon>
+                        </button>
+                      }
                     </div>
                   </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
     </div>
+  }
+
+  <!-- SKELETON DESKTOP -->
+  @if (load) {
+    <table class="table-grid w-full mt-4 hidden sm:table">
+      <thead><tr>@for(i of [1,2,3,4,5,6]; track i){<td><div class="rounded pt-2 pb-2 p-1"><div class="animate-pulse flex"><div class="flex-1 py-1"><div class="h-7 bg-gray-400 dark:bg-slate-500 rounded"></div></div></div></div></td>}</tr></thead>
+      <tbody>@for(i of [1,2,3,4,5,6,7,8]; track i){<tr [ngClass]="{'bg-gray-200 dark:bg-slate-950':$odd}">@for(col of [1,2,3,4,5]; track col){<td class="w-20"><div class="animate-pulse h-2 m-2 bg-gray-400 dark:bg-slate-800 rounded"></div></td>}<td class="w-20"><div class="flex gap-1 p-1"><div class="animate-pulse rounded-md bg-blue-400 h-5 w-5"></div><div class="animate-pulse rounded-md bg-emerald-400 h-5 w-5"></div><div class="animate-pulse rounded-md bg-red-400 h-5 w-5"></div></div></td></tr>}</tbody>
+    </table>
   }
 
   <!-- SKELETON MÓVIL -->

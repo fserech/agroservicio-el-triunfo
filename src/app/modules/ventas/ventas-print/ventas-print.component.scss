@@ -1,0 +1,95 @@
+/* ventas-print.component.scss */
+
+/* Reset para modo impresión */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.print-page {
+  background: #fff;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+}
+
+.receipt {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  color: #111;
+  width: 100%;
+  max-width: 380px;
+}
+
+/* Utilidades de texto */
+.r-center  { text-align: center; }
+.r-right   { text-align: right; }
+.r-bold    { font-weight: 700; }
+.r-title   { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+.r-sub     { font-size: 11px; color: #555; }
+.r-thanks  { margin-top: 12px; }
+.r-note    { font-size: 11px; color: #555; margin: 6px 0; }
+.r-discount{ color: #10b981; }
+
+/* Separador */
+.r-line {
+  border-top: 1px dashed #888;
+  margin: 8px 0;
+}
+
+/* Fila clave-valor */
+.r-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 3px 0;
+  font-size: 11px;
+}
+
+.r-total {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* Tabla de productos */
+.r-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 4px 0;
+
+  td, th { font-size: 11px; padding: 2px 3px; }
+  .r-th-left   { text-align: left;   border-bottom: 1px solid #333; }
+  .r-th-center { text-align: center; border-bottom: 1px solid #333; }
+  .r-th-right  { text-align: right;  border-bottom: 1px solid #333; }
+}
+
+/* Botón imprimir en pantalla */
+.r-print-btn {
+  margin-top: 20px;
+  text-align: center;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 24px;
+    background: #10b981;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: sans-serif;
+
+    &:hover { background: #059669; }
+  }
+}
+
+/* Ocultar botón al imprimir */
+@media print {
+  .no-print { display: none !important; }
+
+  .print-page { padding: 0; }
+
+  .receipt {
+    max-width: 100%;
+    font-size: 11px;
+  }
+}
