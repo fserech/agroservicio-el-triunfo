@@ -20,7 +20,8 @@
     <div class="card mb-3">
       <div class="card-header">
         <div class="flex flex-col">
-          <span class="card-title font-mono" style="color:var(--primary)">{{ venta.numero_recibo }}</span>
+          <!-- numero_factura es el campo real, se muestra como "Recibo" -->
+          <span class="card-title font-mono" style="color:var(--primary)">{{ numeroRecibo }}</span>
           <span class="text-xs text-gray-400 mt-0.5">{{ venta.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
         </div>
         <div class="flex gap-2 items-center flex-wrap justify-end">
@@ -59,9 +60,11 @@
           <ng-icon class="text-gray-400" size="18" name="matPersonOutline"></ng-icon>
           <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Cliente</span>
         </div>
-        <p class="font-semibold text-gray-700 dark:text-gray-300">{{ venta.cliente_nombre || 'Consumidor final' }}</p>
-        @if (venta.cliente_nit) {
-          <p class="text-xs text-gray-400 mt-0.5">NIT: {{ venta.cliente_nit }}</p>
+        <p class="font-semibold text-gray-700 dark:text-gray-300">
+          {{ venta.cliente_nombre || venta.cn || 'Consumidor final' }}
+        </p>
+        @if (venta.cliente_nit || venta.nit) {
+          <p class="text-xs text-gray-400 mt-0.5">NIT: {{ venta.cliente_nit || venta.nit }}</p>
         }
       </div>
       <div class="card p-4">
@@ -100,7 +103,10 @@
             @for (item of items; track $index; let odd = $odd) {
               <tr [ngClass]="{'bg-gray-50 dark:bg-slate-950': odd}">
                 <td class="rounded">
-                  <p class="font-medium text-sm text-gray-700 dark:text-gray-300">{{ item.producto_nombre || item.nombre }}</p>
+                  <!-- Fallbacks para los diferentes alias que devuelve el backend -->
+                  <p class="font-medium text-sm text-gray-700 dark:text-gray-300">
+                    {{ item.producto_nombre || item.pn || item.nombre }}
+                  </p>
                   @if (item.unidad_medida || item.unidad) {
                     <p class="text-xs text-gray-400">{{ item.unidad_medida || item.unidad }}</p>
                   }
@@ -160,8 +166,6 @@
         </div>
       </button>
     </div>
-
   }
 </div>
-
 <!-- La impresión se genera en una ventana nueva desde openPrintWindow() en el TS -->

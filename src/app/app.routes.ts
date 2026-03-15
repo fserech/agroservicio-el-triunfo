@@ -19,7 +19,7 @@ export const routes: Routes = [
       // VENTAS
       { path: 'ventas',        loadComponent: () => import('./modules/ventas/ventas-list/ventas-list.component').then(m => m.VentasListComponent) }, 
       { path: 'ventas/nuevo',  loadComponent: () => import('./modules/ventas/ventas-form/ventas-form.component').then(m => m.VentasFormComponent) },
-      { path: 'ventas/:id', loadComponent: () => import('./modules/ventas/VentasDetailComponent/VentasDetailComponent').then(m => m.VentasDetailComponent) },
+      { path: 'ventas/:id', loadComponent: () => import('./modules/ventas/ventas-detail/ventas-detail.component').then(m => m.VentasDetailComponent) },
 
       // CLIENTES
       { path: 'clientes',            loadComponent: () => import('./modules/clientes/clientes-list/clientes-list.component').then(m => m.ClientesListComponent) },

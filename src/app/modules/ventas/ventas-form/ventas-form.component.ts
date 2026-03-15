@@ -10,12 +10,12 @@ import { VentasService, ProductosService, ClientesService, ToastService } from '
 import { Producto, Cliente } from '../../../core/models/models';
 
 interface CartItem {
-  producto_id:     number;
-  nombre:          string;
-  unidad:          string;
-  precio_unitario: number;
-  cantidad:        number;
-  subtotal:        number;
+  producto_id:      number;
+  nombre:           string;
+  unidad:           string;
+  precio_unitario:  number;
+  cantidad:         number;
+  subtotal:         number;
   stock_disponible: number;
 }
 
@@ -34,10 +34,10 @@ export class VentasFormComponent implements OnInit {
   private toast   = inject(ToastService);
   private router  = inject(Router);
 
-  productos:           Producto[] = [];
-  productosFiltrados:  Producto[] = [];
-  clientes:            Cliente[]  = [];
-  cart:                CartItem[] = [];
+  productos:          Producto[] = [];
+  productosFiltrados: Producto[] = [];
+  clientes:           Cliente[]  = [];
+  cart:               CartItem[] = [];
 
   selectedClienteId: number | null = null;
   metodoPago    = 'efectivo';
@@ -46,28 +46,14 @@ export class VentasFormComponent implements OnInit {
   searchProd    = '';
   saving        = false;
 
-  /** true = IVA incluido en el cálculo, false = sin IVA */
-  ivaActivo = true;
+  // IVA desactivado por defecto
+  ivaActivo = false;
 
-  // ── Cálculos ──────────────────────────────────────────────────────────────
-
-  get subtotal(): number {
-    return this.cart.reduce((a, i) => a + i.subtotal, 0);
-  }
-
-  get baseImponible(): number {
-    return Math.max(0, this.subtotal - this.descuento);
-  }
-
-  get iva(): number {
-    return this.ivaActivo ? +(this.baseImponible * 0.12).toFixed(2) : 0;
-  }
-
-  get total(): number {
-    return +(this.baseImponible + this.iva).toFixed(2);
-  }
-
-  // ── Inicialización ────────────────────────────────────────────────────────
+  // ── Cálculos ──────────────────────────────────────────────
+  get subtotal():      number { return this.cart.reduce((a, i) => a + i.subtotal, 0); }
+  get baseImponible(): number { return Math.max(0, this.subtotal - this.descuento); }
+  get iva():           number { return this.ivaActivo ? +(this.baseImponible * 0.12).toFixed(2) : 0; }
+  get total():         number { return +(this.baseImponible + this.iva).toFixed(2); }
 
   ngOnInit(): void {
     this.prodSvc.getAll('', undefined, 'true', 1, 200).subscribe(r => {
@@ -76,8 +62,6 @@ export class VentasFormComponent implements OnInit {
     });
     this.cliSvc.getAll('', '', 1, 200).subscribe(r => this.clientes = r.data);
   }
-
-  // ── Catálogo ──────────────────────────────────────────────────────────────
 
   filterProductos(): void {
     const t = this.searchProd.toLowerCase();
@@ -88,24 +72,20 @@ export class VentasFormComponent implements OnInit {
       : this.productos;
   }
 
-  /** Devuelve true si el producto no tiene stock disponible */
   sinStock(p: Producto): boolean {
     return p.estado_stock === 'sin_stock' || Number(p.stock_actual ?? 0) <= 0;
   }
 
   addToCart(p: Producto): void {
-    // Bloquear si no hay stock
     if (this.sinStock(p)) {
       this.toast.warning(`"${p.nombre}" no tiene stock disponible`);
       return;
     }
-
-    const precio = Number(p.precio_venta);   // la API puede devolver string
+    const precio = Number(p.precio_venta);
     const stock  = Number(p.stock_actual ?? 0);
     const existing = this.cart.find(i => i.producto_id === p.id);
 
     if (existing) {
-      // Validar que no supere el stock disponible
       if (existing.cantidad >= existing.stock_disponible) {
         this.toast.warning(`Stock insuficiente: solo hay ${existing.stock_disponible} ${existing.unidad}`);
         return;
@@ -138,8 +118,6 @@ export class VentasFormComponent implements OnInit {
 
   removeFromCart(i: number): void { this.cart.splice(i, 1); }
 
-  // ── Guardar ───────────────────────────────────────────────────────────────
-
   save(): void {
     if (!this.cart.length) { this.toast.warning('Agrega al menos un producto'); return; }
     this.saving = true;
@@ -153,10 +131,12 @@ export class VentasFormComponent implements OnInit {
                      })),
       metodo_pago:   this.metodoPago,
       descuento:     this.descuento,
+      // ← Enviamos el flag al backend para que respete IVA = 0
+      aplica_iva:    this.ivaActivo,
       observaciones: this.observaciones
     }).subscribe({
       next:  v => {
-        this.toast.success(`Venta ${v.numero_factura} creada por Q ${v.total}`);
+        this.toast.success(`Venta ${v.numero_factura} creada`);
         this.router.navigate(['/ventas']);
       },
       error: e => {

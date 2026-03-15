@@ -1,7 +1,6 @@
-<!-- ventas-print.component.html — Recibo térmico, sin nav ni header -->
+<!-- ventas-print.component.html -->
 <div class="print-page">
 
-  <!-- SKELETON -->
   @if (load) {
     <div class="receipt animate-pulse space-y-3 p-4">
       <div class="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
@@ -16,22 +15,20 @@
   @if (!load && venta) {
     <div class="receipt">
 
-      <!-- CABECERA EMPRESA -->
       <div class="r-center r-bold r-title">{{ empresa }}</div>
       <div class="r-center r-sub">Recibo de Venta</div>
       <div class="r-line"></div>
 
-      <!-- DATOS DE LA VENTA -->
-      <div class="r-row"><span>Recibo:</span>    <span class="r-bold">{{ venta.numero_recibo }}</span></div>
-      <div class="r-row"><span>Fecha:</span>      <span>{{ venta.fecha | date:'dd/MM/yyyy HH:mm' }}</span></div>
-      <div class="r-row"><span>Cliente:</span>    <span>{{ venta.cliente_nombre || 'Consumidor final' }}</span></div>
-      @if (venta.cliente_nit) {
-        <div class="r-row"><span>NIT:</span>      <span>{{ venta.cliente_nit }}</span></div>
+      <!-- numero_factura es el campo real, se etiqueta como "Recibo" -->
+      <div class="r-row"><span>Recibo:</span>     <span class="r-bold">{{ venta.numero_factura }}</span></div>
+      <div class="r-row"><span>Fecha:</span>       <span>{{ venta.fecha | date:'dd/MM/yyyy HH:mm' }}</span></div>
+      <div class="r-row"><span>Cliente:</span>     <span>{{ venta.cliente_nombre || venta.cn || 'Consumidor final' }}</span></div>
+      @if (venta.cliente_nit || venta.nit) {
+        <div class="r-row"><span>NIT:</span>       <span>{{ venta.cliente_nit || venta.nit }}</span></div>
       }
-      <div class="r-row"><span>Método pago:</span><span>{{ getMetodoLabel(venta.metodo_pago) }}</span></div>
+      <div class="r-row"><span>Método pago:</span> <span>{{ getMetodoLabel(venta.metodo_pago) }}</span></div>
       <div class="r-line"></div>
 
-      <!-- TABLA DE PRODUCTOS -->
       <table class="r-table">
         <thead>
           <tr>
@@ -44,7 +41,7 @@
         <tbody>
           @for (item of items; track $index) {
             <tr>
-              <td>{{ item.producto_nombre || item.nombre }}</td>
+              <td>{{ item.producto_nombre || item.pn || item.nombre }}</td>
               <td class="r-center">{{ item.cantidad }}</td>
               <td class="r-right">Q {{ item.precio_unitario | number:'1.2-2' }}</td>
               <td class="r-right">Q {{ item.subtotal | number:'1.2-2' }}</td>
@@ -54,34 +51,29 @@
       </table>
       <div class="r-line"></div>
 
-      <!-- TOTALES -->
-      <div class="r-row"><span>Subtotal</span>         <span>Q {{ subtotal | number:'1.2-2' }}</span></div>
+      <div class="r-row"><span>Subtotal</span> <span>Q {{ subtotal | number:'1.2-2' }}</span></div>
       @if (descuento > 0) {
         <div class="r-row r-discount"><span>Descuento</span> <span>− Q {{ descuento | number:'1.2-2' }}</span></div>
       }
+      <!-- IVA solo si es > 0 (si se desactivó el toggle, el backend guarda iva=0) -->
       @if (iva > 0) {
-        <div class="r-row"><span>IVA (12%)</span>       <span>Q {{ iva | number:'1.2-2' }}</span></div>
+        <div class="r-row"><span>IVA (12%)</span> <span>Q {{ iva | number:'1.2-2' }}</span></div>
       }
       <div class="r-line"></div>
-      <div class="r-row r-total"><span>TOTAL</span>    <span>Q {{ total | number:'1.2-2' }}</span></div>
+      <div class="r-row r-total"><span>TOTAL</span> <span>Q {{ total | number:'1.2-2' }}</span></div>
       <div class="r-line"></div>
 
-      <!-- OBSERVACIONES -->
       @if (venta.observaciones) {
         <div class="r-note">Nota: {{ venta.observaciones }}</div>
       }
-
       <div class="r-center r-sub r-thanks">¡Gracias por su compra!</div>
 
-      <!-- BOTÓN IMPRIMIR (se oculta con @media print) -->
       <div class="r-print-btn no-print">
         <button (click)="print()">
           <ng-icon name="matPrintOutline" size="16"></ng-icon>
           Imprimir
         </button>
       </div>
-
     </div>
   }
-
 </div>

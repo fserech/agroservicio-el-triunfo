@@ -115,21 +115,37 @@ export class ClientesService {
 @Injectable({ providedIn: 'root' })
 export class VentasService {
   private http = inject(HttpClient);
+ 
   getAll(f: { desde?:string; hasta?:string; estado?:string; cliente_id?:number; sucursal_id?:number; page?:number; limit?:number } = {}): Observable<PagedResponse<Venta>> {
     let p = new HttpParams();
     Object.entries(f).forEach(([k,v]) => { if (v !== undefined && v !== null && v !== '') p = p.set(k, String(v)); });
     return this.http.get<PagedResponse<Venta>>(`${API}/ventas`, { params: p });
   }
-  getById(id: number): Observable<Venta> { return this.http.get<Venta>(`${API}/ventas/${id}`); }
-  create(d: { cliente_id?: number; sucursal_id?: number; items: Partial<DetalleVenta>[]; metodo_pago?: string; descuento?: number; observaciones?: string }): Observable<Venta> {
+ 
+  getById(id: number): Observable<Venta> {
+    return this.http.get<Venta>(`${API}/ventas/${id}`);
+  }
+ 
+  create(d: {
+    cliente_id?:    number;
+    sucursal_id?:   number;
+    items:          Partial<DetalleVenta>[];
+    metodo_pago?:   string;
+    descuento?:     number;
+    aplica_iva?:    boolean;   // ← nuevo campo
+    observaciones?: string;
+  }): Observable<Venta> {
     return this.http.post<Venta>(`${API}/ventas`, d);
   }
+ 
   cambiarEstado(id: number, estado: VentaEstado): Observable<Venta> {
     return this.http.patch<Venta>(`${API}/ventas/${id}/estado`, { estado });
   }
+ 
   finalizar(id: number): Observable<Venta> { return this.cambiarEstado(id, 'FINALIZED'); }
   cancelar(id: number):  Observable<Venta> { return this.cambiarEstado(id, 'CANCEL'); }
 }
+ 
 
 // ── Proveedores Service ───────────────────────────────────────
 @Injectable({ providedIn: 'root' })
@@ -168,16 +184,19 @@ export class ComprasService {
 @Injectable({ providedIn: 'root' })
 export class CuentasCobrarService {
   private http = inject(HttpClient);
-  getAll(estado='', cliente_id?: number): Observable<CuentaCobrar[]> {
+ 
+  getAll(params?: { estado?: string; cliente_id?: number }): Observable<any[]> {
     let p = new HttpParams();
-    if (estado)     p = p.set('estado', estado);
-    if (cliente_id) p = p.set('cliente_id', cliente_id);
-    return this.http.get<CuentaCobrar[]>(`${API}/cuentas-cobrar`, { params: p });
+    if (params?.estado)     p = p.set('estado',     params.estado);
+    if (params?.cliente_id) p = p.set('cliente_id', params.cliente_id);
+    return this.http.get<any[]>(`${API}/cuentas-cobrar`, { params: p });
   }
-  registrarPago(id: number, monto: number, metodo_pago: string, referencia?: string): Observable<any> {
-    return this.http.post(`${API}/cuentas-cobrar/${id}/pago`, { monto, metodo_pago, referencia });
+ 
+  registrarPago(id: number, body: { monto: number; metodo_pago: string; referencia?: string }): Observable<any> {
+    return this.http.post<any>(`${API}/cuentas-cobrar/${id}/pago`, body);
   }
 }
+ 
 
 // ── Reportes Service ──────────────────────────────────────────
 @Injectable({ providedIn: 'root' })
