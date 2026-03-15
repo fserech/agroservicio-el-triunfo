@@ -1,0 +1,18 @@
+// ventas-list.component.scss
+:host { display: block; }
+
+.sort-btn {
+  display: flex; align-items: center; gap: 3px; background: none; border: none;
+  cursor: pointer; font-size: 11px; font-weight: 600; color: var(--text-2);
+  text-transform: uppercase; letter-spacing: .04em; font-family: var(--font);
+  padding: 0; white-space: nowrap;
+  &:hover { color: var(--text); }
+}
+
+.ventas-row-enter { animation: fadeIn .2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+// Responsive table overflow
+@media (max-width: 640px) {
+  .table-wrap { overflow-x: auto; }
+}

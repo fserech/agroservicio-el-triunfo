@@ -1,0 +1,22 @@
+// productos-form.component.scss
+:host { display: block; }
+
+.section-title {
+  font-size: 13px; font-weight: 700; color: var(--text-2);
+  text-transform: uppercase; letter-spacing: .05em;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 14px;
+}
+
+.margen-preview {
+  padding: 10px 14px; border-radius: var(--radius); font-size: 13px;
+  &.margen-ok  { background: var(--success-bg); color: var(--success); }
+  &.margen-low { background: var(--warning-bg); color: var(--warning); }
+  &.margen-neg { background: var(--danger-bg);  color: var(--danger);  }
+}
+
+.spinner-sm {
+  width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #fff; border-radius: 50%;
+  animation: spin .7s linear infinite; display: inline-block; margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

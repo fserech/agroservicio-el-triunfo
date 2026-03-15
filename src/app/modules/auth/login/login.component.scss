@@ -1,0 +1,51 @@
+// login.component.scss
+.login-page {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f4c35 100%);
+  padding: 16px;
+}
+
+.login-card {
+  background: white; border-radius: 16px; padding: 40px;
+  width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+
+.login-header { text-align: center; margin-bottom: 28px; }
+
+.login-logo {
+  width: 56px; height: 56px; border-radius: 14px; background: var(--primary);
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;
+  box-shadow: 0 4px 14px rgba(0,199,147,.4);
+}
+
+.login-title   { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.login-subtitle{ font-size: 13px; color: var(--text-2); }
+
+.login-form { display: flex; flex-direction: column; gap: 4px; }
+
+.password-wrap {
+  position: relative;
+  input { padding-right: 40px; width: 100%; }
+}
+.toggle-pwd {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; color: var(--text-3);
+  display: flex; align-items: center; padding: 0;
+  &:hover { color: var(--text-2); }
+}
+
+.login-error {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--danger-bg); color: var(--danger); border-radius: 8px;
+  padding: 10px 12px; font-size: 13px; border: 1px solid #fecaca;
+}
+
+.btn-login { width: 100%; padding: 12px; font-size: 14px; margin-top: 8px; border-radius: 10px; }
+
+.spinner {
+  width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3);
+  border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.login-footer { text-align: center; margin-top: 20px; p { font-size: 11px; color: var(--text-3); } }

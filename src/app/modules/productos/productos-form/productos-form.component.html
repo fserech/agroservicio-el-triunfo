@@ -1,0 +1,114 @@
+<!-- productos-form.component.html -->
+<app-header [headerTitle]="isEdit ? 'Editar Producto' : 'Nuevo Producto'"
+  headerDescription="Registra o actualiza un producto del catálogo.">
+</app-header>
+
+<div class="p-2 m-2">
+  <div class="card max-w-3xl mx-auto">
+    <div class="card-header">
+      <span class="card-title">{{ isEdit ? 'Editar Producto' : 'Datos del Producto' }}</span>
+      <button class="btn btn-outline btn-sm" (click)="cancel()">
+        <ng-icon name="matArrowBackOutline" size="16"></ng-icon> Volver
+      </button>
+    </div>
+    <div class="card-body p-5">
+      @if (form) {
+        <form [formGroup]="form" (ngSubmit)="save()">
+
+          <h3 class="section-title">Información del Producto</h3>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Código (SKU)</label>
+              <input formControlName="codigo" type="text" placeholder="P-001">
+            </div>
+            <div class="form-group">
+              <label>Categoría *</label>
+              <select formControlName="categoria_id">
+                <option value="">Seleccionar...</option>
+                @for (c of categorias; track c.id) { <option [value]="c.id">{{ c.nombre }}</option> }
+              </select>
+              @if (f['categoria_id'].invalid && f['categoria_id'].touched) {
+                <span class="error-msg">Categoría requerida</span>}
+            </div>
+            <div class="form-group form-full">
+              <label>Nombre del producto *</label>
+              <input formControlName="nombre" type="text" placeholder="Nombre comercial">
+              @if (f['nombre'].invalid && f['nombre'].touched) {
+                <span class="error-msg">Nombre requerido</span>}
+            </div>
+            <div class="form-group form-full">
+              <label>Descripción</label>
+              <textarea formControlName="descripcion" placeholder="Descripción técnica del producto..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Unidad de medida *</label>
+              <select formControlName="unidad_medida">
+                <option value="Litro">Litro</option>
+                <option value="Kilogramo">Kilogramo</option>
+                <option value="Quintal">Quintal</option>
+                <option value="Libra">Libra</option>
+                <option value="Unidad">Unidad</option>
+                <option value="Caja">Caja</option>
+                <option value="Saco">Saco</option>
+                <option value="Metro">Metro</option>
+              </select>
+            </div>
+          </div>
+
+          <h3 class="section-title mt-4">Precios</h3>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Precio de compra (Q) *</label>
+              <input formControlName="precio_compra" type="number" min="0" step="0.01" placeholder="0.00">
+              @if (f['precio_compra'].invalid && f['precio_compra'].touched) {
+                <span class="error-msg">Precio de compra requerido</span>}
+            </div>
+            <div class="form-group">
+              <label>Precio de venta (Q) *</label>
+              <input formControlName="precio_venta" type="number" min="0" step="0.01" placeholder="0.00">
+              @if (f['precio_venta'].invalid && f['precio_venta'].touched) {
+                <span class="error-msg">Precio de venta requerido</span>}
+            </div>
+            @if (margenCalculado !== null) {
+              <div class="form-group form-full">
+                <div class="margen-preview" [class.margen-ok]="margenCalculado >= 20" [class.margen-low]="margenCalculado < 20 && margenCalculado > 0" [class.margen-neg]="margenCalculado <= 0">
+                  Margen calculado: <strong>{{ margenCalculado | number:'1.2-2' }}%</strong>
+                </div>
+              </div>
+            }
+          </div>
+
+          @if (!isEdit) {
+            <h3 class="section-title mt-4">Inventario Inicial</h3>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Stock inicial</label>
+                <input formControlName="stock_inicial" type="number" min="0" placeholder="0">
+              </div>
+              <div class="form-group">
+                <label>Stock mínimo</label>
+                <input formControlName="stock_minimo" type="number" min="0" placeholder="0">
+              </div>
+              <div class="form-group">
+                <label>Stock máximo</label>
+                <input formControlName="stock_maximo" type="number" min="0" placeholder="9999">
+              </div>
+              <div class="form-group">
+                <label>Ubicación en bodega</label>
+                <input formControlName="ubicacion_bodega" type="text" placeholder="Ej: Bodega A-1">
+              </div>
+            </div>
+          }
+
+          <div class="flex justify-end gap-3 mt-6 pt-4 border-t" style="border-color:var(--border)">
+            <button type="button" class="btn btn-outline" (click)="cancel()">Cancelar</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving">
+              @if (saving) { <span class="spinner-sm"></span> Guardando... }
+              @else { <ng-icon name="matSaveOutline" size="16"></ng-icon> {{ isEdit ? 'Actualizar' : 'Guardar' }} }
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  </div>
+</div>

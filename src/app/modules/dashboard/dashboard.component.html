@@ -1,0 +1,129 @@
+<!-- dashboard.component.html -->
+<app-header headerTitle="Dashboard"
+  headerDescription="Resumen general del sistema. KPIs de ventas, inventario y actividad reciente.">
+</app-header>
+
+<div class="p-3">
+  <!-- KPI GRID -->
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+    @if (load) {
+      @for (i of [1,2,3,4,5]; track i) { <div class="skeleton h-24 rounded-xl"></div> }
+    } @else {
+      <div class="kpi-card">
+        <span class="kpi-accent" style="background:var(--primary)"></span>
+        <div class="kpi-icon" style="background:var(--primary-light)">
+          <ng-icon name="matTrendingUpOutline" size="20" style="color:var(--primary)"></ng-icon>
+        </div>
+        <div class="kpi-label">Ventas Hoy</div>
+        <div class="kpi-value">Q {{ kpis?.ventas_hoy | number:'1.0-0' }}</div>
+        <div class="kpi-sub">{{ kpis?.ventas_hoy_count }} órdenes</div>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-accent" style="background:var(--blue)"></span>
+        <div class="kpi-icon" style="background:var(--blue-light)">
+          <ng-icon name="matCalendarMonthOutline" size="20" style="color:var(--blue)"></ng-icon>
+        </div>
+        <div class="kpi-label">Ventas Este Mes</div>
+        <div class="kpi-value">Q {{ kpis?.ventas_mes | number:'1.0-0' }}</div>
+        <div class="kpi-sub">{{ kpis?.ventas_mes_count }} órdenes</div>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-accent" style="background:var(--warning)"></span>
+        <div class="kpi-icon" style="background:var(--warning-bg)">
+          <ng-icon name="matInventory2Outline" size="20" style="color:var(--warning)"></ng-icon>
+        </div>
+        <div class="kpi-label">Inventario</div>
+        <div class="kpi-value">Q {{ kpis?.valor_inventario | number:'1.0-0' }}</div>
+        <div class="kpi-sub">{{ kpis?.total_productos }} productos</div>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-accent" style="background:var(--danger)"></span>
+        <div class="kpi-icon" style="background:var(--danger-bg)">
+          <ng-icon name="matWarningOutline" size="20" style="color:var(--danger)"></ng-icon>
+        </div>
+        <div class="kpi-label">Stock Crítico</div>
+        <div class="kpi-value">{{ kpis?.stock_critico }}</div>
+        <div class="kpi-sub">Requieren reorden</div>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-accent" style="background:var(--success)"></span>
+        <div class="kpi-icon" style="background:var(--success-bg)">
+          <ng-icon name="matAccountBalanceOutline" size="20" style="color:var(--success)"></ng-icon>
+        </div>
+        <div class="kpi-label">Por Cobrar</div>
+        <div class="kpi-value">Q {{ kpis?.cuentas_por_cobrar | number:'1.0-0' }}</div>
+        <div class="kpi-sub">Cuentas pendientes</div>
+      </div>
+    }
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+    <!-- TOP PRODUCTOS -->
+    <div class="card lg:col-span-2">
+      <div class="card-header">
+        <span class="card-title">Top Productos — Últimos 30 días</span>
+        <button class="btn btn-ghost btn-sm" routerLink="/productos">Ver todos</button>
+      </div>
+      <div class="card-body p-0">
+        @if (loadTop) {
+          <div class="p-4">@for (i of [1,2,3,4,5]; track i) { <div class="skeleton h-8 mb-2 rounded"></div> }</div>
+        } @else if (topProductos.length === 0) {
+          <div class="empty-state" style="padding:32px"><div class="empty-title">Sin datos</div></div>
+        } @else {
+          <div class="p-2">
+            @for (p of topProductos; track $index) {
+              <div class="top-prod-row">
+                <div class="top-prod-rank">{{ $index + 1 }}</div>
+                <div class="top-prod-info">
+                  <div class="font-medium text-sm">{{ p.nombre }}</div>
+                  <div class="text-xs text-gray-400">{{ p.unidades | number:'1.0-0' }} unidades vendidas</div>
+                </div>
+                <div class="top-prod-monto">Q {{ p.ingresos | number:'1.0-0' }}</div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- ACTIVIDAD RECIENTE -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Actividad Reciente</span>
+      </div>
+      <div class="card-body p-0">
+        @if (loadActividad) {
+          <div class="p-4">@for (i of [1,2,3,4,5]; track i) { <div class="skeleton h-12 mb-2 rounded"></div> }</div>
+        } @else {
+          <div class="actividad-list">
+            @for (a of actividad; track a.id) {
+              <div class="actividad-item">
+                <div class="actividad-dot" [ngClass]="getActividadClass(a.tipo)"></div>
+                <div class="actividad-body">
+                  <div class="text-sm">{{ a.descripcion }}</div>
+                  <div class="text-xs text-gray-400">{{ a.created_at | date:'dd/MM/yy HH:mm' }}</div>
+                </div>
+              </div>
+            }
+            @if (actividad.length === 0) {
+              <div class="empty-state" style="padding:24px"><div class="empty-title">Sin actividad reciente</div></div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- ALERT STOCK CRITICO -->
+  @if (!load && (kpis?.stock_critico || 0) > 0) {
+    <div class="stock-alert mt-4">
+      <ng-icon name="matWarningOutline" size="18"></ng-icon>
+      <span><strong>{{ kpis?.stock_critico }} productos</strong> con stock crítico requieren reorden inmediato.</span>
+      <button class="btn btn-sm" style="background:#fff;color:var(--warning);border:1px solid currentColor" routerLink="/inventario" [queryParams]="{estado:'critico'}">
+        Ver inventario
+      </button>
+    </div>
+  }
+</div>

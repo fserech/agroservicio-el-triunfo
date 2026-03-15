@@ -1,0 +1,56 @@
+<!-- sidebar.component.html -->
+<aside class="sidebar" [class.sidebar-collapsed]="collapsed">
+
+  <!-- LOGO -->
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">
+      <svg viewBox="0 0 24 24" fill="white" width="20" height="20">
+        <path d="M12 2C8 2 4 6 4 10c0 6 8 12 8 12s8-6 8-12c0-4-4-8-8-8zm0 10a2 2 0 110-4 2 2 0 010 4z"/>
+      </svg>
+    </div>
+    @if (!collapsed) {
+      <div class="sidebar-logo-text">
+        <div class="logo-name">El Triunfo</div>
+        <div class="logo-sub">Agroservicio</div>
+      </div>
+    }
+    <button class="sidebar-toggle" (click)="collapsed = !collapsed">
+      <ng-icon [name]="collapsed ? 'matChevronRightOutline' : 'matChevronLeftOutline'" size="16"></ng-icon>
+    </button>
+  </div>
+
+  <!-- NAV -->
+  <nav class="sidebar-nav">
+    @for (section of navSections; track section.label) {
+      @if (!collapsed) {
+        <div class="nav-section">{{ section.label }}</div>
+      }
+      @for (item of section.items; track item.route) {
+        <a class="nav-item" [routerLink]="item.route" routerLinkActive="active"
+           [title]="collapsed ? item.label : ''">
+          <ng-icon [name]="item.icon" size="16"></ng-icon>
+          @if (!collapsed) { <span>{{ item.label }}</span> }
+          @if (!collapsed && item.badge) {
+            <span class="nav-badge" [class.nav-badge-danger]="item.badgeType === 'danger'">{{ item.badge }}</span>
+          }
+        </a>
+      }
+    }
+  </nav>
+
+  <!-- FOOTER -->
+  @if (!collapsed) {
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar">{{ userInitials }}</div>
+        <div class="user-info">
+          <div class="user-name">{{ user?.nombre }}</div>
+          <div class="user-role">{{ getRolLabel(user?.rol) }}</div>
+        </div>
+      </div>
+      <button class="btn-icon" title="Cerrar sesión" (click)="logout()">
+        <ng-icon name="matLogoutOutline" size="16"></ng-icon>
+      </button>
+    </div>
+  }
+</aside>

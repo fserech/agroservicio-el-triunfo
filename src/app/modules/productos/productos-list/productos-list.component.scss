@@ -1,0 +1,3 @@
+// productos-list.component.scss
+:host { display: block; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

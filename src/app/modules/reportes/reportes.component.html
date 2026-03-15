@@ -1,0 +1,133 @@
+<!-- reportes.component.html -->
+<app-header headerTitle="Reportes"
+  headerDescription="Análisis de ventas por período, categoría, producto y tendencias de inventario.">
+</app-header>
+
+<div class="p-3">
+
+  <!-- FILTROS DE FECHA -->
+  <div class="card mb-4">
+    <div class="card-body p-4">
+      <div class="flex flex-wrap gap-3 items-end">
+        <div class="form-group mb-0">
+          <label>Fecha desde</label>
+          <input class="form-input" type="date" [(ngModel)]="desde" style="width:160px">
+        </div>
+        <div class="form-group mb-0">
+          <label>Fecha hasta</label>
+          <input class="form-input" type="date" [(ngModel)]="hasta" style="width:160px">
+        </div>
+        <div class="form-group mb-0">
+          <label>Agrupar por</label>
+          <select class="form-input" [(ngModel)]="agrupar" style="width:130px">
+            <option value="dia">Día</option>
+            <option value="semana">Semana</option>
+            <option value="mes">Mes</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" (click)="loadData()" [disabled]="loading">
+          <ng-icon name="matSearchOutline" size="16"></ng-icon> Generar Reporte
+        </button>
+        <button class="btn btn-outline" (click)="setRango('mes')">Este mes</button>
+        <button class="btn btn-outline" (click)="setRango('semana')">Esta semana</button>
+        <button class="btn btn-outline" (click)="setRango('anio')">Este año</button>
+      </div>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      @for (i of [1,2,3,4]; track i) { <div class="skeleton h-20 rounded-xl"></div> }
+    </div>
+  }
+
+  @if (!loading && resumen) {
+    <!-- RESUMEN KPIs -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <div class="kpi-card"><span class="kpi-accent" style="background:var(--primary)"></span>
+        <div class="kpi-label">Ventas Totales</div>
+        <div class="kpi-value">Q {{ resumen.m | number:'1.0-0' }}</div>
+        <div class="kpi-sub">{{ resumen.t }} transacciones</div></div>
+      <div class="kpi-card"><span class="kpi-accent" style="background:var(--blue)"></span>
+        <div class="kpi-label">Ticket Promedio</div>
+        <div class="kpi-value">Q {{ resumen.avg | number:'1.0-0' }}</div></div>
+      <div class="kpi-card"><span class="kpi-accent" style="background:var(--warning)"></span>
+        <div class="kpi-label">IVA Generado</div>
+        <div class="kpi-value">Q {{ resumen.iva | number:'1.0-0' }}</div></div>
+      <div class="kpi-card"><span class="kpi-accent" style="background:var(--success)"></span>
+        <div class="kpi-label">Descuentos</div>
+        <div class="kpi-value">Q {{ resumen.desc_ | number:'1.0-0' }}</div></div>
+    </div>
+
+    <!-- TABLAS -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+      <!-- TOP PRODUCTOS -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Top Productos Vendidos</span></div>
+        <div class="table-wrap">
+          <table class="table-grid w-full">
+            <thead><tr><th>#</th><th>Producto</th><th>Unidades</th><th>Ingresos</th></tr></thead>
+            <tbody>
+              @for (p of topProductos; track $index) {
+                <tr [class.bg-gray-50]="$odd">
+                  <td class="font-bold" style="color:var(--primary)">{{ $index+1 }}</td>
+                  <td class="font-medium">{{ p.nombre }}</td>
+                  <td class="font-mono text-sm">{{ p.unidades | number:'1.0-0' }}</td>
+                  <td class="font-mono font-bold text-sm" style="color:var(--primary)">Q {{ p.ingresos | number:'1.0-0' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- POR CATEGORÍA -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Ventas por Categoría</span></div>
+        <div class="table-wrap">
+          <table class="table-grid w-full">
+            <thead><tr><th>Categoría</th><th>Total</th><th>% del total</th></tr></thead>
+            <tbody>
+              @for (c of porCategoria; track $index) {
+                <tr [class.bg-gray-50]="$odd">
+                  <td class="font-medium">{{ c.cat }}</td>
+                  <td class="font-mono text-sm font-bold" style="color:var(--primary)">Q {{ c.total | number:'1.0-0' }}</td>
+                  <td>
+                    <div class="flex items-center gap-2">
+                      <div class="h-2 rounded-full" style="background:var(--primary-light);flex:1">
+                        <div class="h-2 rounded-full" [style.width]="getPct(c.total)+'%'" style="background:var(--primary)"></div>
+                      </div>
+                      <span class="text-xs font-mono text-gray-500">{{ getPct(c.total) | number:'1.1-1' }}%</span>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SERIE TEMPORAL -->
+    @if (serie.length > 0) {
+      <div class="card mt-4">
+        <div class="card-header"><span class="card-title">Ventas por Período</span></div>
+        <div class="table-wrap">
+          <table class="table-grid w-full">
+            <thead><tr><th>Fecha</th><th>Nº Ventas</th><th>Monto Total</th></tr></thead>
+            <tbody>
+              @for (s of serie; track $index) {
+                <tr [class.bg-gray-50]="$odd">
+                  <td class="font-mono text-sm">{{ s.f | date:'dd/MM/yyyy' }}</td>
+                  <td class="font-mono text-sm">{{ s.c }}</td>
+                  <td class="font-mono font-bold text-sm" style="color:var(--primary)">Q {{ s.m | number:'1.2-2' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  }
+</div>

@@ -1,0 +1,7 @@
+// reportes.component.scss
+:host { display: block; }
+.form-input {
+  padding: 8px 11px; border: 1.5px solid var(--border); border-radius: var(--radius);
+  font-size: 13px; font-family: var(--font); outline: none; background: var(--surface);
+  &:focus { border-color: var(--primary); }
+}

@@ -1,0 +1,20 @@
+// usuarios-form.component.scss
+:host { display: block; }
+
+.roles-info {
+  margin-top: 16px; padding: 12px; background: var(--bg);
+  border-radius: var(--radius); border: 1px solid var(--border);
+}
+.role-item {
+  font-size: 12px; color: var(--text-2); padding: 5px 8px;
+  border-radius: 6px; margin-bottom: 3px; transition: background .15s;
+  &.role-active { background: var(--primary-light); color: var(--primary); font-weight: 500; }
+  strong { font-weight: 600; }
+}
+
+.spinner-sm {
+  width:14px; height:14px; border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff; border-radius:50%;
+  animation:spin .7s linear infinite; display:inline-block; margin-right:6px;
+}
+@keyframes spin { to { transform:rotate(360deg); } }

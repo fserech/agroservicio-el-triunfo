@@ -1,0 +1,33 @@
+// cuentas-cobrar.component.scss
+:host { display: block; }
+
+.row-vencida td { background: #fff5f5 !important; }
+
+.dialog-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.dialog {
+  background: var(--surface); border-radius: 12px; width: 100%;
+  max-width: 440px; box-shadow: 0 8px 40px rgba(0,0,0,.18);
+}
+.dialog-header {
+  padding: 16px 20px 12px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.dialog-title { font-size: 15px; font-weight: 700; }
+.dialog-body   { padding: 18px 20px; }
+.dialog-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+.pago-info { background: var(--bg); border-radius: var(--radius); padding: 12px; margin-bottom: 4px; }
+.pago-info-row {
+  display: flex; justify-content: space-between; font-size: 13px;
+  padding: 3px 0; color: var(--text-2);
+}
+
+.spinner-sm {
+  width:14px; height:14px; border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff; border-radius:50%;
+  animation:spin .7s linear infinite; display:inline-block; margin-right:6px;
+}
+@keyframes spin { to { transform:rotate(360deg); } }

@@ -1,0 +1,124 @@
+<!-- usuarios-list.component.html -->
+<app-header headerTitle="Usuarios del Sistema"
+  headerDescription="Gestión de cuentas de usuario, roles y permisos de acceso.">
+</app-header>
+
+<div class="p-2 m-2 bg-white rounded dark:bg-slate-900 border dark:border-slate-800">
+
+  <div class="filter-bar sticky top-0 z-10">
+    <div class="spacer"></div>
+    <button class="btn btn-primary btn-sm" (click)="add()">
+      <ng-icon name="matAddOutline" size="16"></ng-icon> Nuevo Usuario
+    </button>
+  </div>
+
+  @if (load) {
+    <div class="p-4">
+      @for (i of [1,2,3]; track i) {
+        <div class="skeleton h-10 mb-2 rounded-lg"></div>
+      }
+    </div>
+  }
+
+  @if (!load && items.length > 0) {
+
+    <!-- TABLE DESKTOP -->
+    <div class="table-wrap hidden md:block">
+      <table class="table-grid w-full">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Usuario</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Último acceso</th>
+            <th>Estado</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of items; track u.id; let odd = $odd) {
+            <tr [class.bg-gray-50]="odd" class="hover:bg-blue-50">
+              <td class="font-medium">{{ u.nombre }}</td>
+              <td class="font-mono text-sm text-gray-500">{{ u.username }}</td>
+              <td class="text-sm text-gray-500">{{ u.email || '—' }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'badge-danger':  u.rol === 'admin',
+                  'badge-warning': u.rol === 'supervisor',
+                  'badge-info':    u.rol === 'vendedor',
+                  'badge-gray':    u.rol === 'bodeguero' || u.rol === 'contador'}">
+                  {{ getRolLabel(u.rol) }}
+                </span>
+              </td>
+              <td class="text-xs text-gray-400">{{ u.ultimo_acceso | date:'dd/MM/yy HH:mm' }}</td>
+              <td>
+                <span class="badge"
+                  [class.badge-success]="u.activo"
+                  [class.badge-gray]="!u.activo">
+                  {{ u.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <div class="flex justify-center gap-1">
+                  <button class="btn-action" title="Editar" (click)="edit(u.id)">
+                    <ng-icon name="matModeEditOutline" size="18" style="color:#f59e0b"></ng-icon>
+                  </button>
+                  <button class="btn-action" title="Activar/Desactivar" (click)="toggleActivo(u)">
+                    <ng-icon
+                      [name]="u.activo ? 'bootstrapToggleOn' : 'bootstrapToggleOff'"
+                      size="18"
+                      [style.color]="u.activo ? '#10b981' : '#94a3b8'">
+                    </ng-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- MOBILE CARDS -->
+    <div class="md:hidden">
+      @for (u of items; track u.id; let odd = $odd) {
+        <div class="border-b p-3" [class.bg-gray-50]="odd">
+          <div class="flex justify-between items-start">
+            <div>
+              <div class="font-semibold text-sm">{{ u.nombre }}</div>
+              <div class="text-xs text-gray-400 mt-0.5">{{ u.username }}</div>
+            </div>
+            <span class="badge text-xs" [ngClass]="{
+              'badge-danger':  u.rol === 'admin',
+              'badge-warning': u.rol === 'supervisor',
+              'badge-info':    u.rol === 'vendedor',
+              'badge-gray':    u.rol === 'bodeguero' || u.rol === 'contador'}">
+              {{ getRolLabel(u.rol) }}
+            </span>
+          </div>
+          <div class="flex justify-end gap-1 mt-2">
+            <button class="btn-action" (click)="edit(u.id)">
+              <ng-icon name="matModeEditOutline" size="16" style="color:#f59e0b"></ng-icon>
+            </button>
+            <button class="btn-action" (click)="toggleActivo(u)">
+              <ng-icon
+                [name]="u.activo ? 'bootstrapToggleOn' : 'bootstrapToggleOff'"
+                size="16"
+                [style.color]="u.activo ? '#10b981' : '#94a3b8'">
+              </ng-icon>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+  }
+
+  @if (!load && items.length === 0) {
+    <div class="empty-state">
+      <div class="empty-title">No hay usuarios registrados</div>
+      <button (click)="add()" class="btn btn-primary">Crear usuario</button>
+    </div>
+  }
+
+</div>

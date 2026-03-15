@@ -1,0 +1,52 @@
+<!-- configuracion.component.html -->
+<app-header headerTitle="Configuración"
+  headerDescription="Parámetros del sistema, datos de la empresa y preferencias generales.">
+</app-header>
+
+<div class="p-3 max-w-3xl mx-auto">
+
+  @if (loading) {
+    <div class="skeleton h-96 rounded-xl"></div>
+  } @else {
+    <div class="card mb-4">
+      <div class="card-header"><span class="card-title">Datos de la Empresa</span></div>
+      <div class="p-5">
+        <div class="form-grid-2">
+          @for (k of empresaKeys; track k.clave) {
+            <div class="form-group" [class.form-full]="k.full">
+              <label>{{ k.label }}</label>
+              <input [type]="k.type||'text'" [(ngModel)]="configMap[k.clave]" [placeholder]="k.placeholder||''">
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header"><span class="card-title">Parámetros del Sistema</span></div>
+      <div class="p-5">
+        <div class="form-grid-2">
+          @for (k of sistemaKeys; track k.clave) {
+            <div class="form-group">
+              <label>{{ k.label }}</label>
+              @if (k.options) {
+                <select [(ngModel)]="configMap[k.clave]">
+                  @for (o of k.options; track o.value) { <option [value]="o.value">{{ o.label }}</option> }
+                </select>
+              } @else {
+                <input [type]="k.type||'text'" [(ngModel)]="configMap[k.clave]">
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-end">
+      <button class="btn btn-primary" (click)="save()" [disabled]="saving">
+        @if (saving) { <span class="spinner-sm"></span> Guardando... }
+        @else { <ng-icon name="matSaveOutline" size="16"></ng-icon> Guardar Configuración }
+      </button>
+    </div>
+  }
+</div>

@@ -1,0 +1,137 @@
+<app-header headerTitle="Inventario" headerDescription="Control de stock: movimientos, alertas y ajustes de inventario."></app-header>
+
+<div class="p-2 m-2 bg-white rounded dark:bg-slate-900 border dark:border-slate-800">
+
+  <div class="sticky top-0 z-10 grid grid-cols-1 gap-2 p-1 bg-white dark:bg-slate-900 border-b dark:border-slate-600">
+    <div class="md:flex w-full hidden pl-2 gap-2 items-center">
+      <div class="search-wrap w-80">
+        <ng-icon class="search-icon" name="matSearchOutline" size="15"></ng-icon>
+        <input class="search-input" type="text" placeholder="Buscar producto..." [(ngModel)]="searchText" (input)="applyFilter()">
+      </div>
+      <select class="date-input" (change)="onEstadoChange(sel.value)" #sel>
+        <option value="">Todos los estados</option>
+        <option value="critico">Crítico</option>
+        <option value="sin_stock">Sin stock</option>
+        <option value="bajo">Bajo</option>
+      </select>
+      <div class="flex-1"></div>
+      <button class="btn btn-success h-10" (click)="openAjuste()">
+        <ng-icon class="text-white m-1" size="16" name="matSwapVertOutline"></ng-icon> Ajuste Stock
+      </button>
+    </div>
+    <div class="w-full md:hidden">
+      <div class="flex gap-2">
+        <div class="search-wrap flex-1">
+          <ng-icon class="search-icon" name="matSearchOutline" size="15"></ng-icon>
+          <input class="search-input w-full" type="text" placeholder="Buscar..." [(ngModel)]="searchText" (input)="applyFilter()">
+        </div>
+        <select class="date-input" (change)="onEstadoChange(sel.value)" #sel>
+          <option value="">Todos</option>
+          <option value="critico">Crítico</option>
+          <option value="sin_stock">Sin stock</option>
+        </select>
+        <button class="btn btn-success h-10" (click)="openAjuste()">
+          <ng-icon class="text-white" size="16" name="matSwapVertOutline"></ng-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (!load && criticos > 0) {
+    <div class="mx-2 mt-3 p-3 rounded-lg flex items-center gap-2 text-sm" style="background:var(--warning-bg);border:1px solid #fcd34d;color:var(--warning)">
+      <ng-icon name="matWarningOutline" size="16"></ng-icon>
+      <strong>{{ criticos }} productos</strong>&nbsp;con stock crítico requieren reorden inmediato
+    </div>
+  }
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-2 my-3">
+    <div class="kpi-card"><span class="kpi-accent" style="background:var(--primary)"></span><div class="kpi-label">Total</div><div class="kpi-value">{{ items.length }}</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:var(--danger)"></span><div class="kpi-label">Críticos</div><div class="kpi-value">{{ criticos }}</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:var(--warning)"></span><div class="kpi-label">Bajos</div><div class="kpi-value">{{ bajos }}</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:var(--success)"></span><div class="kpi-label">Normales</div><div class="kpi-value">{{ normales }}</div></div>
+  </div>
+
+  <!-- TABLE DESKTOP -->
+  @if (!load) {
+    <table class="table-grid w-full mt-4 hidden sm:table">
+      <thead>
+        <tr>
+          <th><button class="w-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"><p>Producto</p></button></th>
+          <th><button class="w-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"><p>Categoría</p></button></th>
+          <th><button class="w-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"><p>Stock Actual</p></button></th>
+          <th><button class="w-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"><p>Mínimo</p></button></th>
+          <th><button class="w-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"><p>Ubicación</p></button></th>
+          <th><button class="w-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"><p>Estado</p></button></th>
+          <th><div class="w-full bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1 text-center"><p>Acciones</p></div></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of filtered; track item.id; let odd = $odd) {
+          <tr class="text-gray-500 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800" [ngClass]="{'bg-gray-200 dark:bg-slate-950': odd}">
+            <td class="rounded"><div class="font-medium text-gray-700 dark:text-gray-300">{{ item.nombre }}</div><div class="text-xs font-mono text-gray-400">{{ item.codigo }}</div></td>
+            <td class="rounded"><span class="badge badge-info text-xs">{{ item.cat }}</span></td>
+            <td class="rounded font-bold font-mono text-sm" [class.text-red-600]="item.estado==='critico'||item.estado==='sin_stock'" [class.text-yellow-600]="item.estado==='bajo'" [class.text-green-600]="item.estado==='normal'">{{ item.stock_actual }} {{ item.unidad_medida }}</td>
+            <td class="rounded text-sm">{{ item.stock_minimo }} {{ item.unidad_medida }}</td>
+            <td class="rounded text-xs text-gray-500">{{ item.ubicacion_bodega || '—' }}</td>
+            <td class="rounded"><span class="badge text-xs" [ngClass]="{'badge-danger':item.estado==='critico'||item.estado==='sin_stock','badge-warning':item.estado==='bajo','badge-success':item.estado==='normal'}">{{ getEstadoLabel(item.estado) }}</span></td>
+            <td class="rounded">
+              <div class="w-full flex justify-center gap-1">
+                <button class="btn-action" (click)="openAjusteFor(item.id,'entrada')"><ng-icon class="text-emerald-500" size="20" name="matAddCircleOutline"></ng-icon></button>
+                <button class="btn-action" (click)="openAjusteFor(item.id,'salida')"><ng-icon class="text-red-500" size="20" name="matRemoveCircleOutline"></ng-icon></button>
+                <button class="btn-action" (click)="verMovimientosDe(item.id)"><ng-icon class="text-blue-500" size="20" name="matHistoryOutline"></ng-icon></button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else {
+    <table class="table-grid w-full mt-4 hidden sm:table">
+      <thead><tr>@for(i of [1,2,3,4,5,6,7]; track i){<td><div class="animate-pulse h-7 bg-gray-400 dark:bg-slate-500 rounded m-1"></div></td>}</tr></thead>
+      <tbody>@for(i of [1,2,3,4,5,6,7,8]; track i){
+        <tr [ngClass]="{'bg-gray-200 dark:bg-slate-950':$odd}">
+          @for(col of [1,2,3,4,5,6]; track col){<td><div class="animate-pulse h-2 m-2 bg-gray-400 dark:bg-slate-800 rounded"></div></td>}
+          <td><div class="flex gap-1 p-1"><div class="animate-pulse rounded-md bg-green-400 h-5 w-5"></div><div class="animate-pulse rounded-md bg-red-400 h-5 w-5"></div><div class="animate-pulse rounded-md bg-blue-400 h-5 w-5"></div></div></td>
+        </tr>
+      }</tbody>
+    </table>
+  }
+
+  <!-- TABLE MOBILE -->
+  @if (!load) {
+    <table class="table-grid w-full mt-4 sm:hidden">
+      <thead><tr><th><button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"><p>Control de Inventario</p></button></th></tr></thead>
+      <tbody>
+        @for (item of filtered; track item.id; let odd = $odd) {
+          <tr class="text-gray-500 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800" [ngClass]="{'bg-gray-200 dark:bg-slate-950': odd}">
+            <td class="rounded">
+              <div class="flex justify-between mt-4 mb-4 px-1">
+                <div>
+                  <p class="font-bold text-gray-700 dark:text-gray-300">{{ item.nombre }}</p>
+                  <p class="text-xs text-gray-400 mt-0.5">{{ item.cat }} · {{ item.ubicacion_bodega || 'Sin ubicación' }}</p>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="badge text-xs" [ngClass]="{'badge-danger':item.estado==='critico'||item.estado==='sin_stock','badge-warning':item.estado==='bajo','badge-success':item.estado==='normal'}">{{ getEstadoLabel(item.estado) }}</span>
+                    <p class="text-sm font-bold" [class.text-red-600]="item.estado==='critico'||item.estado==='sin_stock'" [class.text-yellow-600]="item.estado==='bajo'" [class.text-green-600]="item.estado==='normal'">{{ item.stock_actual }} / {{ item.stock_minimo }} mín</p>
+                  </div>
+                </div>
+                <div class="flex gap-1 items-start mt-1">
+                  <button class="btn-action" (click)="openAjusteFor(item.id,'entrada')"><ng-icon class="text-emerald-500" size="20" name="matAddCircleOutline"></ng-icon></button>
+                  <button class="btn-action" (click)="openAjusteFor(item.id,'salida')"><ng-icon class="text-red-500" size="20" name="matRemoveCircleOutline"></ng-icon></button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else {
+    <table class="table-grid w-full mt-4 sm:hidden">
+      <thead><tr><th><button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"><p>Inventario</p></button></th></tr></thead>
+      <tbody>@for(i of [1,2,3,4,5,6]; track i){
+        <tr [ngClass]="{'bg-gray-200 dark:bg-slate-950':$odd}">
+          <td class="rounded"><div class="flex"><div class="rounded-md p-2 flex-1"><div class="animate-pulse space-y-2"><div class="h-2 bg-gray-300 dark:bg-slate-700 rounded w-3/4"></div><div class="h-2 bg-gray-300 dark:bg-slate-700 rounded w-1/2"></div></div></div><div class="rounded-md p-2 w-16"><div class="animate-pulse"><div class="float-end h-9 w-2 bg-gray-300 dark:bg-slate-700 rounded"></div></div></div></div></td>
+        </tr>
+      }</tbody>
+    </table>
+  }
+</div>

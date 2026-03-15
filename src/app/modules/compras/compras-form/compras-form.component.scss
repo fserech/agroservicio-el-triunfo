@@ -1,0 +1,40 @@
+// compras-form.component.scss
+:host { display: block; }
+
+.section-title {
+  font-size: 13px; font-weight: 700; color: var(--text-2);
+  text-transform: uppercase; letter-spacing: .05em;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 14px;
+}
+
+.add-item-row {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  padding: 12px; background: var(--bg); border-radius: var(--radius); margin-bottom: 8px;
+
+  .form-control {
+    padding: 8px 10px; border: 1.5px solid var(--border); border-radius: var(--radius);
+    font-size: 13px; font-family: var(--font); outline: none;
+    &:focus { border-color: var(--primary); }
+  }
+}
+
+.totales-box {
+  margin-top: 14px; padding: 14px; background: var(--bg); border-radius: var(--radius);
+  .totales-row {
+    display: flex; justify-content: space-between; font-size: 13px;
+    padding: 4px 0; color: var(--text-2);
+    span:last-child { font-family: var(--font-mono); }
+  }
+  .totales-total {
+    border-top: 1.5px solid var(--border); margin-top: 6px; padding-top: 8px;
+    font-size: 15px; font-weight: 700; color: var(--text);
+    span:last-child { color: var(--primary); }
+  }
+}
+
+.spinner-sm {
+  width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #fff; border-radius: 50%;
+  animation: spin .7s linear infinite; display: inline-block; margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

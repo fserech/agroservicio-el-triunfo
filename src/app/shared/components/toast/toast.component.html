@@ -1,0 +1,9 @@
+<!-- toast.component.html -->
+<div class="toast-container">
+  @for (t of toasts$ | async; track t.id) {
+    <div class="toast-item" [class]="'toast-' + t.type">
+      <ng-icon [name]="getIcon(t.type)" size="16"></ng-icon>
+      <span>{{ t.msg }}</span>
+    </div>
+  }
+</div>

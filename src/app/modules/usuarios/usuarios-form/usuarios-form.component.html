@@ -1,0 +1,88 @@
+<!-- usuarios-form.component.html -->
+<app-header [headerTitle]="isEdit ? 'Editar Usuario' : 'Nuevo Usuario'"
+  headerDescription="Gestiona las credenciales y permisos del usuario.">
+</app-header>
+
+<div class="p-2 m-2">
+  <div class="card max-w-xl mx-auto">
+    <div class="card-header">
+      <span class="card-title">{{ isEdit ? 'Editar Usuario' : 'Crear Usuario' }}</span>
+      <button class="btn btn-outline btn-sm" (click)="cancel()">
+        <ng-icon name="matArrowBackOutline" size="16"></ng-icon> Volver
+      </button>
+    </div>
+    <div class="card-body p-5">
+      @if (form) {
+        <form [formGroup]="form" (ngSubmit)="save()">
+          <div class="form-group">
+            <label>Nombre completo *</label>
+            <input formControlName="nombre" type="text" placeholder="Nombre del usuario">
+            @if (f['nombre'].invalid && f['nombre'].touched) {
+              <span class="error-msg">Nombre requerido</span> }
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Nombre de usuario *</label>
+              <input formControlName="username" type="text" placeholder="usuario123" [readonly]="isEdit">
+              @if (f['username'].invalid && f['username'].touched) {
+                <span class="error-msg">Usuario requerido</span> }
+            </div>
+            <div class="form-group">
+              <label>Correo electrónico</label>
+              <input formControlName="email" type="email" placeholder="correo@empresa.gt">
+            </div>
+            <div class="form-group">
+              <label>Rol *</label>
+              <select formControlName="rol">
+                <option value="admin">Administrador</option>
+                <option value="supervisor">Supervisor</option>
+                <option value="vendedor">Vendedor</option>
+                <option value="bodeguero">Bodeguero</option>
+                <option value="contador">Contador</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Estado</label>
+              <select formControlName="activo">
+                <option [ngValue]="true">Activo</option>
+                <option [ngValue]="false">Inactivo</option>
+              </select>
+            </div>
+          </div>
+
+          @if (!isEdit) {
+            <div class="form-group">
+              <label>Contraseña *</label>
+              <input formControlName="password" type="password" placeholder="Mínimo 6 caracteres">
+              @if (f['password'].invalid && f['password'].touched) {
+                <span class="error-msg">Contraseña mínimo 6 caracteres</span> }
+            </div>
+          }
+
+          <div class="roles-info">
+            <div class="role-item" [class.role-active]="form.get('rol')?.value === 'admin'">
+              <strong>Administrador:</strong> Acceso total al sistema
+            </div>
+            <div class="role-item" [class.role-active]="form.get('rol')?.value === 'supervisor'">
+              <strong>Supervisor:</strong> Ventas, compras, inventario, reportes
+            </div>
+            <div class="role-item" [class.role-active]="form.get('rol')?.value === 'vendedor'">
+              <strong>Vendedor:</strong> Ventas y consulta de productos
+            </div>
+            <div class="role-item" [class.role-active]="form.get('rol')?.value === 'bodeguero'">
+              <strong>Bodeguero:</strong> Inventario y recepción de compras
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-3 mt-5 pt-4 border-t" style="border-color:var(--border)">
+            <button type="button" class="btn btn-outline" (click)="cancel()">Cancelar</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving">
+              @if (saving) { <span class="spinner-sm"></span> Guardando... }
+              @else { <ng-icon name="matSaveOutline" size="16"></ng-icon> {{ isEdit ? 'Actualizar' : 'Crear Usuario' }} }
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  </div>
+</div>

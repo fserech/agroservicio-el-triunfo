@@ -1,0 +1,4 @@
+// inventario-list.component.scss
+:host { display: block; }
+.stock-bar { height: 6px; border-radius: 3px; background: #e2e8f0; overflow: hidden;
+  .fill { height: 100%; border-radius: 3px; transition: width .4s; } }

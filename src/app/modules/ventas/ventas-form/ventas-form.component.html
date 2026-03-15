@@ -1,0 +1,129 @@
+<!-- ventas-form.component.html -->
+<app-header headerTitle="Nueva Venta"
+  headerDescription="Registra una nueva venta seleccionando cliente y productos.">
+</app-header>
+
+<div class="p-2 m-2">
+  <div class="ventas-form-layout">
+
+    <!-- PANEL IZQUIERDO: Selector de productos -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Catálogo de Productos</span>
+      </div>
+      <div class="p-3">
+        <div class="search-wrap mb-3" style="max-width:100%">
+          <ng-icon class="search-icon" name="matSearchOutline" size="15"></ng-icon>
+          <input class="search-input" style="width:100%" type="text"
+            placeholder="Buscar producto..." [(ngModel)]="searchProd" (input)="filterProductos()">
+        </div>
+        <div class="productos-grid">
+          @for (p of productosFiltrados; track p.id) {
+            <div class="prod-card" (click)="addToCart(p)"
+              [class.prod-card-low]="p.estado_stock === 'critico' || p.estado_stock === 'sin_stock'">
+              <div class="prod-card-name">{{ p.nombre }}</div>
+              <div class="prod-card-cat">{{ p.cat_nombre }} · {{ p.unidad_medida }}</div>
+              <div class="prod-card-price">Q {{ p.precio_venta | number:'1.2-2' }}</div>
+              <div class="prod-card-stock"
+                [class.text-red-500]="p.estado_stock !== 'normal'"
+                [class.text-green-600]="p.estado_stock === 'normal'">
+                Stock: {{ p.stock_actual ?? 0 }} {{ p.unidad_medida }}
+              </div>
+            </div>
+          }
+          @if (productosFiltrados.length === 0) {
+            <div class="col-span-full text-center text-gray-400 py-8 text-sm">Sin productos</div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL DERECHO: Carrito y datos de venta -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Detalle de Venta</span>
+        <button class="btn btn-outline btn-sm" (click)="cancel()">
+          <ng-icon name="matArrowBackOutline" size="16"></ng-icon> Volver
+        </button>
+      </div>
+      <div class="p-4">
+
+        <!-- Cliente y datos -->
+        <div class="form-group">
+          <label>Cliente</label>
+          <select [(ngModel)]="selectedClienteId">
+            <option [value]="null">Consumidor final</option>
+            @for (c of clientes; track c.id) { <option [value]="c.id">{{ c.nombre }}</option> }
+          </select>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Método de pago</label>
+            <select [(ngModel)]="metodoPago">
+              <option value="efectivo">Efectivo</option>
+              <option value="tarjeta">Tarjeta</option>
+              <option value="credito">Crédito</option>
+              <option value="transferencia">Transferencia</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Descuento (Q)</label>
+            <input type="number" min="0" step="0.01" [(ngModel)]="descuento" placeholder="0.00">
+          </div>
+        </div>
+
+        <hr style="border-color:var(--border);margin:12px 0">
+
+        <!-- Carrito -->
+        @if (cart.length === 0) {
+          <div class="cart-empty">
+            <ng-icon name="matShoppingCartOutline" size="32" style="color:var(--text-3)"></ng-icon>
+            <p>Selecciona productos del catálogo</p>
+          </div>
+        }
+
+        @if (cart.length > 0) {
+          <div class="cart-items">
+            @for (item of cart; track $index) {
+              <div class="cart-item">
+                <div class="cart-item-info">
+                  <div class="font-medium text-sm">{{ item.nombre }}</div>
+                  <div class="text-xs text-gray-400">Q {{ item.precio_unitario | number:'1.2-2' }} / {{ item.unidad }}</div>
+                </div>
+                <div class="cart-item-qty">
+                  <button class="qty-btn" (click)="changeQty(item, -1)">−</button>
+                  <span class="qty-val">{{ item.cantidad }}</span>
+                  <button class="qty-btn" (click)="changeQty(item, 1)">+</button>
+                </div>
+                <div class="cart-item-sub">Q {{ item.subtotal | number:'1.2-2' }}</div>
+                <button class="btn-action" (click)="removeFromCart($index)">
+                  <ng-icon name="bootstrapXCircle" size="15" style="color:#ef4444"></ng-icon>
+                </button>
+              </div>
+            }
+          </div>
+
+          <div class="totales-box mt-3">
+            <div class="totales-row"><span>Subtotal</span><span>Q {{ subtotal | number:'1.2-2' }}</span></div>
+            @if (descuento > 0) {
+              <div class="totales-row" style="color:var(--success)"><span>Descuento</span><span>− Q {{ descuento | number:'1.2-2' }}</span></div>
+            }
+            <div class="totales-row"><span>IVA (12%)</span><span>Q {{ iva | number:'1.2-2' }}</span></div>
+            <div class="totales-row totales-total"><span>TOTAL</span><span>Q {{ total | number:'1.2-2' }}</span></div>
+          </div>
+
+          <div class="form-group mt-3">
+            <label>Observaciones</label>
+            <textarea [(ngModel)]="observaciones" rows="2" placeholder="Notas de la venta..."></textarea>
+          </div>
+
+          <button class="btn btn-primary w-full mt-2" style="padding:12px;font-size:14px" (click)="save()" [disabled]="saving">
+            @if (saving) { <span class="spinner-sm"></span> Procesando... }
+            @else { <ng-icon name="matShoppingCartOutline" size="18"></ng-icon> Procesar Venta · Q {{ total | number:'1.2-2' }} }
+          </button>
+        }
+
+      </div>
+    </div>
+  </div>
+</div>

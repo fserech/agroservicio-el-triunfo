@@ -1,0 +1,101 @@
+<!-- clientes-form.component.html -->
+<app-header [headerTitle]="isEdit ? 'Editar Cliente' : 'Nuevo Cliente'"
+  headerDescription="Completa el formulario para registrar o actualizar el cliente.">
+</app-header>
+
+<div class="p-2 m-2">
+  <div class="card max-w-3xl mx-auto">
+    <div class="card-header">
+      <span class="card-title">{{ isEdit ? 'Editar Cliente' : 'Datos del Cliente' }}</span>
+      <button class="btn btn-outline btn-sm" (click)="cancel()">
+        <ng-icon name="matArrowBackOutline" size="16"></ng-icon> Volver
+      </button>
+    </div>
+    <div class="card-body p-5">
+      @if (form) {
+        <form [formGroup]="form" (ngSubmit)="save()">
+
+          <h3 class="section-title">Información General</h3>
+          <div class="form-grid-2">
+            <div class="form-group form-full">
+              <label>Nombre completo / Razón social *</label>
+              <input formControlName="nombre" type="text" placeholder="Nombre o razón social">
+              @if (f['nombre'].invalid && f['nombre'].touched) {
+                <span class="error-msg">Nombre es requerido</span>
+              }
+            </div>
+            <div class="form-group">
+              <label>Tipo de cliente</label>
+              <select formControlName="tipo">
+                <option value="individual">Individual</option>
+                <option value="empresa">Empresa</option>
+                <option value="cooperativa">Cooperativa</option>
+                <option value="finca">Finca</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>NIT</label>
+              <input formControlName="nit" type="text" placeholder="0000000-0">
+            </div>
+            <div class="form-group">
+              <label>CUI / DPI</label>
+              <input formControlName="cui" type="text" placeholder="0000 00000 0000">
+            </div>
+            <div class="form-group">
+              <label>Teléfono</label>
+              <input formControlName="telefono" type="tel" placeholder="0000-0000">
+            </div>
+            <div class="form-group">
+              <label>Correo electrónico</label>
+              <input formControlName="email" type="email" placeholder="correo@ejemplo.com">
+            </div>
+          </div>
+
+          <h3 class="section-title mt-4">Ubicación</h3>
+          <div class="form-grid-2">
+            <div class="form-group form-full">
+              <label>Dirección</label>
+              <input formControlName="direccion" type="text" placeholder="Aldea, zona, colonia...">
+            </div>
+            <div class="form-group">
+              <label>Municipio</label>
+              <input formControlName="municipio" type="text" placeholder="Municipio">
+            </div>
+            <div class="form-group">
+              <label>Departamento</label>
+              <select formControlName="departamento">
+                <option value="">Seleccionar...</option>
+                @for (d of departamentos; track d) { <option [value]="d">{{ d }}</option> }
+              </select>
+            </div>
+          </div>
+
+          <h3 class="section-title mt-4">Crédito</h3>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Crédito máximo (Q)</label>
+              <input formControlName="credito_maximo" type="number" min="0" step="100" placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label>Días de crédito</label>
+              <input formControlName="dias_credito" type="number" min="0" placeholder="0">
+            </div>
+            <div class="form-group form-full">
+              <label>Notas / Observaciones</label>
+              <textarea formControlName="notas" placeholder="Información adicional..."></textarea>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-3 mt-6 pt-4 border-t" style="border-color:var(--border)">
+            <button type="button" class="btn btn-outline" (click)="cancel()">Cancelar</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving">
+              @if (saving) { <span class="spinner-sm"></span> Guardando... }
+              @else { <ng-icon name="matSaveOutline" size="16"></ng-icon> {{ isEdit ? 'Actualizar' : 'Guardar' }} }
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  </div>
+</div>

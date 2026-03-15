@@ -1,0 +1,502 @@
+<!-- ventas-list.component.html -->
+<app-header headerTitle="Ventas" headerDescription="Gestión de ventas: ingresa, cambia estado y finaliza cada venta."></app-header>
+
+<div class="p-2 m-2 bg-white rounded dark:bg-slate-900 border dark:border-slate-800">
+
+  <!-- FILTER AND SEARCH -->
+  <div class="sticky top-0 z-10 grid grid-cols-1 gap-4 md:grid-cols-1 p-1 bg-white dark:bg-slate-900 border-b dark:border-slate-600">
+    <div class="border dark:border-slate-700 border-none border-t-0 border-l-0 border-r-0 m-0 p-0 pb-2 w-full">
+
+      <!-- MOBILE: botón nuevo -->
+      <button (click)="add()" type="button" class="btn btn-primary h-10 float-right w-28">
+        <div class="flex text-center justify-center align-middle">
+          <p class="text-sm md:text-base">Nuevo</p>
+          <ng-icon class="text-white font-bold m-1" size="15" name="matAddOutline"></ng-icon>
+        </div>
+      </button>
+    </div>
+
+    <!-- FILTER DESKTOP -->
+    <div class="md:flex w-full hidden pl-2 gap-2 items-center">
+      <div class="search-wrap">
+        <ng-icon class="search-icon" name="matSearchOutline" size="15"></ng-icon>
+        <input class="search-input" type="text" placeholder="Buscar cliente, factura..."
+               [(ngModel)]="searchText" (input)="onSearch()">
+      </div>
+      <input class="date-input" type="date" [(ngModel)]="fechaFiltro" [min]="minDate" [max]="maxDate">
+      <button (click)="buscarPorFecha()" type="button" class="btn btn-success h-10">
+        <div class="flex text-center justify-center align-middle">
+          <p class="text-sm md:text-base align-middle">Buscar</p>
+          <ng-icon class="text-white font-bold m-1" size="17" name="matSearchOutline"></ng-icon>
+        </div>
+      </button>
+      <button (click)="clearFecha()" type="button" class="btn btn-outline h-10">
+        <ng-icon name="matRefreshOutline" size="17"></ng-icon>
+      </button>
+      <div class="flex-1"></div>
+      <button (click)="add()" type="button" class="btn btn-primary h-10">
+        <div class="flex text-center justify-center align-middle">
+          <p class="text-sm md:text-base">Nueva Venta</p>
+          <ng-icon class="text-white font-bold m-1" size="17" name="matAddOutline"></ng-icon>
+        </div>
+      </button>
+    </div>
+
+    <!-- FILTER MOBILE -->
+    <div class="w-full md:hidden">
+      <div class="grid grid-cols-1 gap-2">
+        <div class="flex gap-2">
+          <div class="search-wrap flex-1">
+            <ng-icon class="search-icon" name="matSearchOutline" size="15"></ng-icon>
+            <input class="search-input w-full" type="text" placeholder="Buscar..."
+                   [(ngModel)]="searchText" (input)="onSearch()">
+          </div>
+          <input class="date-input" type="date" [(ngModel)]="fechaFiltro" [min]="minDate" [max]="maxDate">
+          <button (click)="buscarPorFecha()" type="button" class="btn btn-success h-10">
+            <ng-icon name="matSearchOutline" size="20"></ng-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS DE TIEMPO -->
+  <div class="flex gap-2 my-4 px-1">
+    <button (click)="setActiveTimeTab('month')"
+      [class]="activeTimeTab === 'month'
+        ? 'flex-1 py-3 px-6 rounded-lg bg-blue-400'
+        : 'flex-1 py-3 px-6 rounded-lg bg-white dark:bg-slate-900 text-gray-600 border dark:border-slate-700'">
+      <div class="flex text-center justify-center align-middle">
+        <p class="text-sm md:text-base"
+           [class.text-white]="activeTimeTab === 'month'"
+           [class.font-bold]="activeTimeTab === 'month'">Mes</p>
+      </div>
+    </button>
+    <button (click)="setActiveTimeTab('week')"
+      [class]="activeTimeTab === 'week'
+        ? 'flex-1 py-3 px-6 rounded-lg bg-blue-400'
+        : 'flex-1 py-3 px-6 rounded-lg bg-white dark:bg-slate-900 text-gray-600 border dark:border-slate-700'">
+      <div class="flex text-center justify-center align-middle">
+        <p class="text-sm md:text-base"
+           [class.text-white]="activeTimeTab === 'week'"
+           [class.font-bold]="activeTimeTab === 'week'">Semana</p>
+      </div>
+    </button>
+    <button (click)="setActiveTimeTab('day')"
+      [class]="activeTimeTab === 'day'
+        ? 'flex-1 py-3 px-6 rounded-lg bg-blue-400'
+        : 'flex-1 py-3 px-6 rounded-lg bg-white dark:bg-slate-900 text-gray-600 border dark:border-slate-700'">
+      <div class="flex text-center justify-center align-middle">
+        <p class="text-sm md:text-base"
+           [class.text-white]="activeTimeTab === 'day'"
+           [class.font-bold]="activeTimeTab === 'day'">Día</p>
+      </div>
+    </button>
+  </div>
+
+  <!-- STATUS TABS -->
+  <div class="flex gap-2 px-1 mb-3 overflow-x-auto">
+    <button class="tab-btn flex-shrink-0" [class.active]="activeStatus==='all'"        (click)="setStatus('all')">Todos</button>
+    <button class="tab-btn flex-shrink-0" [class.active]="activeStatus==='PENDING'"    (click)="setStatus('PENDING')">Pendientes</button>
+    <button class="tab-btn flex-shrink-0" [class.active]="activeStatus==='IN_PROCESS'" (click)="setStatus('IN_PROCESS')">En Proceso</button>
+    <button class="tab-btn flex-shrink-0" [class.active]="activeStatus==='FINALIZED'"  (click)="setStatus('FINALIZED')">Finalizadas</button>
+    <button class="tab-btn flex-shrink-0" [class.active]="activeStatus==='CANCEL'"     (click)="setStatus('CANCEL')">Canceladas</button>
+  </div>
+
+  <!-- KPI STRIP -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-2 mb-3">
+    <div class="kpi-card"><span class="kpi-accent" style="background:var(--primary)"></span>
+      <div class="kpi-label">Total período</div>
+      <div class="kpi-value">Q {{ totalMonto | number:'1.2-2' }}</div>
+      <div class="kpi-sub">{{ totalItems }} órdenes</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:var(--danger)"></span>
+      <div class="kpi-label">Pendientes</div>
+      <div class="kpi-value">{{ countByStatus('PENDING') }}</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:var(--success)"></span>
+      <div class="kpi-label">Finalizadas</div>
+      <div class="kpi-value">{{ countByStatus('FINALIZED') }}</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:var(--text-3)"></span>
+      <div class="kpi-label">Canceladas</div>
+      <div class="kpi-value">{{ countByStatus('CANCEL') }}</div></div>
+  </div>
+
+  <!-- PAGINACIÓN SUPERIOR LOADING -->
+  @if (load) {
+    <div class="mb-4">
+      <!-- MOBILE LOADING -->
+      <div class="block sm:hidden">
+        <div class="w-full bg-gray-100 rounded-lg dark:bg-slate-950">
+          <div class="rounded-md w-full p-2 pb-1">
+            <div class="animate-pulse flex w-full justify-between">
+              <div class="rounded-full bg-slate-700 h-6 w-6"></div>
+              <div class="rounded-full bg-slate-700 h-6 w-6"></div>
+              <div class="rounded-full bg-slate-700 h-6 w-6"></div>
+              <div class="rounded-full bg-slate-700 h-6 w-6"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- DESKTOP LOADING -->
+      <div class="hidden sm:block">
+        <div class="animate-pulse flex space-x-4 p-2">
+          <div class="h-5 bg-slate-200 dark:bg-slate-700 rounded w-28"></div>
+          <div class="h-5 bg-slate-200 dark:bg-slate-700 rounded w-28"></div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- EMPTY STATE -->
+  @if (!load && ItemsList.length === 0) {
+    <div class="flex flex-col items-center justify-center py-16 px-4">
+      <div class="text-center">
+        <div class="mx-auto mb-4 w-24 h-24 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center">
+          <ng-icon class="text-gray-400 dark:text-gray-500" size="48" name="matShoppingBagOutline"></ng-icon>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No hay ventas registradas</h3>
+        <p class="text-gray-500 dark:text-gray-400 mb-6">
+          @if (activeTimeTab === 'day')   { No se encontraron ventas para el día de hoy }
+          @if (activeTimeTab === 'week')  { No se encontraron ventas para esta semana }
+          @if (activeTimeTab === 'month') { No se encontraron ventas para este mes }
+        </p>
+        <button (click)="add()" type="button" class="btn btn-primary px-6 py-3">
+          <div class="flex items-center justify-center gap-2">
+            <ng-icon class="text-white" size="20" name="matAddOutline"></ng-icon>
+            <span>Crear primera venta</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- TABLA CON DATOS -->
+  @if (!load && ItemsList.length > 0) {
+    <div class="rounded-lg">
+
+      <!-- TABLE DESKTOP -->
+      <table class="table-grid w-full mt-4 hidden sm:table">
+        <thead>
+          <tr>
+            <th>
+              <button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1" (click)="changeSortOrderBy('numero_factura')">
+                <p>Factura</p>
+                @if(sortConfig.sortBy === 'numero_factura' && sortConfig.sortOrder === 'asc'){<ng-icon class="p-0 m-0" size="18" name="matArrowDownwardOutline"></ng-icon>}
+                @if(sortConfig.sortBy === 'numero_factura' && sortConfig.sortOrder === 'desc'){<ng-icon class="p-0 m-0" size="18" name="matArrowUpwardOutline"></ng-icon>}
+              </button>
+            </th>
+            <th>
+              <button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1" (click)="changeSortOrderBy('cliente_nombre')">
+                <p>Cliente</p>
+                @if(sortConfig.sortBy === 'cliente_nombre' && sortConfig.sortOrder === 'asc'){<ng-icon class="p-0 m-0" size="18" name="matArrowDownwardOutline"></ng-icon>}
+                @if(sortConfig.sortBy === 'cliente_nombre' && sortConfig.sortOrder === 'desc'){<ng-icon class="p-0 m-0" size="18" name="matArrowUpwardOutline"></ng-icon>}
+              </button>
+            </th>
+            <th>
+              <button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1" (click)="changeSortOrderBy('estado')">
+                <p>Estado</p>
+                @if(sortConfig.sortBy === 'estado' && sortConfig.sortOrder === 'asc'){<ng-icon class="p-0 m-0" size="18" name="matArrowDownwardOutline"></ng-icon>}
+                @if(sortConfig.sortBy === 'estado' && sortConfig.sortOrder === 'desc'){<ng-icon class="p-0 m-0" size="18" name="matArrowUpwardOutline"></ng-icon>}
+              </button>
+            </th>
+            <th>
+              <button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1" (click)="changeSortOrderBy('sucursal_nombre')">
+                <p>Sucursal</p>
+              </button>
+            </th>
+            <th>
+              <button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1" (click)="changeSortOrderBy('total')">
+                <p>Total</p>
+                @if(sortConfig.sortBy === 'total' && sortConfig.sortOrder === 'asc'){<ng-icon class="p-0 m-0" size="18" name="matArrowDownwardOutline"></ng-icon>}
+                @if(sortConfig.sortBy === 'total' && sortConfig.sortOrder === 'desc'){<ng-icon class="p-0 m-0" size="18" name="matArrowUpwardOutline"></ng-icon>}
+              </button>
+            </th>
+            <th>
+              <button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1" (click)="changeSortOrderBy('fecha')">
+                <p>Fecha de venta</p>
+                @if(sortConfig.sortBy === 'fecha' && sortConfig.sortOrder === 'asc'){<ng-icon class="p-0 m-0" size="18" name="matArrowDownwardOutline"></ng-icon>}
+                @if(sortConfig.sortBy === 'fecha' && sortConfig.sortOrder === 'desc'){<ng-icon class="p-0 m-0" size="18" name="matArrowUpwardOutline"></ng-icon>}
+              </button>
+            </th>
+            <th>
+              <div class="w-full h-full bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1 text-center">
+                <p>Acciones</p>
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of ItemsList; track order.id; let odd = $odd) {
+            <tr class="text-gray-500 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800"
+                [ngClass]="{'bg-gray-200 dark:bg-slate-950': odd}">
+              <td class="rounded font-mono text-xs font-bold" style="color:var(--primary)">{{ order.numero_factura }}</td>
+              <td class="rounded">
+                @if (order.cliente_nombre) {
+                  <p class="font-medium">{{ order.cliente_nombre }}</p>
+                  <p class="text-xs text-gray-400">NIT: {{ order.cliente_nit || 'N/A' }}</p>
+                } @else {
+                  <p class="text-gray-400 text-xs">Consumidor final</p>
+                }
+              </td>
+              <td class="rounded">
+                <p class="rounded-lg p-1 text-xs text-center w-full m-0"
+                   [ngClass]="{
+                     'bg-red-200 text-red-600':       order.estado === 'PENDING',
+                     'bg-yellow-100 text-yellow-600':  order.estado === 'IN_PROCESS',
+                     'bg-emerald-200 text-emerald-600':order.estado === 'FINALIZED',
+                     'bg-gray-50 text-gray-600':       order.estado === 'CANCEL'}">
+                  {{ getStatusLabel(order.estado) }}
+                </p>
+              </td>
+              <td class="rounded text-sm">
+                @if (order.sucursal_nombre) { {{ order.sucursal_nombre }} }
+                @else { <span class="text-gray-400">Sin sucursal</span> }
+              </td>
+              <td class="rounded font-mono text-sm font-semibold" style="color:var(--primary)">
+                Q {{ order.total | number:'1.2-2' }}
+              </td>
+              <td class="rounded text-sm">{{ order.fecha | date:'dd/MM/yyyy' }}</td>
+              <td class="rounded">
+                <div class="flex justify-center gap-1">
+                  @if (order.estado === 'FINALIZED' || order.estado === 'PENDING' || order.estado === 'CANCEL') {
+                    <button (click)="view(order.id)" class="btn-action" title="Ver detalle">
+                      <ng-icon class="text-blue-500 font-bold" size="20" name="matRemoveRedEyeOutline"></ng-icon>
+                    </button>
+                  }
+                  @if (order.estado === 'PENDING') {
+                    <button (click)="edit(order.id)" class="btn-action" title="Editar venta">
+                      <ng-icon class="text-yellow-500 font-bold" size="20" name="matModeEditOutline"></ng-icon>
+                    </button>
+                  }
+                  @if (order.estado === 'FINALIZED') {
+                    <button (click)="printReceipt(order.id)" class="btn-action" title="Imprimir recibo">
+                      <ng-icon class="text-purple-500 font-bold" size="20" name="matReceiptLongOutline"></ng-icon>
+                    </button>
+                  }
+                  @if (order.estado === 'PENDING') {
+                    <button (click)="finalizedOrder(order.id)" class="btn-action" title="Finalizar venta">
+                      <ng-icon class="text-emerald-500 font-bold" size="20" name="bootstrapCheckCircleFill"></ng-icon>
+                    </button>
+                  }
+                  @if (order.estado !== 'FINALIZED' && order.estado !== 'CANCEL') {
+                    <button (click)="cancelOrder(order.id)" class="btn-action" title="Anular venta">
+                      <ng-icon class="text-red-500 font-bold" size="20" name="bootstrapXCircle"></ng-icon>
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- TABLE MOBILE -->
+      <table class="table-grid w-full mt-4 sm:hidden">
+        <thead>
+          <tr>
+            <th>
+              <button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"
+                      (click)="changeSortOrderBy('fecha')">
+                <p>Ventas por fecha de creación</p>
+                @if(sortConfig.sortBy === 'fecha' && sortConfig.sortOrder === 'desc'){<ng-icon class="p-0 m-0" size="22" name="matArrowDownwardOutline"></ng-icon>}
+                @if(sortConfig.sortBy === 'fecha' && sortConfig.sortOrder === 'asc'){<ng-icon class="p-0 m-0" size="22" name="matArrowUpwardOutline"></ng-icon>}
+              </button>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of ItemsList; track order.id; let odd = $odd) {
+            <tr class="text-gray-500 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800"
+                [ngClass]="{'bg-gray-200 dark:bg-slate-950': odd}">
+              <td class="rounded">
+                <div class="flex justify-between mt-3 mb-3 px-1">
+                  <div>
+                    <p class="font-bold text-gray-400 flex items-center gap-1 mb-1">
+                      @if (order.estado === 'FINALIZED') { <span class="inline-flex rounded-full h-2 w-2 bg-emerald-400"></span> }
+                      @if (order.estado === 'IN_PROCESS'){ <span class="inline-flex rounded-full h-2 w-2 bg-yellow-400"></span> }
+                      @if (order.estado === 'PENDING')   { <span class="inline-flex rounded-full h-2 w-2 bg-red-400"></span> }
+                      @if (order.estado === 'CANCEL')    { <span class="inline-flex rounded-full h-2 w-2 bg-gray-400"></span> }
+                      <b class="font-semibold text-xs text-gray-400">{{ order.numero_factura }}</b>
+                    </p>
+                    @if (order.cliente_nombre) {
+                      <p class="font-bold text-gray-700 dark:text-gray-300">{{ order.cliente_nombre }}</p>
+                      <p class="text-xs text-gray-400">NIT: {{ order.cliente_nit || 'N/A' }}</p>
+                    } @else {
+                      <p class="font-bold text-gray-700 dark:text-gray-300">Consumidor final</p>
+                    }
+                    <p class="text-sm mt-1">
+                      <b class="text-gray-400">Sucursal: </b>
+                      <span class="text-gray-500">{{ order.sucursal_nombre || 'Sin sucursal' }}</span>
+                    </p>
+                    <p class="text-sm">
+                      <b class="text-gray-400">Fecha: </b>{{ order.fecha | date:'dd/MM/yyyy' }}
+                    </p>
+                    <p class="text-sm font-bold mt-1" style="color:var(--primary)">
+                      Q {{ order.total | number:'1.2-2' }}
+                    </p>
+                  </div>
+                  <!-- ACCIONES MÓVIL -->
+                  <div class="flex flex-col gap-1 items-end">
+                    <span class="badge text-xs mb-1"
+                      [ngClass]="{
+                        'badge-danger':  order.estado === 'PENDING',
+                        'badge-warning': order.estado === 'IN_PROCESS',
+                        'badge-success': order.estado === 'FINALIZED',
+                        'badge-gray':    order.estado === 'CANCEL'}">
+                      {{ getStatusLabel(order.estado) }}
+                    </span>
+                    <div class="flex gap-1">
+                      <button (click)="view(order.id)" class="btn-action" title="Ver detalle">
+                        <ng-icon class="text-blue-500" size="18" name="matRemoveRedEyeOutline"></ng-icon>
+                      </button>
+                      @if (order.estado === 'PENDING') {
+                        <button (click)="finalizedOrder(order.id)" class="btn-action" title="Finalizar">
+                          <ng-icon class="text-emerald-500" size="18" name="bootstrapCheckCircleFill"></ng-icon>
+                        </button>
+                        <button (click)="cancelOrder(order.id)" class="btn-action" title="Cancelar">
+                          <ng-icon class="text-red-500" size="18" name="bootstrapXCircle"></ng-icon>
+                        </button>
+                      }
+                      @if (order.estado === 'FINALIZED') {
+                        <button (click)="printReceipt(order.id)" class="btn-action" title="Imprimir">
+                          <ng-icon class="text-purple-500" size="18" name="matReceiptLongOutline"></ng-icon>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+    </div>
+  }
+
+  <!-- LOADING STATE -->
+  @if (load) {
+    <div class="rounded-lg">
+      <!-- DESKTOP LOADING -->
+      <table class="table-grid w-full mt-4 hidden sm:table">
+        <thead>
+          <tr>
+            @for (item of [1,2,3,4,5,6,7]; track $index) {
+              <td>
+                <div class="rounded pt-2 pb-2 p-1">
+                  <div class="animate-pulse flex space-x-4">
+                    <div class="flex-1 space-y-6 py-1">
+                      <div class="h-7 bg-gray-400 dark:bg-slate-500 rounded"></div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of [1,2,3,4,5,6,7,8]; track $index) {
+            <tr class="w-full" [ngClass]="{'bg-gray-200 dark:bg-slate-950': $odd}">
+              @for (col of [1,2,3,4,5,6]; track $index) {
+                <td class="w-20">
+                  <div class="rounded p-2">
+                    <div class="animate-pulse">
+                      <div class="h-2 bg-gray-400 dark:bg-slate-700 rounded"></div>
+                    </div>
+                  </div>
+                </td>
+              }
+              <td class="w-20">
+                <div class="flex gap-1 p-1">
+                  <div class="animate-pulse rounded-md bg-emerald-400 h-5 w-5"></div>
+                  <div class="animate-pulse rounded-md bg-blue-400 h-5 w-5"></div>
+                  <div class="animate-pulse rounded-md bg-red-400 h-5 w-5"></div>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- MOBILE LOADING -->
+      <table class="table-grid w-full mt-4 sm:hidden">
+        <thead>
+          <tr>
+            <th>
+              <button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1">
+                <p>Ventas por fecha de creación</p>
+              </button>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of [1,2,3,4,5,6]; track $index) {
+            <tr [ngClass]="{'bg-gray-200 dark:bg-slate-950': $odd}">
+              <td class="rounded">
+                <div class="flex gap-2 p-2">
+                  <div class="rounded-md p-2 flex-1">
+                    <div class="animate-pulse space-y-2">
+                      <div class="h-2 bg-gray-300 dark:bg-slate-700 rounded w-3/4"></div>
+                      <div class="h-2 bg-gray-300 dark:bg-slate-700 rounded w-1/2"></div>
+                      <div class="h-2 bg-gray-300 dark:bg-slate-700 rounded w-full"></div>
+                      <div class="h-2 bg-gray-300 dark:bg-slate-700 rounded w-2/3"></div>
+                    </div>
+                  </div>
+                  <div class="rounded-md p-2 w-16">
+                    <div class="animate-pulse">
+                      <div class="h-6 w-2 bg-gray-300 dark:bg-slate-700 rounded float-end"></div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- PAGINACIÓN INFERIOR -->
+  @if (!load && ItemsList.length > 0) {
+    <div class="mt-4">
+      <!-- MOBILE -->
+      <div class="block sm:hidden">
+        <div class="w-full bg-gray-100 rounded-lg dark:bg-slate-950">
+          <div class="flex justify-between mb-2 p-2 rounded-lg border m-1 bg-white dark:bg-slate-900 dark:border-slate-700">
+            <button class="btn-action" (click)="firstPage()">
+              <ng-icon size="22" name="bootstrapChevronBarLeft"></ng-icon>
+            </button>
+            <button class="btn-action" (click)="previousPage()">
+              <ng-icon size="22" name="bootstrapChevronLeft"></ng-icon>
+            </button>
+            <button class="btn-action" (click)="nextPage()">
+              <ng-icon size="22" name="bootstrapChevronRight"></ng-icon>
+            </button>
+            <button class="btn-action" (click)="lastPage()">
+              <ng-icon size="22" name="bootstrapChevronBarRight"></ng-icon>
+            </button>
+          </div>
+          <div class="flex justify-between">
+            <p class="bg-white dark:bg-slate-900 p-1 m-1 rounded text-sm pl-2"><b>Páginas: </b>{{ page }} de {{ totalPages }}</p>
+            <p class="bg-white dark:bg-slate-900 p-1 m-1 rounded text-sm pl-2"><b>Items: </b>{{ startIndex }}-{{ endIndex }} de {{ totalItems }}</p>
+          </div>
+        </div>
+      </div>
+      <!-- DESKTOP -->
+      <div class="hidden sm:block">
+        <div class="pagination">
+          <div class="pagination-controls gap-2 flex items-center justify-between w-full px-2">
+            <p class="pagination-info"><b class="bg-white dark:bg-slate-800 p-2 m-1 rounded text-sm">Página {{ page }} de {{ totalPages }}</b></p>
+            <p class="pagination-info">Items {{ startIndex }} - {{ endIndex }} de {{ totalItems }}</p>
+            <div class="flex gap-1">
+              <button class="pag-btn" (click)="firstPage()"    [disabled]="page===1"><ng-icon name="bootstrapChevronBarLeft"  size="13"></ng-icon></button>
+              <button class="pag-btn" (click)="previousPage()" [disabled]="page===1"><ng-icon name="bootstrapChevronLeft"     size="13"></ng-icon></button>
+              <button class="pag-btn" (click)="nextPage()"     [disabled]="page>=totalPages"><ng-icon name="bootstrapChevronRight"    size="13"></ng-icon></button>
+              <button class="pag-btn" (click)="lastPage()"     [disabled]="page>=totalPages"><ng-icon name="bootstrapChevronBarRight" size="13"></ng-icon></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>
