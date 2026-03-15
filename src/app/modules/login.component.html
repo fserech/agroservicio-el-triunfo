@@ -1,0 +1,68 @@
+<!-- login.component.html -->
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-logo">
+        <svg viewBox="0 0 24 24" fill="white" width="26" height="26">
+          <path d="M12 2C8 2 4 6 4 10c0 6 8 12 8 12s8-6 8-12c0-4-4-8-8-8zm0 10a2 2 0 110-4 2 2 0 010 4z"/>
+        </svg>
+      </div>
+      <h1 class="login-title">Agroservicio El Triunfo</h1>
+      <p class="login-subtitle">Ingresa tus credenciales para continuar</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="login()" class="login-form">
+      <div class="form-group">
+        <label>Usuario</label>
+        <input formControlName="username" type="text" placeholder="Ingresa tu usuario"
+               autocomplete="username"
+               class="bg-gray-200 dark:bg-slate-950 rounded-2xl border-none py-2 px-4 w-full
+                      text-gray-600 dark:text-white focus:outline-none focus:ring-2
+                      focus:ring-green-400 transition-shadow">
+        <span class="error-msg" *ngIf="form.get('username')?.invalid && form.get('username')?.touched">
+          Usuario requerido
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label>Contraseña</label>
+        <div class="relative">
+          <input formControlName="password"
+                 [type]="showPassword ? 'text' : 'password'"
+                 placeholder="••••••••"
+                 autocomplete="current-password"
+                 class="bg-gray-200 dark:bg-slate-950 rounded-2xl border-none py-2 px-4 w-full
+                        text-gray-600 dark:text-white pr-10 focus:outline-none focus:ring-2
+                        focus:ring-green-400 transition-shadow">
+          <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  (click)="showPassword = !showPassword">
+            <ng-icon [name]="showPassword ? 'matVisibilityOffOutline' : 'matVisibilityOutline'" size="18"></ng-icon>
+          </button>
+        </div>
+        <span class="error-msg" *ngIf="form.get('password')?.invalid && form.get('password')?.touched">
+          Contraseña requerida
+        </span>
+      </div>
+
+      @if (errorMsg) {
+        <div class="login-error">
+          <ng-icon name="matErrorOutline" size="16"></ng-icon>
+          {{ errorMsg }}
+        </div>
+      }
+
+      <button type="submit" class="btn-primary w-full h-10 mt-2 font-bold" [disabled]="loading">
+        @if (loading) {
+          <span class="spinner-sm"></span> Ingresando...
+        } @else {
+          <ng-icon name="matLoginOutline" size="16"></ng-icon>
+          Ingresar
+        }
+      </button>
+    </form>
+
+    <div class="login-footer">
+      <p>Sistema de Gestión v2.1.0</p>
+    </div>
+  </div>
+</div>

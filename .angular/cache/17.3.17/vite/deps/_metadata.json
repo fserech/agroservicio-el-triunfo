@@ -1,73 +1,79 @@
 {
-  "hash": "da8176fa",
-  "configHash": "1ae34e59",
+  "hash": "b83bf4fd",
+  "configHash": "5ab550d7",
   "lockfileHash": "23387921",
-  "browserHash": "68d290e6",
+  "browserHash": "34d882e9",
   "optimized": {
     "@angular/common": {
       "src": "../../../../../node_modules/@angular/common/fesm2022/common.mjs",
       "file": "@angular_common.js",
-      "fileHash": "4e9999ef",
+      "fileHash": "4c89d92d",
       "needsInterop": false
     },
     "@angular/common/http": {
       "src": "../../../../../node_modules/@angular/common/fesm2022/http.mjs",
       "file": "@angular_common_http.js",
-      "fileHash": "7c0737ae",
+      "fileHash": "7f2bbc8c",
       "needsInterop": false
     },
     "@angular/core": {
       "src": "../../../../../node_modules/@angular/core/fesm2022/core.mjs",
       "file": "@angular_core.js",
-      "fileHash": "543a5b78",
+      "fileHash": "7c2518a7",
       "needsInterop": false
     },
     "@angular/forms": {
       "src": "../../../../../node_modules/@angular/forms/fesm2022/forms.mjs",
       "file": "@angular_forms.js",
-      "fileHash": "a453ed29",
+      "fileHash": "e3b397a1",
       "needsInterop": false
     },
     "@angular/platform-browser": {
       "src": "../../../../../node_modules/@angular/platform-browser/fesm2022/platform-browser.mjs",
       "file": "@angular_platform-browser.js",
-      "fileHash": "a65fd83f",
+      "fileHash": "d659e50a",
       "needsInterop": false
     },
     "@angular/platform-browser/animations": {
       "src": "../../../../../node_modules/@angular/platform-browser/fesm2022/animations.mjs",
       "file": "@angular_platform-browser_animations.js",
-      "fileHash": "46dc55c3",
+      "fileHash": "26c35f66",
       "needsInterop": false
     },
     "@angular/router": {
       "src": "../../../../../node_modules/@angular/router/fesm2022/router.mjs",
       "file": "@angular_router.js",
-      "fileHash": "ee49ea38",
+      "fileHash": "e927191b",
       "needsInterop": false
     },
     "@ng-icons/bootstrap-icons": {
       "src": "../../../../../node_modules/@ng-icons/bootstrap-icons/fesm2022/ng-icons-bootstrap-icons.mjs",
       "file": "@ng-icons_bootstrap-icons.js",
-      "fileHash": "070f83a2",
+      "fileHash": "8c5efb53",
       "needsInterop": false
     },
     "@ng-icons/core": {
       "src": "../../../../../node_modules/@ng-icons/core/fesm2022/ng-icons-core.mjs",
       "file": "@ng-icons_core.js",
-      "fileHash": "97b81885",
+      "fileHash": "943c1c0c",
       "needsInterop": false
     },
     "@ng-icons/material-icons/outline": {
       "src": "../../../../../node_modules/@ng-icons/material-icons/fesm2022/ng-icons-material-icons-outline.mjs",
       "file": "@ng-icons_material-icons_outline.js",
-      "fileHash": "afb4099e",
+      "fileHash": "2dec88f2",
       "needsInterop": false
     },
     "rxjs": {
       "src": "../../../../../node_modules/rxjs/dist/esm5/index.js",
       "file": "rxjs.js",
-      "fileHash": "45e9ebee",
+      "fileHash": "016668ad",
+      "needsInterop": false
+    },
+    "@ng-icons/material-icons/round": {
+      "src": "../../../../../node_modules/@ng-icons/material-icons/fesm2022/ng-icons-material-icons-round.mjs",
+      "file": "@ng-icons_material-icons_round.js",
+      "fileHash": "8a2e07b8",
       "needsInterop": false
     }
   },
