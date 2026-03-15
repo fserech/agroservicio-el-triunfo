@@ -17,17 +17,9 @@
     <div class="md:flex w-full hidden pl-6 gap-2">
       <div class="w-96">
         <app-search-input-text
-          [form]="form"
-          name="name"
-          icon="matSearchOutline"
-          label="Cliente"
-          placeholder="Nombre de cliente..."
-          [maxlength]="50"
-          [load]="load"
-          [counter]="true"
-          (keydown.enter)="introSearch()"
-          (keydown.escape)="initPage()"
-          (clearFilters)="initPage()">
+          [form]="form" name="name" icon="matSearchOutline" label="Cliente"
+          placeholder="Nombre de cliente..." [maxlength]="50" [load]="load" [counter]="true"
+          (keydown.enter)="introSearch()" (keydown.escape)="initPage()" (clearFilters)="initPage()">
         </app-search-input-text>
       </div>
       <button (click)="(form.controls['name'].value && form.controls['name'].value !== '') ? filter(form.controls['name'].value) : null"
@@ -50,17 +42,9 @@
     <div class="w-full md:hidden lg:hidden xl:hidden 2xl:hidden 3xl:hidden">
       <div class="flex gap-2">
         <app-search-input-text
-          class="flex-1"
-          [form]="form"
-          name="name"
-          icon="matSearchOutline"
-          placeholder="Nombre de cliente..."
-          [maxlength]="50"
-          [load]="load"
-          [counter]="true"
-          (keydown.enter)="introSearch()"
-          (keydown.escape)="initPage()"
-          (clearFilters)="initPage()">
+          class="flex-1" [form]="form" name="name" icon="matSearchOutline"
+          placeholder="Nombre de cliente..." [maxlength]="50" [load]="load" [counter]="true"
+          (keydown.enter)="introSearch()" (keydown.escape)="initPage()" (clearFilters)="initPage()">
         </app-search-input-text>
         <button (click)="(form.controls['name'].value && form.controls['name'].value !== '') ? filter(form.controls['name'].value) : null"
                 type="button" class="btn-success h-10">
@@ -90,10 +74,8 @@
     </div>
   </div>
 
-  <!-- TABLE -->
+  <!-- TABLE DESKTOP -->
   <div class="rounded-lg">
-
-    <!-- TABLE DESKTOP -->
     @if (!load) {
       <table class="table-grid w-full mt-4 hidden sm:table">
         <thead>
@@ -118,8 +100,15 @@
               <td class="rounded font-mono text-sm" [class.text-red-600]="(c.saldo_pendiente||0)>0">Q {{ (c.saldo_pendiente||0) | number:'1.2-2' }}</td>
               <td class="rounded">
                 <div class="w-full c-actions flex justify-center gap-1">
-                  <button (click)="view(c.id)" class="btn-action content-desktop"><ng-icon class="text-blue-500 font-bold float-end" size="20" name="matRemoveRedEyeOutline"></ng-icon></button>
-                  <button (click)="edit(c.id)" class="btn-action content-desktop"><ng-icon class="text-yellow-500 font-bold float-end" size="20" name="matModeEditOutline"></ng-icon></button>
+                  <button (click)="view(c.id)" class="btn-action content-desktop">
+                    <ng-icon class="text-blue-500 font-bold float-end" size="20" name="matRemoveRedEyeOutline"></ng-icon>
+                  </button>
+                  <button (click)="edit(c.id)" class="btn-action content-desktop">
+                    <ng-icon class="text-yellow-500 font-bold float-end" size="20" name="matModeEditOutline"></ng-icon>
+                  </button>
+                  <button (click)="delete(c.id)" class="btn-action content-desktop">
+                    <ng-icon class="text-red-500 font-bold float-end" size="20" name="matDeleteOutline"></ng-icon>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -132,7 +121,7 @@
         <tbody>@for(i of [1,2,3,4,5,6,7,8,9,10]; track i){
           <tr class="w-full" [ngClass]="{'bg-gray-200 dark:bg-slate-950':$odd}">
             @for(loading of [1,2,3,4,5,6]; track loading){<td class="w-20"><div class="rounded pt-2 pb-2 p-1"><div class="animate-pulse flex space-x-4"><div class="flex-1 space-y-6 py-1"><div class="h-2 bg-gray-400 dark:bg-slate-800 rounded" [ngClass]="{'bg-gray-400 dark:bg-slate-500':$odd}"></div></div></div></div></td>}
-            <td class="w-20"><div class="flex"><div class="rounded pl-2"><div class="animate-pulse"><div class="rounded-md bg-blue-400 h-5 w-5"></div></div></div><div class="rounded-md pl-1"><div class="animate-pulse"><div class="rounded-md bg-yellow-400 h-5 w-5"></div></div></div></div></td>
+            <td class="w-20"><div class="flex"><div class="rounded pl-2"><div class="animate-pulse"><div class="rounded-md bg-blue-400 h-5 w-5"></div></div></div><div class="rounded-md pl-1"><div class="animate-pulse"><div class="rounded-md bg-yellow-400 h-5 w-5"></div></div></div><div class="rounded-md pl-1"><div class="animate-pulse"><div class="rounded-md bg-red-400 h-5 w-5"></div></div></div></div></td>
           </tr>
         }</tbody>
       </table>
@@ -225,6 +214,5 @@
         <div class="rounded-md w-full p-2 pt-1"><div class="animate-pulse flex w-full justify-between gap-1"><div class="h-5 bg-slate-700 rounded w-48"></div><div class="h-5 bg-slate-700 rounded w-48"></div></div></div>
       </div></div></div>
     }
-
   </div>
 </div>

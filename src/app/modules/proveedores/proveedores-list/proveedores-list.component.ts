@@ -1,4 +1,3 @@
-// proveedores-list.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,7 +6,7 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
   matAddOutline, matRemoveRedEyeOutline, matModeEditOutline,
-  matShoppingCartOutline, matSearchOutline,
+  matShoppingCartOutline, matSearchOutline, matDeleteOutline,
   matArrowDownwardOutline, matArrowUpwardOutline
 } from '@ng-icons/material-icons/outline';
 import {
@@ -23,7 +22,7 @@ import { Proveedor } from '../../../core/models/models';
   imports: [HeaderComponent, CommonModule, FormsModule, NgIconComponent, DecimalPipe],
   providers: [provideIcons({
     matAddOutline, matRemoveRedEyeOutline, matModeEditOutline,
-    matShoppingCartOutline, matSearchOutline,
+    matShoppingCartOutline, matSearchOutline, matDeleteOutline,
     matArrowDownwardOutline, matArrowUpwardOutline,
     bootstrapChevronBarLeft, bootstrapChevronBarRight,
     bootstrapChevronLeft, bootstrapChevronRight
@@ -39,9 +38,7 @@ export class ProveedoresListComponent implements OnInit {
   items: Proveedor[] = [];
   load       = false;
   searchText = '';
-
   sortConfig = { sortBy: 'nombre', sortOrder: 'asc' };
-
   page       = 1;
   limit      = 10;
   totalItems = 0;
@@ -76,10 +73,18 @@ export class ProveedoresListComponent implements OnInit {
     });
   }
 
-  add():          void { this.router.navigate(['/proveedores/nuevo']); }
-  view(id:number):void { this.router.navigate(['/proveedores', id]); }
-  edit(id:number):void { this.router.navigate(['/proveedores', id, 'editar']); }
-  nuevaOrden(id:number):void { this.router.navigate(['/compras/nuevo'], { queryParams: { proveedor: id } }); }
+  delete(id: number): void {
+    if (!confirm('¿Eliminar este proveedor? Esta acción no se puede deshacer.')) return;
+    this.svc.delete(id).subscribe({
+      next:  () => { this.toast.success('Proveedor eliminado'); this.loadData(); },
+      error: (e) => this.toast.error(e?.error?.error || 'Error al eliminar')
+    });
+  }
+
+  add():           void { this.router.navigate(['/proveedores/nuevo']); }
+  view(id: number):void { this.router.navigate(['/proveedores', id]); }
+  edit(id: number):void { this.router.navigate(['/proveedores', id, 'editar']); }
+  nuevaOrden(id: number): void { this.router.navigate(['/compras/nuevo'], { queryParams: { proveedor: id } }); }
 
   firstPage():    void { this.page = 1; }
   lastPage():     void { this.page = this.totalPages; }

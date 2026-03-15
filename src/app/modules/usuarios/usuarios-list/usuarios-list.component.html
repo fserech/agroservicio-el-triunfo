@@ -1,4 +1,3 @@
-<!-- usuarios-list.component.html -->
 <app-header headerTitle="Usuarios del Sistema"
   headerDescription="Gestión de cuentas de usuario, roles y permisos de acceso.">
 </app-header>
@@ -53,9 +52,7 @@
               </td>
               <td class="text-xs text-gray-400">{{ u.ultimo_acceso | date:'dd/MM/yy HH:mm' }}</td>
               <td>
-                <span class="badge"
-                  [class.badge-success]="u.activo"
-                  [class.badge-gray]="!u.activo">
+                <span class="badge" [class.badge-success]="u.activo" [class.badge-gray]="!u.activo">
                   {{ u.activo ? 'Activo' : 'Inactivo' }}
                 </span>
               </td>
@@ -65,11 +62,11 @@
                     <ng-icon name="matModeEditOutline" size="18" style="color:#f59e0b"></ng-icon>
                   </button>
                   <button class="btn-action" title="Activar/Desactivar" (click)="toggleActivo(u)">
-                    <ng-icon
-                      [name]="u.activo ? 'bootstrapToggleOn' : 'bootstrapToggleOff'"
-                      size="18"
-                      [style.color]="u.activo ? '#10b981' : '#94a3b8'">
-                    </ng-icon>
+                    <ng-icon [name]="u.activo ? 'bootstrapToggleOn' : 'bootstrapToggleOff'" size="18"
+                      [style.color]="u.activo ? '#10b981' : '#94a3b8'"></ng-icon>
+                  </button>
+                  <button class="btn-action" title="Eliminar" (click)="delete(u.id)">
+                    <ng-icon name="matDeleteOutline" size="18" style="color:#ef4444"></ng-icon>
                   </button>
                 </div>
               </td>
@@ -101,17 +98,16 @@
               <ng-icon name="matModeEditOutline" size="16" style="color:#f59e0b"></ng-icon>
             </button>
             <button class="btn-action" (click)="toggleActivo(u)">
-              <ng-icon
-                [name]="u.activo ? 'bootstrapToggleOn' : 'bootstrapToggleOff'"
-                size="16"
-                [style.color]="u.activo ? '#10b981' : '#94a3b8'">
-              </ng-icon>
+              <ng-icon [name]="u.activo ? 'bootstrapToggleOn' : 'bootstrapToggleOff'" size="16"
+                [style.color]="u.activo ? '#10b981' : '#94a3b8'"></ng-icon>
+            </button>
+            <button class="btn-action" (click)="delete(u.id)">
+              <ng-icon name="matDeleteOutline" size="16" style="color:#ef4444"></ng-icon>
             </button>
           </div>
         </div>
       }
     </div>
-
   }
 
   @if (!load && items.length === 0) {

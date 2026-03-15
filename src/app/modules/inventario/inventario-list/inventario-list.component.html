@@ -243,3 +243,103 @@
 
   </div>
 </div>
+
+<!-- ══ MODAL AJUSTE DE STOCK ══════════════════════════════════ -->
+@if (modalItem) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center">
+
+    <!-- Overlay -->
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="closeModal()"></div>
+
+    <!-- Panel -->
+    <div class="relative z-10 bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between px-5 py-4 border-b dark:border-slate-700">
+        <div class="flex items-center gap-2">
+          @if (modalTipo === 'entrada') {
+            <ng-icon class="text-emerald-500" name="matAddCircleOutline" size="20"></ng-icon>
+            <span class="font-semibold text-gray-700 dark:text-gray-200">Entrada de Stock</span>
+          } @else {
+            <ng-icon class="text-red-500" name="matRemoveCircleOutline" size="20"></ng-icon>
+            <span class="font-semibold text-gray-700 dark:text-gray-200">Salida de Stock</span>
+          }
+        </div>
+        <button class="btn-action" (click)="closeModal()">
+          <ng-icon class="text-gray-500" name="matCloseOutline" size="20"></ng-icon>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-5 space-y-4">
+
+        <!-- Info del producto -->
+        <div class="rounded-lg p-3 space-y-1" style="background:var(--bg-2,#f8fafc);border:1px solid var(--border)">
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500">Producto</span>
+            <span class="font-semibold text-gray-700 dark:text-gray-300">{{ modalItem.nombre }}</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500">Categoría</span>
+            <span class="text-gray-600 dark:text-gray-400">{{ modalItem.cat }}</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500">Stock actual</span>
+            <span class="font-mono font-bold"
+              [class.text-red-600]="modalItem.estado==='critico'||modalItem.estado==='sin_stock'"
+              [class.text-yellow-600]="modalItem.estado==='bajo'"
+              [class.text-green-600]="modalItem.estado==='normal'">
+              {{ modalItem.stock_actual }} {{ modalItem.unidad_medida }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Tipo de ajuste -->
+        <div class="form-group">
+          <label>Tipo de movimiento</label>
+          <select [(ngModel)]="modalTipo">
+            <option value="entrada">Entrada (aumentar stock)</option>
+            <option value="salida">Salida (reducir stock)</option>
+          </select>
+        </div>
+
+        <!-- Cantidad -->
+        <div class="form-group">
+          <label>Cantidad *</label>
+          <input type="number" [(ngModel)]="modalCantidad" min="1" step="1" placeholder="0">
+          @if (modalTipo === 'salida') {
+            <p class="text-xs text-gray-400 mt-1">
+              Máximo disponible: {{ modalItem.stock_actual }} {{ modalItem.unidad_medida }}
+            </p>
+          }
+        </div>
+
+        <!-- Motivo -->
+        <div class="form-group">
+          <label>Motivo / Referencia</label>
+          <input type="text" [(ngModel)]="modalMotivo" placeholder="Ej: Compra proveedor, Venta especial...">
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex gap-2 justify-end px-5 py-4 border-t dark:border-slate-700 bg-gray-50 dark:bg-slate-950">
+        <button class="btn btn-outline h-10" (click)="closeModal()">Cancelar</button>
+        <button class="h-10 px-4 rounded-lg font-medium text-white transition-colors"
+          [class.bg-emerald-500]="modalTipo==='entrada'"
+          [class.hover:bg-emerald-600]="modalTipo==='entrada'"
+          [class.bg-red-500]="modalTipo==='salida'"
+          [class.hover:bg-red-600]="modalTipo==='salida'"
+          (click)="saveAjuste()"
+          [disabled]="savingAjuste">
+          @if (savingAjuste) {
+            <span class="inline-block h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin mr-1"></span>
+            Guardando...
+          } @else {
+            <ng-icon [name]="modalTipo==='entrada' ? 'matAddCircleOutline' : 'matRemoveCircleOutline'" size="16"></ng-icon>
+            {{ modalTipo === 'entrada' ? 'Registrar Entrada' : 'Registrar Salida' }}
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

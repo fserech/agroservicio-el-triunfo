@@ -1,4 +1,3 @@
-<!-- productos-form.component.html -->
 <app-header [headerTitle]="isEdit ? 'Editar Producto' : 'Nuevo Producto'"
   headerDescription="Registra o actualiza un producto del catálogo.">
 </app-header>
@@ -21,20 +20,51 @@
               <label>Código (SKU)</label>
               <input formControlName="codigo" type="text" placeholder="P-001">
             </div>
+
+            <!-- CATEGORÍA CON CREACIÓN INLINE -->
             <div class="form-group">
               <label>Categoría *</label>
-              <select formControlName="categoria_id">
-                <option value="">Seleccionar...</option>
-                @for (c of categorias; track c.id) { <option [value]="c.id">{{ c.nombre }}</option> }
-              </select>
+              <div class="flex gap-2">
+                <select formControlName="categoria_id" class="flex-1">
+                  <option value="">Seleccionar...</option>
+                  @for (c of categorias; track c.id) {
+                    <option [value]="c.id">{{ c.nombre }}</option>
+                  }
+                </select>
+                <button type="button" class="btn btn-outline btn-sm" (click)="toggleNuevaCategoria()" title="Agregar categoría">
+                  <ng-icon name="matAddOutline" size="16"></ng-icon>
+                </button>
+              </div>
+              @if (mostrarNuevaCategoria) {
+                <div class="flex gap-2 mt-2">
+                  <input
+                    [(ngModel)]="nuevaCategoriaName"
+                    [ngModelOptions]="{standalone: true}"
+                    type="text"
+                    placeholder="Nombre de nueva categoría..."
+                    class="flex-1"
+                    (keydown.enter)="agregarCategoria()"
+                    (keydown.escape)="mostrarNuevaCategoria = false">
+                  <button type="button" class="btn btn-primary btn-sm" (click)="agregarCategoria()" [disabled]="savingCategoria">
+                    @if (savingCategoria) { <span class="spinner-sm"></span> }
+                    @else { Agregar }
+                  </button>
+                  <button type="button" class="btn btn-outline btn-sm" (click)="mostrarNuevaCategoria = false">
+                    Cancelar
+                  </button>
+                </div>
+              }
               @if (f['categoria_id'].invalid && f['categoria_id'].touched) {
-                <span class="error-msg">Categoría requerida</span>}
+                <span class="error-msg">Categoría requerida</span>
+              }
             </div>
+
             <div class="form-group form-full">
               <label>Nombre del producto *</label>
               <input formControlName="nombre" type="text" placeholder="Nombre comercial">
               @if (f['nombre'].invalid && f['nombre'].touched) {
-                <span class="error-msg">Nombre requerido</span>}
+                <span class="error-msg">Nombre requerido</span>
+              }
             </div>
             <div class="form-group form-full">
               <label>Descripción</label>
@@ -61,17 +91,22 @@
               <label>Precio de compra (Q) *</label>
               <input formControlName="precio_compra" type="number" min="0" step="0.01" placeholder="0.00">
               @if (f['precio_compra'].invalid && f['precio_compra'].touched) {
-                <span class="error-msg">Precio de compra requerido</span>}
+                <span class="error-msg">Precio de compra requerido</span>
+              }
             </div>
             <div class="form-group">
               <label>Precio de venta (Q) *</label>
               <input formControlName="precio_venta" type="number" min="0" step="0.01" placeholder="0.00">
               @if (f['precio_venta'].invalid && f['precio_venta'].touched) {
-                <span class="error-msg">Precio de venta requerido</span>}
+                <span class="error-msg">Precio de venta requerido</span>
+              }
             </div>
             @if (margenCalculado !== null) {
               <div class="form-group form-full">
-                <div class="margen-preview" [class.margen-ok]="margenCalculado >= 20" [class.margen-low]="margenCalculado < 20 && margenCalculado > 0" [class.margen-neg]="margenCalculado <= 0">
+                <div class="margen-preview"
+                     [class.margen-ok]="margenCalculado >= 20"
+                     [class.margen-low]="margenCalculado < 20 && margenCalculado > 0"
+                     [class.margen-neg]="margenCalculado <= 0">
                   Margen calculado: <strong>{{ margenCalculado | number:'1.2-2' }}%</strong>
                 </div>
               </div>

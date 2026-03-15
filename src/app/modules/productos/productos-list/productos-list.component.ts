@@ -1,4 +1,3 @@
-// productos-list.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,7 +6,7 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
   matSearchOutline, matAddOutline, matRemoveRedEyeOutline,
-  matModeEditOutline, matInventory2Outline,
+  matModeEditOutline, matDeleteOutline, matInventory2Outline,
   matArrowDownwardOutline, matArrowUpwardOutline
 } from '@ng-icons/material-icons/outline';
 import {
@@ -23,7 +22,7 @@ import { Producto, Categoria } from '../../../core/models/models';
   imports: [HeaderComponent, CommonModule, FormsModule, NgIconComponent, DecimalPipe],
   providers: [provideIcons({
     matSearchOutline, matAddOutline, matRemoveRedEyeOutline,
-    matModeEditOutline, matInventory2Outline,
+    matModeEditOutline, matDeleteOutline, matInventory2Outline,
     matArrowDownwardOutline, matArrowUpwardOutline,
     bootstrapChevronLeft, bootstrapChevronRight,
     bootstrapChevronBarLeft, bootstrapChevronBarRight
@@ -38,24 +37,20 @@ export class ProductosListComponent implements OnInit {
 
   items: Producto[]       = [];
   categorias: Categoria[] = [];
-  load        = false;
-  searchText  = '';
+  load         = false;
+  searchText   = '';
   catFilter: number | undefined;
   activoFilter = 'true';
 
-  sortBy    = 'nombre';
-  sortOrder = 'asc';
+  sortConfig = { sortBy: 'nombre', sortOrder: 'asc' };
 
   page = 1; limit = 15; totalItems = 0;
 
-  get totalPages()    { return Math.max(1, Math.ceil(this.totalItems / this.limit)); }
-  get startIndex()    { return (this.page - 1) * this.limit + 1; }
-  get endIndex()      { return Math.min(this.page * this.limit, this.totalItems); }
-  get margenPromedio(){ const m = this.items.map(i => i.margen || 0); return m.length ? m.reduce((a, b) => a + b, 0) / m.length : 0; }
-  get stockCritico()  { return this.items.filter(i => i.estado_stock === 'critico' || i.estado_stock === 'sin_stock').length; }
-
-  // Objeto compatible con el template (sortConfig.sortBy / sortConfig.sortOrder)
-  sortConfig = { sortBy: 'nombre', sortOrder: 'asc' };
+  get totalPages()     { return Math.max(1, Math.ceil(this.totalItems / this.limit)); }
+  get startIndex()     { return (this.page - 1) * this.limit + 1; }
+  get endIndex()       { return Math.min(this.page * this.limit, this.totalItems); }
+  get margenPromedio() { const m = this.items.map(i => i.margen || 0); return m.length ? m.reduce((a, b) => a + b, 0) / m.length : 0; }
+  get stockCritico()   { return this.items.filter(i => i.estado_stock === 'critico' || i.estado_stock === 'sin_stock').length; }
 
   ngOnInit(): void {
     this.svc.getCategorias().subscribe(c => this.categorias = c);
@@ -77,18 +72,24 @@ export class ProductosListComponent implements OnInit {
       this.sortConfig.sortBy    = field;
       this.sortConfig.sortOrder = 'asc';
     }
-    // Ordenar localmente el array
     this.items = [...this.items].sort((a: any, b: any) => {
-      const va = a[field] ?? '';
-      const vb = b[field] ?? '';
+      const va = a[field] ?? '', vb = b[field] ?? '';
       const cmp = va > vb ? 1 : va < vb ? -1 : 0;
       return this.sortConfig.sortOrder === 'asc' ? cmp : -cmp;
     });
   }
 
-  add():          void { this.router.navigate(['/productos/nuevo']); }
-  view(id:number):void { this.router.navigate(['/productos', id]); }
-  edit(id:number):void { this.router.navigate(['/productos', id, 'editar']); }
+  delete(id: number): void {
+    if (!confirm('¿Eliminar este producto? Esta acción no se puede deshacer.')) return;
+    this.svc.delete(id).subscribe({
+      next:  () => { this.toast.success('Producto eliminado'); this.loadData(); },
+      error: (e) => this.toast.error(e?.error?.error || 'Error al eliminar')
+    });
+  }
+
+  add():           void { this.router.navigate(['/productos/nuevo']); }
+  view(id: number):void { this.router.navigate(['/productos', id]); }
+  edit(id: number):void { this.router.navigate(['/productos', id, 'editar']); }
 
   firstPage():    void { this.page = 1; this.loadData(); }
   lastPage():     void { this.page = this.totalPages; this.loadData(); }
