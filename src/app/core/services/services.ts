@@ -93,6 +93,14 @@ export class ProductosService {
   createCategoria(d: { nombre: string }): Observable<Categoria> {
     return this.http.post<Categoria>(`${API}/categorias`, d);
   }
+
+  updateCategoria(id: number, d: { nombre: string }): Observable<Categoria> {
+  return this.http.put<Categoria>(`${API}/categorias/${id}`, d);
+}
+
+deleteCategoria(id: number): Observable<any> {
+  return this.http.delete(`${API}/categorias/${id}`);
+}
 }
 
 @Injectable({ providedIn: 'root' })

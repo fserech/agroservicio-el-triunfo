@@ -4,7 +4,10 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } 
 import { ActivatedRoute, Router } from '@angular/router';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { matArrowBackOutline, matSaveOutline, matAddOutline } from '@ng-icons/material-icons/outline';
+import {
+  matArrowBackOutline, matSaveOutline, matAddOutline,
+  matModeEditOutline, matDeleteOutline, matCheckOutline, matCloseOutline
+} from '@ng-icons/material-icons/outline';
 import { ProductosService, ToastService } from '../../../core/services/services';
 import { Categoria } from '../../../core/models/models';
 
@@ -12,7 +15,10 @@ import { Categoria } from '../../../core/models/models';
   selector: 'app-productos-form',
   standalone: true,
   imports: [HeaderComponent, CommonModule, ReactiveFormsModule, FormsModule, NgIconComponent, DecimalPipe],
-  providers: [provideIcons({ matArrowBackOutline, matSaveOutline, matAddOutline })],
+  providers: [provideIcons({
+    matArrowBackOutline, matSaveOutline, matAddOutline,
+    matModeEditOutline, matDeleteOutline, matCheckOutline, matCloseOutline
+  })],
   templateUrl: './productos-form.component.html',
   styleUrls: ['./productos-form.component.scss']
 })
@@ -29,9 +35,21 @@ export class ProductosFormComponent implements OnInit {
   saving     = false;
   productoId?: number;
 
+  // ── Nueva categoría ──────────────────────────────────────
   mostrarNuevaCategoria = false;
   nuevaCategoriaName    = '';
   savingCategoria       = false;
+
+  // ── Editar categoría ─────────────────────────────────────
+  editandoCategoriaId: number | null = null;
+  editandoCategoriaName = '';
+  savingEditCategoria   = false;
+
+  // ── Eliminar categoría ───────────────────────────────────
+  deletingCategoriaId: number | null = null;
+
+  // ── Panel de gestión visible ─────────────────────────────
+  mostrarGestionCategorias = false;
 
   get f() { return this.form.controls; }
 
@@ -48,7 +66,7 @@ export class ProductosFormComponent implements OnInit {
     this.svc.getCategorias().subscribe(c => this.categorias = c);
     const id = this.route.snapshot.paramMap.get('id');
     if (id && id !== 'nuevo') {
-      this.isEdit = true;
+      this.isEdit     = true;
       this.productoId = +id;
       this.svc.getById(+id).subscribe({
         next:  p => this.form.patchValue(p),
@@ -74,9 +92,12 @@ export class ProductosFormComponent implements OnInit {
     });
   }
 
+  // ── NUEVA CATEGORÍA ──────────────────────────────────────
   toggleNuevaCategoria(): void {
-    this.mostrarNuevaCategoria = !this.mostrarNuevaCategoria;
-    this.nuevaCategoriaName    = '';
+    this.mostrarNuevaCategoria   = !this.mostrarNuevaCategoria;
+    this.nuevaCategoriaName      = '';
+    this.mostrarGestionCategorias = false;
+    this.cancelarEdicionCategoria();
   }
 
   agregarCategoria(): void {
@@ -85,7 +106,7 @@ export class ProductosFormComponent implements OnInit {
     this.savingCategoria = true;
     this.svc.createCategoria({ nombre }).subscribe({
       next: (nueva) => {
-        this.categorias      = [...this.categorias, nueva];
+        this.categorias            = [...this.categorias, nueva].sort((a,b) => a.nombre.localeCompare(b.nombre));
         this.form.patchValue({ categoria_id: nueva.id });
         this.mostrarNuevaCategoria = false;
         this.nuevaCategoriaName    = '';
@@ -99,6 +120,64 @@ export class ProductosFormComponent implements OnInit {
     });
   }
 
+  // ── EDITAR CATEGORÍA ─────────────────────────────────────
+  iniciarEdicionCategoria(cat: Categoria): void {
+    this.editandoCategoriaId   = cat.id;
+    this.editandoCategoriaName = cat.nombre;
+  }
+
+  cancelarEdicionCategoria(): void {
+    this.editandoCategoriaId   = null;
+    this.editandoCategoriaName = '';
+  }
+
+  guardarEdicionCategoria(cat: Categoria): void {
+    const nombre = this.editandoCategoriaName.trim();
+    if (!nombre || nombre === cat.nombre) { this.cancelarEdicionCategoria(); return; }
+    this.savingEditCategoria = true;
+    this.svc.updateCategoria(cat.id, { nombre }).subscribe({
+      next: (actualizada) => {
+        this.categorias = this.categorias
+          .map(c => c.id === actualizada.id ? actualizada : c)
+          .sort((a,b) => a.nombre.localeCompare(b.nombre));
+        this.cancelarEdicionCategoria();
+        this.savingEditCategoria = false;
+        this.toast.success('Categoría actualizada');
+      },
+      error: (e) => {
+        this.savingEditCategoria = false;
+        this.toast.error(e?.error?.error || 'Error actualizando categoría');
+      }
+    });
+  }
+
+  // ── ELIMINAR CATEGORÍA ───────────────────────────────────
+  eliminarCategoria(cat: Categoria): void {
+    if (!confirm(`¿Eliminar la categoría "${cat.nombre}"? Solo se puede si no tiene productos activos.`)) return;
+    this.deletingCategoriaId = cat.id;
+    this.svc.deleteCategoria(cat.id).subscribe({
+      next: () => {
+        this.categorias = this.categorias.filter(c => c.id !== cat.id);
+        const catActual = this.form.get('categoria_id')?.value;
+        if (+catActual === cat.id) this.form.patchValue({ categoria_id: '' });
+        this.deletingCategoriaId = null;
+        this.toast.success('Categoría eliminada');
+      },
+      error: (e) => {
+        this.deletingCategoriaId = null;
+        this.toast.error(e?.error?.error || 'Error eliminando categoría');
+      }
+    });
+  }
+
+  // ── PANEL GESTIÓN ────────────────────────────────────────
+  toggleGestionCategorias(): void {
+    this.mostrarGestionCategorias = !this.mostrarGestionCategorias;
+    this.mostrarNuevaCategoria    = false;
+    this.cancelarEdicionCategoria();
+  }
+
+  // ── GUARDAR PRODUCTO ─────────────────────────────────────
   save(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.saving = true;
