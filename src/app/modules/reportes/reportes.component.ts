@@ -29,6 +29,7 @@ export class ReportesComponent implements OnInit {
   topProductos: any[] = [];
   porCategoria: any[] = [];
   serie:        any[] = [];
+rangoActivo: any;
 
   ngOnInit(): void {
     this.setRango('mes');

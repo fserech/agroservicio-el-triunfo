@@ -3,131 +3,322 @@
   headerDescription="Análisis de ventas por período, categoría, producto y tendencias de inventario.">
 </app-header>
 
-<div class="p-3">
+<div class="p-2 m-2 bg-white rounded dark:bg-slate-900 border dark:border-slate-800">
 
-  <!-- FILTROS DE FECHA -->
-  <div class="card mb-4">
-    <div class="card-body p-4">
-      <div class="flex flex-wrap gap-3 items-end">
-        <div class="form-group mb-0">
-          <label>Fecha desde</label>
-          <input class="form-input" type="date" [(ngModel)]="desde" style="width:160px">
+  <!-- FILTROS -->
+  <div class="sticky top-0 z-10 p-2 bg-white dark:bg-slate-900 border-b dark:border-slate-600">
+
+    <!-- DESKTOP -->
+    <div class="md:flex w-full hidden gap-3 items-end flex-wrap">
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-semibold text-gray-500 dark:text-gray-400">Fecha desde</label>
+        <input class="date-input" type="date" [(ngModel)]="desde">
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-semibold text-gray-500 dark:text-gray-400">Fecha hasta</label>
+        <input class="date-input" type="date" [(ngModel)]="hasta">
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-semibold text-gray-500 dark:text-gray-400">Agrupar por</label>
+        <select class="date-input" [(ngModel)]="agrupar" style="width:130px">
+          <option value="dia">Día</option>
+          <option value="semana">Semana</option>
+          <option value="mes">Mes</option>
+        </select>
+      </div>
+      <button class="btn-primary h-10" (click)="loadData()" [disabled]="loading">
+        <div class="flex text-center justify-center align-middle">
+          <p class="text-sm md:text-base align-middle">Generar</p>
+          <ng-icon class="text-white font-bold m-1" size="17" name="matSearchOutline"></ng-icon>
         </div>
-        <div class="form-group mb-0">
-          <label>Fecha hasta</label>
-          <input class="form-input" type="date" [(ngModel)]="hasta" style="width:160px">
+      </button>
+      <div class="flex gap-2 ml-auto">
+        <button (click)="setRango('semana')" class="btn-back h-10 text-sm font-semibold px-3">Esta semana</button>
+        <button (click)="setRango('mes')"    class="btn-back h-10 text-sm font-semibold px-3">Este mes</button>
+        <button (click)="setRango('anio')"   class="btn-back h-10 text-sm font-semibold px-3">Este año</button>
+      </div>
+    </div>
+
+    <!-- MOBILE -->
+    <div class="md:hidden flex flex-col gap-2">
+      <div class="flex gap-2">
+        <div class="flex flex-col gap-1 flex-1">
+          <label class="text-xs font-semibold text-gray-500 dark:text-gray-400">Desde</label>
+          <input class="date-input w-full" type="date" [(ngModel)]="desde">
         </div>
-        <div class="form-group mb-0">
-          <label>Agrupar por</label>
-          <select class="form-input" [(ngModel)]="agrupar" style="width:130px">
-            <option value="dia">Día</option>
-            <option value="semana">Semana</option>
-            <option value="mes">Mes</option>
-          </select>
+        <div class="flex flex-col gap-1 flex-1">
+          <label class="text-xs font-semibold text-gray-500 dark:text-gray-400">Hasta</label>
+          <input class="date-input w-full" type="date" [(ngModel)]="hasta">
         </div>
-        <button class="btn btn-primary" (click)="loadData()" [disabled]="loading">
-          <ng-icon name="matSearchOutline" size="16"></ng-icon> Generar Reporte
+      </div>
+      <div class="flex gap-2 items-center">
+        <select class="date-input flex-1" [(ngModel)]="agrupar">
+          <option value="dia">Por día</option>
+          <option value="semana">Por semana</option>
+          <option value="mes">Por mes</option>
+        </select>
+        <button class="btn-primary h-10 px-4" (click)="loadData()" [disabled]="loading">
+          <ng-icon class="text-white" size="20" name="matSearchOutline"></ng-icon>
         </button>
-        <button class="btn btn-outline" (click)="setRango('mes')">Este mes</button>
-        <button class="btn btn-outline" (click)="setRango('semana')">Esta semana</button>
-        <button class="btn btn-outline" (click)="setRango('anio')">Este año</button>
       </div>
     </div>
   </div>
 
+  <!-- TABS DE RANGO RÁPIDO -->
+  <div class="flex gap-2 my-3 px-1">
+    <button (click)="setRango('semana'); loadData()"
+      class="flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-colors"
+      [class.bg-blue-400]="rangoActivo==='semana'"
+      [class.text-white]="rangoActivo==='semana'"
+      [class.bg-white]="rangoActivo!=='semana'"
+      [class.dark:bg-slate-900]="rangoActivo!=='semana'"
+      [class.border]="rangoActivo!=='semana'"
+      [class.dark:border-slate-700]="rangoActivo!=='semana'"
+      [class.text-gray-600]="rangoActivo!=='semana'"
+      [class.dark:text-gray-400]="rangoActivo!=='semana'">
+      Semana
+    </button>
+    <button (click)="setRango('mes'); loadData()"
+      class="flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-colors"
+      [class.bg-blue-400]="rangoActivo==='mes'"
+      [class.text-white]="rangoActivo==='mes'"
+      [class.bg-white]="rangoActivo!=='mes'"
+      [class.dark:bg-slate-900]="rangoActivo!=='mes'"
+      [class.border]="rangoActivo!=='mes'"
+      [class.dark:border-slate-700]="rangoActivo!=='mes'"
+      [class.text-gray-600]="rangoActivo!=='mes'"
+      [class.dark:text-gray-400]="rangoActivo!=='mes'">
+      Mes
+    </button>
+    <button (click)="setRango('anio'); loadData()"
+      class="flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-colors"
+      [class.bg-blue-400]="rangoActivo==='anio'"
+      [class.text-white]="rangoActivo==='anio'"
+      [class.bg-white]="rangoActivo!=='anio'"
+      [class.dark:bg-slate-900]="rangoActivo!=='anio'"
+      [class.border]="rangoActivo!=='anio'"
+      [class.dark:border-slate-700]="rangoActivo!=='anio'"
+      [class.text-gray-600]="rangoActivo!=='anio'"
+      [class.dark:text-gray-400]="rangoActivo!=='anio'">
+      Año
+    </button>
+  </div>
+
+  <!-- KPI SKELETON -->
   @if (loading) {
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-      @for (i of [1,2,3,4]; track i) { <div class="skeleton h-20 rounded-xl"></div> }
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-2 mb-3">
+      @for (i of [1,2,3,4]; track i) {
+        <div class="kpi-card animate-pulse">
+          <span class="kpi-accent bg-gray-300 dark:bg-slate-700"></span>
+          <div class="h-3 bg-gray-300 dark:bg-slate-700 rounded w-2/3 mb-2"></div>
+          <div class="h-6 bg-gray-300 dark:bg-slate-700 rounded w-1/2"></div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- KPI STRIP -->
+  @if (!loading && resumen) {
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-2 mb-3">
+      <div class="kpi-card">
+        <span class="kpi-accent" style="background:var(--primary)"></span>
+        <div class="kpi-label">Ventas Totales</div>
+        <div class="kpi-value">Q {{ resumen.m | number:'1.0-0' }}</div>
+        <div class="kpi-sub">{{ resumen.t }} transacciones</div>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-accent" style="background:var(--blue)"></span>
+        <div class="kpi-label">Ticket Promedio</div>
+        <div class="kpi-value">Q {{ resumen.avg | number:'1.0-0' }}</div>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-accent" style="background:var(--warning)"></span>
+        <div class="kpi-label">IVA Generado</div>
+        <div class="kpi-value">Q {{ resumen.iva | number:'1.0-0' }}</div>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-accent" style="background:var(--success)"></span>
+        <div class="kpi-label">Descuentos</div>
+        <div class="kpi-value">Q {{ resumen.desc_ | number:'1.0-0' }}</div>
+      </div>
+    </div>
+  }
+
+  <!-- EMPTY STATE -->
+  @if (!loading && !resumen) {
+    <div class="flex flex-col items-center justify-center py-16 px-4">
+      <div class="text-center">
+        <div class="mx-auto mb-4 w-20 h-20 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center">
+          <ng-icon class="text-gray-400 dark:text-gray-500" size="40" name="matBarChartOutline"></ng-icon>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">Sin datos para el período</h3>
+        <p class="text-gray-500 dark:text-gray-400 mb-4 text-sm">Selecciona un rango de fechas y genera el reporte</p>
+        <button (click)="loadData()" type="button" class="btn-primary h-10 px-6">
+          <div class="flex items-center gap-2">
+            <ng-icon class="text-white" size="18" name="matSearchOutline"></ng-icon>
+            <span>Generar Reporte</span>
+          </div>
+        </button>
+      </div>
     </div>
   }
 
   @if (!loading && resumen) {
-    <!-- RESUMEN KPIs -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-      <div class="kpi-card"><span class="kpi-accent" style="background:var(--primary)"></span>
-        <div class="kpi-label">Ventas Totales</div>
-        <div class="kpi-value">Q {{ resumen.m | number:'1.0-0' }}</div>
-        <div class="kpi-sub">{{ resumen.t }} transacciones</div></div>
-      <div class="kpi-card"><span class="kpi-accent" style="background:var(--blue)"></span>
-        <div class="kpi-label">Ticket Promedio</div>
-        <div class="kpi-value">Q {{ resumen.avg | number:'1.0-0' }}</div></div>
-      <div class="kpi-card"><span class="kpi-accent" style="background:var(--warning)"></span>
-        <div class="kpi-label">IVA Generado</div>
-        <div class="kpi-value">Q {{ resumen.iva | number:'1.0-0' }}</div></div>
-      <div class="kpi-card"><span class="kpi-accent" style="background:var(--success)"></span>
-        <div class="kpi-label">Descuentos</div>
-        <div class="kpi-value">Q {{ resumen.desc_ | number:'1.0-0' }}</div></div>
-    </div>
 
-    <!-- TABLAS -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <!-- TABLAS SIDE BY SIDE -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 px-2 mb-4">
 
       <!-- TOP PRODUCTOS -->
-      <div class="card">
-        <div class="card-header"><span class="card-title">Top Productos Vendidos</span></div>
-        <div class="table-wrap">
+      <div class="rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800">
+          <span class="font-semibold text-sm text-gray-700 dark:text-gray-300">Top Productos Vendidos</span>
+          <span class="badge badge-info text-xs">{{ topProductos.length }} productos</span>
+        </div>
+        @if (loading) {
+          <div class="p-4 space-y-3">
+            @for (i of [1,2,3,4,5]; track i) { <div class="animate-pulse h-8 bg-gray-200 dark:bg-slate-700 rounded"></div> }
+          </div>
+        }
+        @if (!loading && topProductos.length === 0) {
+          <div class="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-500">
+            <ng-icon size="32" name="matBarChartOutline"></ng-icon>
+            <p class="text-sm mt-2">Sin ventas en el período</p>
+          </div>
+        }
+        @if (!loading && topProductos.length > 0) {
           <table class="table-grid w-full">
-            <thead><tr><th>#</th><th>Producto</th><th>Unidades</th><th>Ingresos</th></tr></thead>
+            <thead>
+              <tr>
+                <th class="bg-white dark:bg-slate-900"><div class="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1 text-xs text-gray-600 dark:text-gray-400">#</div></th>
+                <th class="bg-white dark:bg-slate-900"><div class="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1 text-xs text-gray-600 dark:text-gray-400">Producto</div></th>
+                <th class="bg-white dark:bg-slate-900"><div class="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1 text-xs text-gray-600 dark:text-gray-400">Unidades</div></th>
+                <th class="bg-white dark:bg-slate-900"><div class="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1 text-xs text-gray-600 dark:text-gray-400">Ingresos</div></th>
+              </tr>
+            </thead>
             <tbody>
               @for (p of topProductos; track $index) {
-                <tr [class.bg-gray-50]="$odd">
-                  <td class="font-bold" style="color:var(--primary)">{{ $index+1 }}</td>
-                  <td class="font-medium">{{ p.nombre }}</td>
-                  <td class="font-mono text-sm">{{ p.unidades | number:'1.0-0' }}</td>
-                  <td class="font-mono font-bold text-sm" style="color:var(--primary)">Q {{ p.ingresos | number:'1.0-0' }}</td>
+                <tr class="text-gray-500 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800"
+                    [ngClass]="{'bg-gray-200 dark:bg-slate-950': $odd}">
+                  <td class="rounded font-bold text-sm" style="color:var(--primary)">{{ $index+1 }}</td>
+                  <td class="rounded">
+                    <div class="font-medium text-gray-700 dark:text-gray-300 text-sm">{{ p.nombre }}</div>
+                  </td>
+                  <td class="rounded font-mono text-sm text-gray-600 dark:text-gray-400">{{ p.unidades | number:'1.0-0' }}</td>
+                  <td class="rounded font-mono font-bold text-sm" style="color:var(--primary)">Q {{ p.ingresos | number:'1.0-0' }}</td>
                 </tr>
               }
             </tbody>
           </table>
-        </div>
+        }
       </div>
 
       <!-- POR CATEGORÍA -->
-      <div class="card">
-        <div class="card-header"><span class="card-title">Ventas por Categoría</span></div>
-        <div class="table-wrap">
+      <div class="rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800">
+          <span class="font-semibold text-sm text-gray-700 dark:text-gray-300">Ventas por Categoría</span>
+          <span class="badge badge-success text-xs">{{ porCategoria.length }} categorías</span>
+        </div>
+        @if (!loading && porCategoria.length === 0) {
+          <div class="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-500">
+            <ng-icon size="32" name="matBarChartOutline"></ng-icon>
+            <p class="text-sm mt-2">Sin datos</p>
+          </div>
+        }
+        @if (!loading && porCategoria.length > 0) {
           <table class="table-grid w-full">
-            <thead><tr><th>Categoría</th><th>Total</th><th>% del total</th></tr></thead>
+            <thead>
+              <tr>
+                <th class="bg-white dark:bg-slate-900"><div class="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1 text-xs text-gray-600 dark:text-gray-400">Categoría</div></th>
+                <th class="bg-white dark:bg-slate-900"><div class="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1 text-xs text-gray-600 dark:text-gray-400">Total</div></th>
+                <th class="bg-white dark:bg-slate-900"><div class="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1 text-xs text-gray-600 dark:text-gray-400">% del total</div></th>
+              </tr>
+            </thead>
             <tbody>
               @for (c of porCategoria; track $index) {
-                <tr [class.bg-gray-50]="$odd">
-                  <td class="font-medium">{{ c.cat }}</td>
-                  <td class="font-mono text-sm font-bold" style="color:var(--primary)">Q {{ c.total | number:'1.0-0' }}</td>
-                  <td>
+                <tr class="text-gray-500 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800"
+                    [ngClass]="{'bg-gray-200 dark:bg-slate-950': $odd}">
+                  <td class="rounded">
+                    <span class="font-medium text-gray-700 dark:text-gray-300 text-sm">{{ c.cat }}</span>
+                  </td>
+                  <td class="rounded font-mono text-sm font-bold" style="color:var(--primary)">
+                    Q {{ c.total | number:'1.0-0' }}
+                  </td>
+                  <td class="rounded">
                     <div class="flex items-center gap-2">
-                      <div class="h-2 rounded-full" style="background:var(--primary-light);flex:1">
+                      <div class="h-2 rounded-full flex-1 bg-gray-200 dark:bg-slate-700">
                         <div class="h-2 rounded-full" [style.width]="getPct(c.total)+'%'" style="background:var(--primary)"></div>
                       </div>
-                      <span class="text-xs font-mono text-gray-500">{{ getPct(c.total) | number:'1.1-1' }}%</span>
+                      <span class="text-xs font-mono text-gray-500 dark:text-gray-400 w-10 text-right">{{ getPct(c.total) | number:'1.1-1' }}%</span>
                     </div>
                   </td>
                 </tr>
               }
             </tbody>
           </table>
-        </div>
+        }
       </div>
+
     </div>
 
     <!-- SERIE TEMPORAL -->
     @if (serie.length > 0) {
-      <div class="card mt-4">
-        <div class="card-header"><span class="card-title">Ventas por Período</span></div>
-        <div class="table-wrap">
-          <table class="table-grid w-full">
-            <thead><tr><th>Fecha</th><th>Nº Ventas</th><th>Monto Total</th></tr></thead>
-            <tbody>
-              @for (s of serie; track $index) {
-                <tr [class.bg-gray-50]="$odd">
-                  <td class="font-mono text-sm">{{ s.f | date:'dd/MM/yyyy' }}</td>
-                  <td class="font-mono text-sm">{{ s.c }}</td>
-                  <td class="font-mono font-bold text-sm" style="color:var(--primary)">Q {{ s.m | number:'1.2-2' }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
+      <div class="mx-2 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800">
+          <span class="font-semibold text-sm text-gray-700 dark:text-gray-300">Ventas por Período</span>
+          <span class="badge badge-info text-xs">{{ serie.length }} períodos</span>
         </div>
+
+        <!-- Desktop -->
+        <table class="table-grid w-full hidden sm:table">
+          <thead>
+            <tr>
+              <th class="bg-white dark:bg-slate-900"><div class="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1 text-xs text-gray-600 dark:text-gray-400">Fecha</div></th>
+              <th class="bg-white dark:bg-slate-900"><div class="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1 text-xs text-gray-600 dark:text-gray-400">Nº Ventas</div></th>
+              <th class="bg-white dark:bg-slate-900"><div class="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1 text-xs text-gray-600 dark:text-gray-400">Monto Total</div></th>
+              <th class="bg-white dark:bg-slate-900"><div class="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1 text-xs text-gray-600 dark:text-gray-400">Promedio</div></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of serie; track $index) {
+              <tr class="text-gray-500 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800"
+                  [ngClass]="{'bg-gray-200 dark:bg-slate-950': $odd}">
+                <td class="rounded font-mono text-sm text-gray-600 dark:text-gray-400">{{ s.f | date:'dd/MM/yyyy' }}</td>
+                <td class="rounded font-mono text-sm text-gray-600 dark:text-gray-400">{{ s.c }}</td>
+                <td class="rounded font-mono font-bold text-sm" style="color:var(--primary)">Q {{ s.m | number:'1.2-2' }}</td>
+                <td class="rounded font-mono text-sm text-gray-500 dark:text-gray-500">Q {{ (s.c > 0 ? s.m / s.c : 0) | number:'1.0-0' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <!-- Mobile -->
+        <table class="table-grid w-full sm:hidden">
+          <thead>
+            <tr>
+              <th><button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1">
+                <p>Ventas por período</p>
+              </button></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of serie; track $index) {
+              <tr class="text-gray-500 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800"
+                  [ngClass]="{'bg-gray-200 dark:bg-slate-950': $odd}">
+                <td class="rounded">
+                  <div class="flex justify-between items-center px-2 py-3">
+                    <div>
+                      <p class="font-mono text-sm text-gray-600 dark:text-gray-400">{{ s.f | date:'dd/MM/yyyy' }}</p>
+                      <p class="text-xs text-gray-400 dark:text-gray-500">{{ s.c }} ventas</p>
+                    </div>
+                    <p class="font-mono font-bold text-sm" style="color:var(--primary)">Q {{ s.m | number:'1.0-0' }}</p>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
       </div>
     }
+
   }
 </div>
