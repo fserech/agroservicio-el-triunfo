@@ -6,7 +6,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { matArrowBackOutline, matSaveOutline } from '@ng-icons/material-icons/outline';
-import { ClientesService, ToastService } from '../../../core/services/services';
+import { ClientesService, EventBusService, ToastService } from '../../../core/services/services';
 
 @Component({
   selector: 'app-clientes-form',
@@ -23,6 +23,7 @@ export class ClientesFormComponent implements OnInit {
   private router = inject(Router);
   private route  = inject(ActivatedRoute);
   private fb     = inject(FormBuilder);
+  private eventBus = inject(EventBusService);
 
   form!: FormGroup;
   isEdit = false;
@@ -79,6 +80,7 @@ export class ClientesFormComponent implements OnInit {
     req.subscribe({
       next:  () => {
         this.toast.success(this.isEdit ? 'Cliente actualizado' : 'Cliente creado exitosamente');
+         this.eventBus.emitRefresh();
         this.router.navigate(['/clientes']);
       },
       error: e => {

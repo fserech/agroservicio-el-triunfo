@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { Observable, BehaviorSubject, tap, Subject } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import {
@@ -300,4 +300,14 @@ export class ToastService {
   error(msg: string)   { this.show(msg, 'error'); }
   info(msg: string)    { this.show(msg, 'info'); }
   warning(msg: string) { this.show(msg, 'warning'); }
+}
+
+@Injectable({ providedIn: 'root' })
+export class EventBusService {
+  private _refresh$ = new Subject<void>();
+  refresh$ = this._refresh$.asObservable();
+
+  emitRefresh(): void {
+    this._refresh$.next();
+  }
 }

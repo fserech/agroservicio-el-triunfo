@@ -15,7 +15,7 @@ import {
   matDeleteOutline, matModeEditOutline, matRemoveRedEyeOutline
 } from '@ng-icons/material-icons/outline';
 import { Router } from '@angular/router';
-import { ClientesService, ToastService } from '../../../core/services/services';
+import { ClientesService, EventBusService, ToastService } from '../../../core/services/services';
 import { Cliente } from '../../../core/models/models';
 import { OptionsChatBubble } from '../../../core/interfaces/options-chat-bubble';
 import { ACTIONS_GRID_MAIN_VIEW } from '../../../core/constants/actions-menu';
@@ -42,6 +42,7 @@ export class ClientesListComponent implements OnInit {
   private svc    = inject(ClientesService);
   private toast  = inject(ToastService);
   private router = inject(Router);
+  private eventBus = inject(EventBusService);
 
   form: FormGroup;
   tipoFilter = '';
@@ -137,6 +138,7 @@ export class ClientesListComponent implements OnInit {
       this.ItemsList = this.ItemsList.filter(c => c.id !== id);
       this.totalItems = Math.max(0, this.totalItems - 1);
       this.updateIndexes();
+       this.eventBus.emitRefresh();
     },
     error: (e) => this.toast.error(e?.error?.error || 'Error al eliminar')
   });

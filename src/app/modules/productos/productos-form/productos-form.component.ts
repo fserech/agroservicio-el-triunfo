@@ -8,7 +8,7 @@ import {
   matArrowBackOutline, matSaveOutline, matAddOutline,
   matModeEditOutline, matDeleteOutline, matCheckOutline, matCloseOutline
 } from '@ng-icons/material-icons/outline';
-import { ProductosService, ToastService } from '../../../core/services/services';
+import { EventBusService, ProductosService, ToastService } from '../../../core/services/services';
 import { Categoria } from '../../../core/models/models';
 
 @Component({
@@ -28,6 +28,7 @@ export class ProductosFormComponent implements OnInit {
   private router = inject(Router);
   private route  = inject(ActivatedRoute);
   private fb     = inject(FormBuilder);
+  private eventBus = inject(EventBusService);
 
   form!: FormGroup;
   categorias: Categoria[] = [];
@@ -188,6 +189,7 @@ export class ProductosFormComponent implements OnInit {
     req.subscribe({
       next:  () => {
         this.toast.success(this.isEdit ? 'Producto actualizado' : 'Producto creado exitosamente');
+        this.eventBus.emitRefresh();
         this.router.navigate(['/productos']);
       },
       error: e => {

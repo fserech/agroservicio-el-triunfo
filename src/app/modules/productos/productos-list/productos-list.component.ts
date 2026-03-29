@@ -13,7 +13,7 @@ import {
   bootstrapChevronLeft, bootstrapChevronRight,
   bootstrapChevronBarLeft, bootstrapChevronBarRight
 } from '@ng-icons/bootstrap-icons';
-import { ProductosService, ToastService } from '../../../core/services/services';
+import { EventBusService, ProductosService, ToastService } from '../../../core/services/services';
 import { Producto, Categoria } from '../../../core/models/models';
 
 @Component({
@@ -34,6 +34,7 @@ export class ProductosListComponent implements OnInit {
   private svc    = inject(ProductosService);
   private toast  = inject(ToastService);
   private router = inject(Router);
+  private eventBus = inject(EventBusService);
 
   items: Producto[]       = [];
   categorias: Categoria[] = [];
@@ -86,6 +87,7 @@ delete(id: number): void {
       this.toast.success('Producto eliminado');
       this.items = this.items.filter(p => p.id !== id);
       this.totalItems = Math.max(0, this.totalItems - 1);
+       this.eventBus.emitRefresh();
     },
     error: (e) => this.toast.error(e?.error?.error || 'Error al eliminar')
   });

@@ -45,6 +45,9 @@ export class VentasListComponent implements OnInit {
   private toast  = inject(ToastService);
   private router = inject(Router);
   private fb     = inject(FormBuilder);
+  private toLocalDateString(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 
   form!: FormGroup;
   ItemsList: Venta[] = [];
@@ -88,29 +91,29 @@ export class VentasListComponent implements OnInit {
   }
 
   buildFiltros() {
-    const hoy = new Date();
-    let desde: string | undefined, hasta: string | undefined;
+  const hoy = new Date();
+  let desde: string | undefined, hasta: string | undefined;
 
-    if (this.fechaFiltro) {
-      desde = hasta = this.fechaFiltro;
-    } else if (this.activeTimeTab === 'day') {
-      desde = hasta = hoy.toISOString().split('T')[0];
-    } else if (this.activeTimeTab === 'week') {
-      const lun = new Date(hoy);
-      lun.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
-      desde = lun.toISOString().split('T')[0];
-      hasta = hoy.toISOString().split('T')[0];
-    } else {
-      desde = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
-      hasta = hoy.toISOString().split('T')[0];
-    }
-
-    return {
-      desde, hasta,
-      ...(this.activeStatus !== 'all' ? { estado: this.activeStatus } : {}),
-      page: this.page, limit: this.limit
-    };
+  if (this.fechaFiltro) {
+    desde = hasta = this.fechaFiltro;
+  } else if (this.activeTimeTab === 'day') {
+    desde = hasta = this.toLocalDateString(hoy);
+  } else if (this.activeTimeTab === 'week') {
+    const lun = new Date(hoy);
+    lun.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
+    desde = this.toLocalDateString(lun);
+    hasta = this.toLocalDateString(hoy);
+  } else {
+    desde = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-01`;
+    hasta = this.toLocalDateString(hoy);
   }
+
+  return {
+    desde, hasta,
+    ...(this.activeStatus !== 'all' ? { estado: this.activeStatus } : {}),
+    page: this.page, limit: this.limit
+  };
+}
 
   setActiveTimeTab(t: TimeTab): void { this.activeTimeTab = t; this.fechaFiltro = ''; this.initPage(); }
   setStatus(s: VentaEstado | 'all'): void { this.activeStatus = s; this.initPage(); }

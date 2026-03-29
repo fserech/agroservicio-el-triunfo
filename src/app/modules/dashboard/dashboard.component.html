@@ -1,11 +1,25 @@
-<!-- dashboard.component.html — Estilo Librería Yami -->
 <app-header headerTitle="Dashboard"
   headerDescription="Resumen general del sistema — ventas, inventario y actividad reciente.">
 </app-header>
 
 <div class="p-2 m-2">
 
-  <!-- KPI GRID — estilo kpi-card de Librería Yami -->
+  <!-- BARRA DE ESTADO -->
+  <div class="flex items-center justify-between mb-3 px-1">
+    <span class="text-xs text-gray-400 dark:text-gray-500">
+      @if (ultimaActualizacion) {
+        Actualizado: {{ ultimaActualizacion | date:'HH:mm:ss' }}
+      }
+    </span>
+    <button class="btn-back text-xs flex items-center gap-1"
+            (click)="refrescarManual()" [disabled]="refreshing">
+      <ng-icon name="matRefreshOutline" size="14"
+               [class.animate-spin]="refreshing"></ng-icon>
+      {{ refreshing ? 'Actualizando...' : 'Refrescar' }}
+    </button>
+  </div>
+
+  <!-- KPI GRID -->
   <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
     @if (load) {
       @for (i of [1,2,3,4,5]; track i) {
@@ -81,7 +95,7 @@
             }
           </div>
         } @else if (topProductos.length === 0) {
-          <div class="py-10 text-center text-gray-400 text-sm">Sin datos</div>
+          <div class="py-10 text-center text-gray-400 text-sm">Sin datos de ventas en los últimos 30 días</div>
         } @else {
           <div class="divide-y dark:divide-slate-800">
             @for (p of topProductos; track $index) {
