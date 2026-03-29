@@ -1,12 +1,13 @@
+<!-- productos-form.component.html -->
 <app-header [headerTitle]="isEdit ? 'Editar Producto' : 'Nuevo Producto'"
   headerDescription="Registra o actualiza un producto del catálogo.">
 </app-header>
 
 <div class="p-2 m-2">
-  <div class="card max-w-3xl mx-auto">
-    <div class="card-header">
-      <span class="card-title">{{ isEdit ? 'Editar Producto' : 'Datos del Producto' }}</span>
-      <button class="btn btn-outline btn-sm" (click)="cancel()">
+  <div class="card max-w-3xl mx-auto bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm">
+    <div class="card-header flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-slate-700">
+      <span class="card-title text-gray-800 dark:text-gray-100 font-semibold text-lg">{{ isEdit ? 'Editar Producto' : 'Datos del Producto' }}</span>
+      <button class="btn btn-outline btn-sm flex items-center gap-1 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-slate-600 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg px-3 py-1.5 text-sm transition-colors" (click)="cancel()">
         <ng-icon name="matArrowBackOutline" size="16"></ng-icon> Volver
       </button>
     </div>
@@ -14,31 +15,35 @@
       @if (form) {
         <form [formGroup]="form" (ngSubmit)="save()">
 
-          <h3 class="section-title">Información del Producto</h3>
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label>Código (SKU)</label>
-              <input formControlName="codigo" type="text" placeholder="P-001">
+          <h3 class="section-title text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3 mt-1">Información del Producto</h3>
+          <div class="form-grid-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-group flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Código (SKU)</label>
+              <input formControlName="codigo" type="text" placeholder="P-001"
+                class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
             </div>
 
             <!-- CATEGORÍA -->
-            <div class="form-group">
-              <label>Categoría *</label>
+            <div class="form-group flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Categoría *</label>
 
               <!-- Selector + botones -->
               <div class="flex gap-2">
-                <select formControlName="categoria_id" class="flex-1">
-                  <option value="">Seleccionar...</option>
+                <select formControlName="categoria_id"
+                  class="flex-1 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
+                  <option value="" class="bg-white dark:bg-slate-800">Seleccionar...</option>
                   @for (c of categorias; track c.id) {
-                    <option [value]="c.id">{{ c.nombre }}</option>
+                    <option [value]="c.id" class="bg-white dark:bg-slate-800">{{ c.nombre }}</option>
                   }
                 </select>
-                <button type="button" class="btn btn-outline btn-sm"
-                        (click)="toggleNuevaCategoria()" title="Nueva categoría">
+                <button type="button"
+                  class="flex items-center justify-center w-9 h-9 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                  (click)="toggleNuevaCategoria()" title="Nueva categoría">
                   <ng-icon name="matAddOutline" size="16"></ng-icon>
                 </button>
-                <button type="button" class="btn btn-outline btn-sm"
-                        (click)="toggleGestionCategorias()" title="Editar / eliminar categorías">
+                <button type="button"
+                  class="flex items-center justify-center w-9 h-9 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                  (click)="toggleGestionCategorias()" title="Editar / eliminar categorías">
                   <ng-icon name="matModeEditOutline" size="16"></ng-icon>
                 </button>
               </div>
@@ -51,16 +56,18 @@
                     [ngModelOptions]="{standalone: true}"
                     type="text"
                     placeholder="Nombre de nueva categoría..."
-                    class="flex-1"
+                    class="flex-1 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors"
                     (keydown.enter)="agregarCategoria()"
                     (keydown.escape)="mostrarNuevaCategoria = false">
-                  <button type="button" class="btn btn-primary btn-sm"
-                          (click)="agregarCategoria()" [disabled]="savingCategoria">
+                  <button type="button"
+                    class="px-3 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-sm font-medium transition-colors"
+                    (click)="agregarCategoria()" [disabled]="savingCategoria">
                     @if (savingCategoria) { <span class="spinner-sm"></span> }
                     @else { Agregar }
                   </button>
-                  <button type="button" class="btn btn-outline btn-sm"
-                          (click)="mostrarNuevaCategoria = false">
+                  <button type="button"
+                    class="px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 text-sm transition-colors"
+                    (click)="mostrarNuevaCategoria = false">
                     Cancelar
                   </button>
                 </div>
@@ -68,117 +75,122 @@
 
               <!-- Panel gestión de categorías -->
               @if (mostrarGestionCategorias) {
-                <div class="mt-3 border rounded-lg dark:border-slate-700 overflow-hidden">
+                <div class="mt-3 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden">
                   <div class="bg-gray-50 dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                     Gestionar categorías
                   </div>
-                  <ul class="divide-y dark:divide-slate-700">
+                  <ul class="divide-y divide-gray-100 dark:divide-slate-700 bg-white dark:bg-slate-900">
                     @for (cat of categorias; track cat.id) {
                       <li class="flex items-center gap-2 px-3 py-2">
-
-                        <!-- Modo edición -->
                         @if (editandoCategoriaId === cat.id) {
                           <input
                             [(ngModel)]="editandoCategoriaName"
                             [ngModelOptions]="{standalone: true}"
                             type="text"
-                            class="flex-1 text-sm"
+                            class="flex-1 text-sm rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors"
                             (keydown.enter)="guardarEdicionCategoria(cat)"
                             (keydown.escape)="cancelarEdicionCategoria()">
-                          <button type="button"
-                                  class="btn-action"
-                                  (click)="guardarEdicionCategoria(cat)"
-                                  [disabled]="savingEditCategoria"
-                                  title="Guardar">
+                          <button type="button" class="btn-action hover:opacity-80 transition-opacity"
+                            (click)="guardarEdicionCategoria(cat)" [disabled]="savingEditCategoria" title="Guardar">
                             <ng-icon name="matCheckOutline" size="16" class="text-green-500"></ng-icon>
                           </button>
-                          <button type="button"
-                                  class="btn-action"
-                                  (click)="cancelarEdicionCategoria()"
-                                  title="Cancelar">
-                            <ng-icon name="matCloseOutline" size="16" class="text-gray-400"></ng-icon>
+                          <button type="button" class="btn-action hover:opacity-80 transition-opacity"
+                            (click)="cancelarEdicionCategoria()" title="Cancelar">
+                            <ng-icon name="matCloseOutline" size="16" class="text-gray-400 dark:text-gray-500"></ng-icon>
                           </button>
-
-                        <!-- Modo lectura -->
                         } @else {
                           <span class="flex-1 text-sm text-gray-700 dark:text-gray-300">{{ cat.nombre }}</span>
-                          <button type="button"
-                                  class="btn-action"
-                                  (click)="iniciarEdicionCategoria(cat)"
-                                  title="Editar">
+                          <button type="button" class="btn-action hover:opacity-80 transition-opacity"
+                            (click)="iniciarEdicionCategoria(cat)" title="Editar">
                             <ng-icon name="matModeEditOutline" size="16" class="text-yellow-500"></ng-icon>
                           </button>
-                          <button type="button"
-                                  class="btn-action"
-                                  (click)="eliminarCategoria(cat)"
-                                  [disabled]="deletingCategoriaId === cat.id"
-                                  title="Eliminar">
+                          <button type="button" class="btn-action hover:opacity-80 transition-opacity"
+                            (click)="eliminarCategoria(cat)" [disabled]="deletingCategoriaId === cat.id" title="Eliminar">
                             <ng-icon name="matDeleteOutline" size="16" class="text-red-500"></ng-icon>
                           </button>
                         }
-
                       </li>
                     }
                     @if (categorias.length === 0) {
-                      <li class="px-3 py-3 text-sm text-gray-400 text-center">No hay categorías</li>
+                      <li class="px-3 py-3 text-sm text-gray-400 dark:text-gray-500 text-center">No hay categorías</li>
                     }
                   </ul>
                 </div>
               }
 
               @if (f['categoria_id'].invalid && f['categoria_id'].touched) {
-                <span class="error-msg">Categoría requerida</span>
+                <span class="text-xs text-red-500 dark:text-red-400">Categoría requerida</span>
               }
             </div>
 
-            <div class="form-group form-full">
-              <label>Nombre del producto *</label>
-              <input formControlName="nombre" type="text" placeholder="Nombre comercial">
+            <div class="form-group form-full md:col-span-2 flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Nombre del producto *</label>
+              <input formControlName="nombre" type="text" placeholder="Nombre comercial"
+                class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
               @if (f['nombre'].invalid && f['nombre'].touched) {
-                <span class="error-msg">Nombre requerido</span>
+                <span class="text-xs text-red-500 dark:text-red-400">Nombre requerido</span>
               }
             </div>
-            <div class="form-group form-full">
-              <label>Descripción</label>
-              <textarea formControlName="descripcion" placeholder="Descripción técnica del producto..."></textarea>
+            <div class="form-group form-full md:col-span-2 flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Descripción</label>
+              <textarea formControlName="descripcion" placeholder="Descripción técnica del producto..."
+                class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors resize-none" rows="3"></textarea>
             </div>
-            <div class="form-group">
-              <label>Unidad de medida *</label>
-              <select formControlName="unidad_medida">
-                <option value="Litro">Litro</option>
-                <option value="Kilogramo">Kilogramo</option>
-                <option value="Quintal">Quintal</option>
-                <option value="Libra">Libra</option>
-                <option value="Unidad">Unidad</option>
-                <option value="Caja">Caja</option>
-                <option value="Saco">Saco</option>
-                <option value="Metro">Metro</option>
+            <div class="form-group flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Unidad de medida *</label>
+              <select formControlName="unidad_medida"
+                class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
+                <option value="Litro"      class="bg-white dark:bg-slate-800">Litro</option>
+                <option value="Kilogramo"  class="bg-white dark:bg-slate-800">Kilogramo</option>
+                <option value="Quintal"    class="bg-white dark:bg-slate-800">Quintal</option>
+                <option value="Libra"      class="bg-white dark:bg-slate-800">Libra</option>
+                <option value="Unidad"     class="bg-white dark:bg-slate-800">Unidad</option>
+                <option value="Caja"       class="bg-white dark:bg-slate-800">Caja</option>
+                <option value="Saco"       class="bg-white dark:bg-slate-800">Saco</option>
+                <option value="Metro"      class="bg-white dark:bg-slate-800">Metro</option>
               </select>
             </div>
           </div>
 
-          <h3 class="section-title mt-4">Precios</h3>
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label>Precio de compra (Q) *</label>
-              <input formControlName="precio_compra" type="number" min="0" step="0.01" placeholder="0.00">
+          <h3 class="section-title text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3 mt-6">Precios</h3>
+          <div class="form-grid-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-group flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Precio de compra (Q) *</label>
+              <input formControlName="precio_compra" type="number" min="0" step="0.01" placeholder="0.00"
+                class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
               @if (f['precio_compra'].invalid && f['precio_compra'].touched) {
-                <span class="error-msg">Precio de compra requerido</span>
+                <span class="text-xs text-red-500 dark:text-red-400">Precio de compra requerido</span>
               }
             </div>
-            <div class="form-group">
-              <label>Precio de venta (Q) *</label>
-              <input formControlName="precio_venta" type="number" min="0" step="0.01" placeholder="0.00">
+            <div class="form-group flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Precio de venta (Q) *</label>
+              <input formControlName="precio_venta" type="number" min="0" step="0.01" placeholder="0.00"
+                class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
               @if (f['precio_venta'].invalid && f['precio_venta'].touched) {
-                <span class="error-msg">Precio de venta requerido</span>
+                <span class="text-xs text-red-500 dark:text-red-400">Precio de venta requerido</span>
               }
             </div>
             @if (margenCalculado !== null) {
-              <div class="form-group form-full">
-                <div class="margen-preview"
-                     [class.margen-ok]="margenCalculado >= 20"
-                     [class.margen-low]="margenCalculado < 20 && margenCalculado > 0"
-                     [class.margen-neg]="margenCalculado <= 0">
+              <div class="form-group form-full md:col-span-2">
+                <div class="margen-preview flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors"
+                  [class.bg-emerald-50]="margenCalculado >= 20"
+                  [class.dark:bg-emerald-900]="margenCalculado >= 20"
+                  [class.border-emerald-200]="margenCalculado >= 20"
+                  [class.dark:border-emerald-700]="margenCalculado >= 20"
+                  [class.text-emerald-700]="margenCalculado >= 20"
+                  [class.dark:text-emerald-300]="margenCalculado >= 20"
+                  [class.bg-yellow-50]="margenCalculado < 20 && margenCalculado > 0"
+                  [class.dark:bg-yellow-900]="margenCalculado < 20 && margenCalculado > 0"
+                  [class.border-yellow-200]="margenCalculado < 20 && margenCalculado > 0"
+                  [class.dark:border-yellow-700]="margenCalculado < 20 && margenCalculado > 0"
+                  [class.text-yellow-700]="margenCalculado < 20 && margenCalculado > 0"
+                  [class.dark:text-yellow-300]="margenCalculado < 20 && margenCalculado > 0"
+                  [class.bg-red-50]="margenCalculado <= 0"
+                  [class.dark:bg-red-900]="margenCalculado <= 0"
+                  [class.border-red-200]="margenCalculado <= 0"
+                  [class.dark:border-red-700]="margenCalculado <= 0"
+                  [class.text-red-700]="margenCalculado <= 0"
+                  [class.dark:text-red-300]="margenCalculado <= 0">
                   Margen calculado: <strong>{{ margenCalculado | number:'1.2-2' }}%</strong>
                 </div>
               </div>
@@ -186,30 +198,38 @@
           </div>
 
           @if (!isEdit) {
-            <h3 class="section-title mt-4">Inventario Inicial</h3>
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label>Stock inicial</label>
-                <input formControlName="stock_inicial" type="number" min="0" placeholder="0">
+            <h3 class="section-title text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3 mt-6">Inventario Inicial</h3>
+            <div class="form-grid-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="form-group flex flex-col gap-1">
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Stock inicial</label>
+                <input formControlName="stock_inicial" type="number" min="0" placeholder="0"
+                  class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
               </div>
-              <div class="form-group">
-                <label>Stock mínimo</label>
-                <input formControlName="stock_minimo" type="number" min="0" placeholder="0">
+              <div class="form-group flex flex-col gap-1">
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Stock mínimo</label>
+                <input formControlName="stock_minimo" type="number" min="0" placeholder="0"
+                  class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
               </div>
-              <div class="form-group">
-                <label>Stock máximo</label>
-                <input formControlName="stock_maximo" type="number" min="0" placeholder="9999">
+              <div class="form-group flex flex-col gap-1">
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Stock máximo</label>
+                <input formControlName="stock_maximo" type="number" min="0" placeholder="9999"
+                  class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
               </div>
-              <div class="form-group">
-                <label>Ubicación en bodega</label>
-                <input formControlName="ubicacion_bodega" type="text" placeholder="Ej: Bodega A-1">
+              <div class="form-group flex flex-col gap-1">
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Ubicación en bodega</label>
+                <input formControlName="ubicacion_bodega" type="text" placeholder="Ej: Bodega A-1"
+                  class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
               </div>
             </div>
           }
 
-          <div class="flex justify-end gap-3 mt-6 pt-4 border-t" style="border-color:var(--border)">
-            <button type="button" class="btn btn-outline" (click)="cancel()">Cancelar</button>
-            <button type="submit" class="btn btn-primary" [disabled]="saving">
+          <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-slate-700">
+            <button type="button"
+              class="btn btn-outline px-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 text-sm transition-colors"
+              (click)="cancel()">Cancelar</button>
+            <button type="submit"
+              class="btn btn-primary flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-sm font-medium transition-colors"
+              [disabled]="saving">
               @if (saving) { <span class="spinner-sm"></span> Guardando... }
               @else { <ng-icon name="matSaveOutline" size="16"></ng-icon> {{ isEdit ? 'Actualizar' : 'Guardar' }} }
             </button>

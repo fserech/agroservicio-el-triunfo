@@ -4,79 +4,143 @@
 </app-header>
 
 <div class="p-2 m-2">
-  <div class="card max-w-xl mx-auto">
-    <div class="card-header">
-      <span class="card-title">{{ isEdit ? 'Editar Usuario' : 'Crear Usuario' }}</span>
-      <button class="btn btn-outline btn-sm" (click)="cancel()">
+  <div class="card max-w-xl mx-auto bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm">
+    <div class="card-header flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-slate-700">
+      <span class="card-title text-gray-800 dark:text-gray-100 font-semibold text-lg">{{ isEdit ? 'Editar Usuario' : 'Crear Usuario' }}</span>
+      <button class="btn btn-outline btn-sm flex items-center gap-1 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-slate-600 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg px-3 py-1.5 text-sm transition-colors" (click)="cancel()">
         <ng-icon name="matArrowBackOutline" size="16"></ng-icon> Volver
       </button>
     </div>
     <div class="card-body p-5">
       @if (form) {
         <form [formGroup]="form" (ngSubmit)="save()">
-          <div class="form-group">
-            <label>Nombre completo *</label>
-            <input formControlName="nombre" type="text" placeholder="Nombre del usuario">
+          <div class="form-group flex flex-col gap-1 mb-4">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Nombre completo *</label>
+            <input formControlName="nombre" type="text" placeholder="Nombre del usuario"
+              class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
             @if (f['nombre'].invalid && f['nombre'].touched) {
-              <span class="error-msg">Nombre requerido</span> }
+              <span class="text-xs text-red-500 dark:text-red-400">Nombre requerido</span>
+            }
           </div>
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label>Nombre de usuario *</label>
-              <input formControlName="username" type="text" placeholder="usuario123" [readonly]="isEdit">
+
+          <div class="form-grid-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-group flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Nombre de usuario *</label>
+              <input formControlName="username" type="text" placeholder="usuario123" [readonly]="isEdit"
+                class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                [class.opacity-60]="isEdit" [class.cursor-not-allowed]="isEdit">
               @if (f['username'].invalid && f['username'].touched) {
-                <span class="error-msg">Usuario requerido</span> }
+                <span class="text-xs text-red-500 dark:text-red-400">Usuario requerido</span>
+              }
             </div>
-            <div class="form-group">
-              <label>Correo electrónico</label>
-              <input formControlName="email" type="email" placeholder="correo@empresa.gt">
+            <div class="form-group flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Correo electrónico</label>
+              <input formControlName="email" type="email" placeholder="correo@empresa.gt"
+                class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
             </div>
-            <div class="form-group">
-              <label>Rol *</label>
-              <select formControlName="rol">
-                <option value="admin">Administrador</option>
-                <option value="supervisor">Supervisor</option>
-                <option value="vendedor">Vendedor</option>
-                <option value="bodeguero">Bodeguero</option>
-                <option value="contador">Contador</option>
+            <div class="form-group flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Rol *</label>
+              <select formControlName="rol"
+                class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
+                <option value="admin"      class="bg-white dark:bg-slate-800">Administrador</option>
+                <option value="supervisor" class="bg-white dark:bg-slate-800">Supervisor</option>
+                <option value="vendedor"   class="bg-white dark:bg-slate-800">Vendedor</option>
+                <option value="bodeguero"  class="bg-white dark:bg-slate-800">Bodeguero</option>
+                <option value="contador"   class="bg-white dark:bg-slate-800">Contador</option>
               </select>
             </div>
-            <div class="form-group">
-              <label>Estado</label>
-              <select formControlName="activo">
-                <option [ngValue]="true">Activo</option>
-                <option [ngValue]="false">Inactivo</option>
+            <div class="form-group flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Estado</label>
+              <select formControlName="activo"
+                class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
+                <option [ngValue]="true"  class="bg-white dark:bg-slate-800">Activo</option>
+                <option [ngValue]="false" class="bg-white dark:bg-slate-800">Inactivo</option>
               </select>
             </div>
           </div>
 
           @if (!isEdit) {
-            <div class="form-group">
-              <label>Contraseña *</label>
-              <input formControlName="password" type="password" placeholder="Mínimo 6 caracteres">
+            <div class="form-group flex flex-col gap-1 mt-4">
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña *</label>
+              <input formControlName="password" type="password" placeholder="Mínimo 6 caracteres"
+                class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
               @if (f['password'].invalid && f['password'].touched) {
-                <span class="error-msg">Contraseña mínimo 6 caracteres</span> }
+                <span class="text-xs text-red-500 dark:text-red-400">Contraseña mínimo 6 caracteres</span>
+              }
             </div>
           }
 
-          <div class="roles-info">
-            <div class="role-item" [class.role-active]="form.get('rol')?.value === 'admin'">
+          <!-- Roles info -->
+          <div class="roles-info mt-5 space-y-2">
+            <div class="role-item flex items-start gap-2 px-3 py-2 rounded-lg border transition-colors text-sm"
+              [class.bg-blue-50]="form.get('rol')?.value === 'admin'"
+              [class.dark:bg-blue-900]="form.get('rol')?.value === 'admin'"
+              [class.border-blue-200]="form.get('rol')?.value === 'admin'"
+              [class.dark:border-blue-700]="form.get('rol')?.value === 'admin'"
+              [class.text-blue-700]="form.get('rol')?.value === 'admin'"
+              [class.dark:text-blue-300]="form.get('rol')?.value === 'admin'"
+              [class.bg-gray-50]="form.get('rol')?.value !== 'admin'"
+              [class.dark:bg-slate-800]="form.get('rol')?.value !== 'admin'"
+              [class.border-gray-200]="form.get('rol')?.value !== 'admin'"
+              [class.dark:border-slate-700]="form.get('rol')?.value !== 'admin'"
+              [class.text-gray-500]="form.get('rol')?.value !== 'admin'"
+              [class.dark:text-gray-400]="form.get('rol')?.value !== 'admin'">
               <strong>Administrador:</strong> Acceso total al sistema
             </div>
-            <div class="role-item" [class.role-active]="form.get('rol')?.value === 'supervisor'">
+            <div class="role-item flex items-start gap-2 px-3 py-2 rounded-lg border transition-colors text-sm"
+              [class.bg-blue-50]="form.get('rol')?.value === 'supervisor'"
+              [class.dark:bg-blue-900]="form.get('rol')?.value === 'supervisor'"
+              [class.border-blue-200]="form.get('rol')?.value === 'supervisor'"
+              [class.dark:border-blue-700]="form.get('rol')?.value === 'supervisor'"
+              [class.text-blue-700]="form.get('rol')?.value === 'supervisor'"
+              [class.dark:text-blue-300]="form.get('rol')?.value === 'supervisor'"
+              [class.bg-gray-50]="form.get('rol')?.value !== 'supervisor'"
+              [class.dark:bg-slate-800]="form.get('rol')?.value !== 'supervisor'"
+              [class.border-gray-200]="form.get('rol')?.value !== 'supervisor'"
+              [class.dark:border-slate-700]="form.get('rol')?.value !== 'supervisor'"
+              [class.text-gray-500]="form.get('rol')?.value !== 'supervisor'"
+              [class.dark:text-gray-400]="form.get('rol')?.value !== 'supervisor'">
               <strong>Supervisor:</strong> Ventas, compras, inventario, reportes
             </div>
-            <div class="role-item" [class.role-active]="form.get('rol')?.value === 'vendedor'">
+            <div class="role-item flex items-start gap-2 px-3 py-2 rounded-lg border transition-colors text-sm"
+              [class.bg-blue-50]="form.get('rol')?.value === 'vendedor'"
+              [class.dark:bg-blue-900]="form.get('rol')?.value === 'vendedor'"
+              [class.border-blue-200]="form.get('rol')?.value === 'vendedor'"
+              [class.dark:border-blue-700]="form.get('rol')?.value === 'vendedor'"
+              [class.text-blue-700]="form.get('rol')?.value === 'vendedor'"
+              [class.dark:text-blue-300]="form.get('rol')?.value === 'vendedor'"
+              [class.bg-gray-50]="form.get('rol')?.value !== 'vendedor'"
+              [class.dark:bg-slate-800]="form.get('rol')?.value !== 'vendedor'"
+              [class.border-gray-200]="form.get('rol')?.value !== 'vendedor'"
+              [class.dark:border-slate-700]="form.get('rol')?.value !== 'vendedor'"
+              [class.text-gray-500]="form.get('rol')?.value !== 'vendedor'"
+              [class.dark:text-gray-400]="form.get('rol')?.value !== 'vendedor'">
               <strong>Vendedor:</strong> Ventas y consulta de productos
             </div>
-            <div class="role-item" [class.role-active]="form.get('rol')?.value === 'bodeguero'">
+            <div class="role-item flex items-start gap-2 px-3 py-2 rounded-lg border transition-colors text-sm"
+              [class.bg-blue-50]="form.get('rol')?.value === 'bodeguero'"
+              [class.dark:bg-blue-900]="form.get('rol')?.value === 'bodeguero'"
+              [class.border-blue-200]="form.get('rol')?.value === 'bodeguero'"
+              [class.dark:border-blue-700]="form.get('rol')?.value === 'bodeguero'"
+              [class.text-blue-700]="form.get('rol')?.value === 'bodeguero'"
+              [class.dark:text-blue-300]="form.get('rol')?.value === 'bodeguero'"
+              [class.bg-gray-50]="form.get('rol')?.value !== 'bodeguero'"
+              [class.dark:bg-slate-800]="form.get('rol')?.value !== 'bodeguero'"
+              [class.border-gray-200]="form.get('rol')?.value !== 'bodeguero'"
+              [class.dark:border-slate-700]="form.get('rol')?.value !== 'bodeguero'"
+              [class.text-gray-500]="form.get('rol')?.value !== 'bodeguero'"
+              [class.dark:text-gray-400]="form.get('rol')?.value !== 'bodeguero'">
               <strong>Bodeguero:</strong> Inventario y recepción de compras
             </div>
           </div>
 
-          <div class="flex justify-end gap-3 mt-5 pt-4 border-t" style="border-color:var(--border)">
-            <button type="button" class="btn btn-outline" (click)="cancel()">Cancelar</button>
-            <button type="submit" class="btn btn-primary" [disabled]="saving">
+          <div class="flex justify-end gap-3 mt-5 pt-4 border-t border-gray-200 dark:border-slate-700">
+            <button type="button"
+              class="btn btn-outline px-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 text-sm transition-colors"
+              (click)="cancel()">Cancelar</button>
+            <button type="submit"
+              class="btn btn-primary flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-sm font-medium transition-colors"
+              [disabled]="saving">
               @if (saving) { <span class="spinner-sm"></span> Guardando... }
               @else { <ng-icon name="matSaveOutline" size="16"></ng-icon> {{ isEdit ? 'Actualizar' : 'Crear Usuario' }} }
             </button>

@@ -7,37 +7,40 @@
   <div class="ventas-form-layout">
 
     <!-- PANEL IZQUIERDO: Catálogo de productos -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">Catálogo de Productos</span>
+    <div class="card bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm">
+      <div class="card-header flex items-center px-4 py-3 border-b border-gray-200 dark:border-slate-700">
+        <span class="card-title text-gray-800 dark:text-gray-100 font-semibold text-base">Catálogo de Productos</span>
       </div>
       <div class="p-3">
-        <div class="search-wrap mb-3" style="max-width:100%">
-          <ng-icon class="search-icon" name="matSearchOutline" size="15"></ng-icon>
-          <input class="search-input" style="width:100%" type="text"
-            placeholder="Buscar producto..." [(ngModel)]="searchProd" (input)="filterProductos()">
+        <div class="search-wrap mb-3 relative" style="max-width:100%">
+          <ng-icon class="search-icon absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" name="matSearchOutline" size="15"></ng-icon>
+          <input class="search-input w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 pl-8 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors"
+            type="text" placeholder="Buscar producto..." [(ngModel)]="searchProd" (input)="filterProductos()">
         </div>
 
         <div class="productos-grid">
           @for (p of productosFiltrados; track p.id) {
 
             @if (sinStock(p)) {
-              <div class="prod-card prod-card-disabled" title="Sin stock disponible">
-                <div class="prod-card-name text-gray-400">{{ p.nombre }}</div>
-                <div class="prod-card-cat text-gray-300">{{ p.cat_nombre }} · {{ p.unidad_medida }}</div>
-                <div class="prod-card-price text-gray-300">Q {{ p.precio_venta | number:'1.2-2' }}</div>
-                <div class="prod-card-stock text-red-400 font-semibold">Sin stock</div>
+              <div class="prod-card prod-card-disabled cursor-not-allowed rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 p-3 opacity-60" title="Sin stock disponible">
+                <div class="prod-card-name text-sm font-medium text-gray-400 dark:text-gray-500">{{ p.nombre }}</div>
+                <div class="prod-card-cat text-xs text-gray-300 dark:text-gray-600 mt-0.5">{{ p.cat_nombre }} · {{ p.unidad_medida }}</div>
+                <div class="prod-card-price text-sm text-gray-300 dark:text-gray-600 mt-1">Q {{ p.precio_venta | number:'1.2-2' }}</div>
+                <div class="prod-card-stock text-xs text-red-400 dark:text-red-500 font-semibold mt-1">Sin stock</div>
               </div>
             } @else {
-              <div class="prod-card"
+              <div class="prod-card cursor-pointer rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md p-3 transition-all"
                 (click)="addToCart(p)"
-                [class.prod-card-low]="p.estado_stock === 'critico'">
-                <div class="prod-card-name">{{ p.nombre }}</div>
-                <div class="prod-card-cat">{{ p.cat_nombre }} · {{ p.unidad_medida }}</div>
-                <div class="prod-card-price">Q {{ p.precio_venta | number:'1.2-2' }}</div>
-                <div class="prod-card-stock"
+                [class.border-yellow-300]="p.estado_stock === 'critico'"
+                [class.dark:border-yellow-600]="p.estado_stock === 'critico'">
+                <div class="prod-card-name text-sm font-medium text-gray-700 dark:text-gray-200">{{ p.nombre }}</div>
+                <div class="prod-card-cat text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ p.cat_nombre }} · {{ p.unidad_medida }}</div>
+                <div class="prod-card-price text-sm font-semibold mt-1" style="color:var(--primary)">Q {{ p.precio_venta | number:'1.2-2' }}</div>
+                <div class="prod-card-stock text-xs font-medium mt-1"
                   [class.text-yellow-500]="p.estado_stock === 'critico'"
-                  [class.text-green-600]="p.estado_stock === 'normal' || p.estado_stock === 'bajo'">
+                  [class.dark:text-yellow-400]="p.estado_stock === 'critico'"
+                  [class.text-emerald-600]="p.estado_stock === 'normal' || p.estado_stock === 'bajo'"
+                  [class.dark:text-emerald-400]="p.estado_stock === 'normal' || p.estado_stock === 'bajo'">
                   Stock: {{ p.stock_actual ?? 0 }} {{ p.unidad_medida }}
                 </div>
               </div>
@@ -45,63 +48,64 @@
 
           }
           @if (productosFiltrados.length === 0) {
-            <div class="col-span-full text-center text-gray-400 py-8 text-sm">Sin productos</div>
+            <div class="col-span-full text-center text-gray-400 dark:text-gray-500 py-8 text-sm">Sin productos</div>
           }
         </div>
       </div>
     </div>
 
     <!-- PANEL DERECHO: Carrito y datos de venta -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">Detalle de Venta</span>
-        <button class="btn btn-outline btn-sm" (click)="cancel()">
+    <div class="card bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm">
+      <div class="card-header flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-slate-700">
+        <span class="card-title text-gray-800 dark:text-gray-100 font-semibold text-base">Detalle de Venta</span>
+        <button class="btn btn-outline btn-sm flex items-center gap-1 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-slate-600 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg px-3 py-1.5 text-sm transition-colors" (click)="cancel()">
           <ng-icon name="matArrowBackOutline" size="16"></ng-icon> Volver
         </button>
       </div>
       <div class="p-4">
 
         <!-- Cliente -->
-        <div class="form-group">
-          <label>Cliente</label>
-          <select [(ngModel)]="selectedClienteId">
-            <option [value]="null">Consumidor final</option>
+        <div class="form-group flex flex-col gap-1 mb-3">
+          <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Cliente</label>
+          <select [(ngModel)]="selectedClienteId"
+            class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
+            <option [value]="null" class="bg-white dark:bg-slate-800">Consumidor final</option>
             @for (c of clientes; track c.id) {
-              <option [value]="c.id">{{ c.nombre }}</option>
+              <option [value]="c.id" class="bg-white dark:bg-slate-800">{{ c.nombre }}</option>
             }
           </select>
         </div>
 
         <!-- Método de pago + Descuento -->
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label>Método de pago</label>
-            <select [(ngModel)]="metodoPago">
-              <option value="efectivo">Efectivo</option>
-              <option value="tarjeta">Tarjeta</option>
-              <option value="credito">Crédito</option>
-              <option value="transferencia">Transferencia</option>
+        <div class="form-grid-2 grid grid-cols-2 gap-3 mb-3">
+          <div class="form-group flex flex-col gap-1">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Método de pago</label>
+            <select [(ngModel)]="metodoPago"
+              class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
+              <option value="efectivo"      class="bg-white dark:bg-slate-800">Efectivo</option>
+              <option value="tarjeta"       class="bg-white dark:bg-slate-800">Tarjeta</option>
+              <option value="credito"       class="bg-white dark:bg-slate-800">Crédito</option>
+              <option value="transferencia" class="bg-white dark:bg-slate-800">Transferencia</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Descuento (Q)</label>
-            <input type="number" min="0" step="0.01" [(ngModel)]="descuento" placeholder="0.00">
+          <div class="form-group flex flex-col gap-1">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Descuento (Q)</label>
+            <input type="number" min="0" step="0.01" [(ngModel)]="descuento" placeholder="0.00"
+              class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
           </div>
         </div>
 
         <!-- Toggle IVA -->
-        <div class="flex items-center justify-between px-1 py-2 mb-2 rounded-lg"
-          style="background:var(--bg-2, #f8fafc);border:1px solid var(--border)">
+        <div class="flex items-center justify-between px-3 py-2.5 mb-3 rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 transition-colors">
           <div>
-            <p class="text-sm font-medium" style="color:var(--text-1)">Aplicar IVA (12%)</p>
-            <p class="text-xs" style="color:var(--text-3)">
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Aplicar IVA (12%)</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500">
               @if (ivaActivo) { IVA incluido en el total }
               @else { Venta exenta de IVA }
             </p>
           </div>
-          <!-- Toggle switch -->
           <button type="button"
-            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
             [style.background]="ivaActivo ? 'var(--success)' : '#d1d5db'"
             (click)="ivaActivo = !ivaActivo">
             <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform"
@@ -110,38 +114,39 @@
           </button>
         </div>
 
-        <hr style="border-color:var(--border);margin:12px 0">
+        <hr class="border-gray-200 dark:border-slate-700 my-3">
 
         <!-- Carrito vacío -->
         @if (cart.length === 0) {
-          <div class="cart-empty">
-            <ng-icon name="matShoppingCartOutline" size="32" style="color:var(--text-3)"></ng-icon>
-            <p>Selecciona productos del catálogo</p>
+          <div class="cart-empty flex flex-col items-center justify-center py-10 gap-2 text-gray-400 dark:text-gray-500">
+            <ng-icon name="matShoppingCartOutline" size="32"></ng-icon>
+            <p class="text-sm">Selecciona productos del catálogo</p>
           </div>
         }
 
         <!-- Carrito con items -->
         @if (cart.length > 0) {
-          <div class="cart-items">
+          <div class="cart-items space-y-2">
             @for (item of cart; track $index) {
-              <div class="cart-item">
-                <div class="cart-item-info">
-                  <div class="font-medium text-sm">{{ item.nombre }}</div>
-                  <div class="text-xs text-gray-400">
+              <div class="cart-item flex items-center gap-2 p-2 rounded-lg border border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 transition-colors">
+                <div class="cart-item-info flex-1 min-w-0">
+                  <div class="font-medium text-sm text-gray-800 dark:text-gray-200 truncate">{{ item.nombre }}</div>
+                  <div class="text-xs text-gray-400 dark:text-gray-500">
                     Q {{ item.precio_unitario | number:'1.2-2' }} / {{ item.unidad }}
                     · Disp: {{ item.stock_disponible }}
                   </div>
                 </div>
-                <div class="cart-item-qty">
-                  <button class="qty-btn" (click)="changeQty(item, -1)">−</button>
-                  <span class="qty-val">{{ item.cantidad }}</span>
-                  <button class="qty-btn"
+                <div class="cart-item-qty flex items-center gap-1">
+                  <button class="qty-btn w-6 h-6 rounded-md bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-600 text-sm font-bold transition-colors flex items-center justify-center" (click)="changeQty(item, -1)">−</button>
+                  <span class="qty-val text-sm font-semibold text-gray-800 dark:text-gray-200 w-6 text-center">{{ item.cantidad }}</span>
+                  <button class="qty-btn w-6 h-6 rounded-md bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-600 text-sm font-bold transition-colors flex items-center justify-center"
                     [disabled]="item.cantidad >= item.stock_disponible"
                     [class.opacity-40]="item.cantidad >= item.stock_disponible"
+                    [class.cursor-not-allowed]="item.cantidad >= item.stock_disponible"
                     (click)="changeQty(item, 1)">+</button>
                 </div>
-                <div class="cart-item-sub">Q {{ item.subtotal | number:'1.2-2' }}</div>
-                <button class="btn-action" (click)="removeFromCart($index)">
+                <div class="cart-item-sub text-sm font-bold font-mono" style="color:var(--primary)">Q {{ item.subtotal | number:'1.2-2' }}</div>
+                <button class="btn-action hover:opacity-80 transition-opacity" (click)="removeFromCart($index)">
                   <ng-icon name="bootstrapXCircle" size="15" style="color:#ef4444"></ng-icon>
                 </button>
               </div>
@@ -149,43 +154,47 @@
           </div>
 
           <!-- Totales -->
-          <div class="totales-box mt-3">
-            <div class="totales-row">
+          <div class="totales-box mt-3 bg-gray-50 dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-3 space-y-1.5">
+            <div class="totales-row flex justify-between text-sm text-gray-600 dark:text-gray-400">
               <span>Subtotal ({{ cart.length }} producto{{ cart.length !== 1 ? 's' : '' }})</span>
-              <span>Q {{ subtotal | number:'1.2-2' }}</span>
+              <span class="font-mono">Q {{ subtotal | number:'1.2-2' }}</span>
             </div>
             @if (descuento > 0) {
-              <div class="totales-row" style="color:var(--success)">
+              <div class="totales-row flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
                 <span>Descuento</span>
-                <span>− Q {{ descuento | number:'1.2-2' }}</span>
+                <span class="font-mono">− Q {{ descuento | number:'1.2-2' }}</span>
               </div>
-              <div class="totales-row text-xs" style="color:var(--text-3)">
+              <div class="totales-row flex justify-between text-xs text-gray-400 dark:text-gray-500">
                 <span>Base imponible</span>
-                <span>Q {{ baseImponible | number:'1.2-2' }}</span>
+                <span class="font-mono">Q {{ baseImponible | number:'1.2-2' }}</span>
               </div>
             }
-            <div class="totales-row" [style.color]="ivaActivo ? 'inherit' : 'var(--text-3)'">
+            <div class="totales-row flex justify-between text-sm"
+              [class.text-gray-600]="ivaActivo"
+              [class.dark:text-gray-400]="ivaActivo"
+              [class.text-gray-400]="!ivaActivo"
+              [class.dark:text-gray-600]="!ivaActivo">
               <span>
                 IVA (12%)
                 @if (!ivaActivo) { <span class="text-xs ml-1">(inactivo)</span> }
               </span>
-              <span>Q {{ iva | number:'1.2-2' }}</span>
+              <span class="font-mono">Q {{ iva | number:'1.2-2' }}</span>
             </div>
-            <div class="totales-row totales-total">
-              <span>TOTAL</span>
-              <span>Q {{ total | number:'1.2-2' }}</span>
+            <div class="totales-row totales-total flex justify-between text-base font-bold border-t border-gray-200 dark:border-slate-600 pt-2 mt-2">
+              <span class="text-gray-800 dark:text-gray-100">TOTAL</span>
+              <span class="font-mono" style="color:var(--primary)">Q {{ total | number:'1.2-2' }}</span>
             </div>
           </div>
 
           <!-- Observaciones -->
-          <div class="form-group mt-3">
-            <label>Observaciones</label>
-            <textarea [(ngModel)]="observaciones" rows="2" placeholder="Notas de la venta..."></textarea>
+          <div class="form-group mt-3 flex flex-col gap-1">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Observaciones</label>
+            <textarea [(ngModel)]="observaciones" rows="2" placeholder="Notas de la venta..."
+              class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors resize-none"></textarea>
           </div>
 
           <!-- Botón procesar -->
-          <button class="btn btn-primary w-full mt-2"
-            style="padding:12px;font-size:14px"
+          <button class="btn btn-primary w-full mt-3 flex items-center justify-center gap-2 py-3 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white font-semibold text-sm transition-colors"
             (click)="save()"
             [disabled]="saving">
             @if (saving) {
