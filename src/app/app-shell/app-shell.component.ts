@@ -2,7 +2,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+  matLogoutOutline, matDarkModeOutline, matLightModeOutline
+} from '@ng-icons/material-icons/outline';
 import { AuthService } from '../core/services/services';
+import { ThemeService } from '../core/services/theme.service';
 import { SidebarComponent } from '../shared/components/sidebar/sidebar.component';
 import { ToastComponent } from '../shared/components/toast/toast.component';
 import { Usuario } from '../core/models/models';
@@ -10,13 +15,17 @@ import { Usuario } from '../core/models/models';
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterModule, SidebarComponent, ToastComponent],
+  imports: [CommonModule, RouterModule, NgIconComponent, SidebarComponent, ToastComponent],
+  providers: [provideIcons({ matLogoutOutline, matDarkModeOutline, matLightModeOutline })],
   templateUrl: './app-shell.component.html',
   styleUrls: ['./app-shell.component.scss']
 })
 export class AppShellComponent implements OnInit {
   private auth = inject(AuthService);
+  public  theme = inject(ThemeService);
   user?: Usuario | null;
 
   ngOnInit(): void { this.user = this.auth.user; }
+  logout(): void { this.auth.logout(); }
+  toggleTheme(): void { this.theme.toggle(); }
 }

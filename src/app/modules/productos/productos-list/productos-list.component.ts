@@ -1,3 +1,4 @@
+// productos-list.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,24 +7,23 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
   matSearchOutline, matAddOutline, matRemoveRedEyeOutline,
-  matModeEditOutline, matDeleteOutline, matInventory2Outline,
-  matArrowDownwardOutline, matArrowUpwardOutline
+  matModeEditOutline, matInventory2Outline
 } from '@ng-icons/material-icons/outline';
 import {
   bootstrapChevronLeft, bootstrapChevronRight,
   bootstrapChevronBarLeft, bootstrapChevronBarRight
 } from '@ng-icons/bootstrap-icons';
-import { EventBusService, ProductosService, ToastService } from '../../../core/services/services';
+import { ProductosService, ToastService } from '../../../core/services/services';
 import { Producto, Categoria } from '../../../core/models/models';
 
 @Component({
   selector: 'app-productos-list',
   standalone: true,
-  imports: [HeaderComponent, CommonModule, FormsModule, NgIconComponent, DecimalPipe],
+  imports: [
+    HeaderComponent,CommonModule, FormsModule, NgIconComponent, DecimalPipe],
   providers: [provideIcons({
     matSearchOutline, matAddOutline, matRemoveRedEyeOutline,
-    matModeEditOutline, matDeleteOutline, matInventory2Outline,
-    matArrowDownwardOutline, matArrowUpwardOutline,
+    matModeEditOutline, matInventory2Outline,
     bootstrapChevronLeft, bootstrapChevronRight,
     bootstrapChevronBarLeft, bootstrapChevronBarRight
   })],
@@ -34,24 +34,18 @@ export class ProductosListComponent implements OnInit {
   private svc    = inject(ProductosService);
   private toast  = inject(ToastService);
   private router = inject(Router);
-  private eventBus = inject(EventBusService);
 
-  items: Producto[]       = [];
+  items: Producto[]    = [];
   categorias: Categoria[] = [];
-  load         = false;
-  searchText   = '';
-  catFilter: number | undefined;
-  activoFilter = 'true';
-
-  sortConfig = { sortBy: 'nombre', sortOrder: 'asc' };
-
+  load = false;
+  searchText = ''; catFilter: number|undefined; activoFilter = 'true';
   page = 1; limit = 15; totalItems = 0;
 
-  get totalPages()     { return Math.max(1, Math.ceil(this.totalItems / this.limit)); }
-  get startIndex()     { return (this.page - 1) * this.limit + 1; }
-  get endIndex()       { return Math.min(this.page * this.limit, this.totalItems); }
-  get margenPromedio() { const m = this.items.map(i => i.margen || 0); return m.length ? m.reduce((a, b) => a + b, 0) / m.length : 0; }
-  get stockCritico()   { return this.items.filter(i => i.estado_stock === 'critico' || i.estado_stock === 'sin_stock').length; }
+  get totalPages()    { return Math.max(1, Math.ceil(this.totalItems / this.limit)); }
+  get startIndex()    { return (this.page - 1) * this.limit + 1; }
+  get endIndex()      { return Math.min(this.page * this.limit, this.totalItems); }
+  get margenPromedio(){ const m = this.items.map(i => i.margen||0); return m.length ? m.reduce((a,b)=>a+b,0)/m.length : 0; }
+  get stockCritico()  { return this.items.filter(i => i.estado_stock === 'critico' || i.estado_stock === 'sin_stock').length; }
 
   ngOnInit(): void {
     this.svc.getCategorias().subscribe(c => this.categorias = c);
@@ -66,36 +60,9 @@ export class ProductosListComponent implements OnInit {
     });
   }
 
-  changeSortOrderBy(field: string): void {
-    if (this.sortConfig.sortBy === field) {
-      this.sortConfig.sortOrder = this.sortConfig.sortOrder === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortConfig.sortBy    = field;
-      this.sortConfig.sortOrder = 'asc';
-    }
-    this.items = [...this.items].sort((a: any, b: any) => {
-      const va = a[field] ?? '', vb = b[field] ?? '';
-      const cmp = va > vb ? 1 : va < vb ? -1 : 0;
-      return this.sortConfig.sortOrder === 'asc' ? cmp : -cmp;
-    });
-  }
-
-delete(id: number): void {
-  if (!confirm('¿Eliminar este producto? Esta acción no se puede deshacer.')) return;
-  this.svc.delete(id).subscribe({
-    next: () => {
-      this.toast.success('Producto eliminado');
-      this.items = this.items.filter(p => p.id !== id);
-      this.totalItems = Math.max(0, this.totalItems - 1);
-       this.eventBus.emitRefresh();
-    },
-    error: (e) => this.toast.error(e?.error?.error || 'Error al eliminar')
-  });
-}
-
-  add():           void { this.router.navigate(['/productos/nuevo']); }
-  view(id: number):void { this.router.navigate(['/productos', id]); }
-  edit(id: number):void { this.router.navigate(['/productos', id, 'editar']); }
+  add():          void { this.router.navigate(['/productos/nuevo']); }
+  view(id:number):void { this.router.navigate(['/productos', id]); }
+  edit(id:number):void { this.router.navigate(['/productos', id, 'editar']); }
 
   firstPage():    void { this.page = 1; this.loadData(); }
   lastPage():     void { this.page = this.totalPages; this.loadData(); }

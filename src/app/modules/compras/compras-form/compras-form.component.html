@@ -4,10 +4,10 @@
 </app-header>
 
 <div class="p-2 m-2">
-  <div class="card max-w-4xl mx-auto bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm">
-    <div class="card-header flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-slate-700">
-      <span class="card-title text-gray-800 dark:text-gray-100 font-semibold text-lg">Datos de la Orden</span>
-      <button class="btn btn-outline btn-sm flex items-center gap-1 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-slate-600 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg px-3 py-1.5 text-sm transition-colors" (click)="cancel()">
+  <div class="card max-w-4xl mx-auto">
+    <div class="card-header">
+      <span class="card-title">Datos de la Orden</span>
+      <button class="btn btn-outline btn-sm" (click)="cancel()">
         <ng-icon name="matArrowBackOutline" size="16"></ng-icon> Volver
       </button>
     </div>
@@ -15,78 +15,61 @@
       @if (form) {
         <form [formGroup]="form" (ngSubmit)="save()">
 
-          <h3 class="section-title text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3 mt-1">Proveedor y Entrega</h3>
-          <div class="form-grid-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="form-group form-full md:col-span-2 flex flex-col gap-1">
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Proveedor *</label>
-              <select formControlName="proveedor_id"
-                class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
-                <option value="" class="bg-white dark:bg-slate-800">Seleccionar proveedor...</option>
-                @for (p of proveedores; track p.id) {
-                  <option [value]="p.id" class="bg-white dark:bg-slate-800">{{ p.nombre }}</option>
-                }
+          <h3 class="section-title">Proveedor y Entrega</h3>
+          <div class="form-grid-2">
+            <div class="form-group form-full">
+              <label>Proveedor *</label>
+              <select formControlName="proveedor_id">
+                <option value="">Seleccionar proveedor...</option>
+                @for (p of proveedores; track p.id) { <option [value]="p.id">{{ p.nombre }}</option> }
               </select>
               @if (f['proveedor_id'].invalid && f['proveedor_id'].touched) {
-                <span class="error-msg text-xs text-red-500 dark:text-red-400">Proveedor requerido</span>
-              }
+                <span class="error-msg">Proveedor requerido</span>}
             </div>
-            <div class="form-group flex flex-col gap-1">
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha de entrega estimada</label>
-              <input formControlName="fecha_entrega" type="date"
-                class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
+            <div class="form-group">
+              <label>Fecha de entrega estimada</label>
+              <input formControlName="fecha_entrega" type="date">
             </div>
-            <div class="form-group flex flex-col gap-1">
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Observaciones</label>
-              <input formControlName="observaciones" type="text" placeholder="Notas adicionales..."
-                class="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
+            <div class="form-group">
+              <label>Observaciones</label>
+              <input formControlName="observaciones" type="text" placeholder="Notas adicionales...">
             </div>
           </div>
 
-          <h3 class="section-title text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3 mt-6">Productos a Ordenar</h3>
+          <h3 class="section-title mt-4">Productos a Ordenar</h3>
 
           <!-- Agregar item -->
-          <div class="add-item-row flex flex-wrap gap-2 items-end">
-            <select [(ngModel)]="newItem.producto_id" [ngModelOptions]="{standalone: true}"
-              class="flex-1 min-w-[180px] rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
-              <option value="" class="bg-white dark:bg-slate-800">Seleccionar producto...</option>
-              @for (p of productos; track p.id) {
-                <option [value]="p.id" class="bg-white dark:bg-slate-800">{{ p.nombre }} ({{ p.unidad_medida }})</option>
-              }
+          <div class="add-item-row">
+            <select [(ngModel)]="newItem.producto_id" [ngModelOptions]="{standalone: true}" class="form-control flex-1">
+              <option value="">Seleccionar producto...</option>
+              @for (p of productos; track p.id) { <option [value]="p.id">{{ p.nombre }} ({{ p.unidad_medida }})</option> }
             </select>
             <input [(ngModel)]="newItem.cantidad" [ngModelOptions]="{standalone: true}"
-              type="number" min="0.01" step="0.01" placeholder="Cantidad"
-              class="w-28 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
+              type="number" min="0.01" step="0.01" placeholder="Cantidad" class="form-control w-28">
             <input [(ngModel)]="newItem.precio_unitario" [ngModelOptions]="{standalone: true}"
-              type="number" min="0.01" step="0.01" placeholder="Precio unit."
-              class="w-32 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors">
-            <button type="button"
-              class="btn btn-success btn-sm flex items-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-              (click)="addItem()">
+              type="number" min="0.01" step="0.01" placeholder="Precio unit." class="form-control w-32">
+            <button type="button" class="btn btn-success btn-sm" (click)="addItem()">
               <ng-icon name="matAddOutline" size="16"></ng-icon> Agregar
             </button>
           </div>
 
           @if (items.length > 0) {
-            <div class="table-wrap mt-3 overflow-x-auto rounded-lg border border-gray-200 dark:border-slate-700">
-              <table class="table-grid w-full text-sm">
-                <thead class="bg-gray-50 dark:bg-slate-800">
+            <div class="table-wrap mt-3">
+              <table class="table-grid w-full">
+                <thead>
                   <tr>
-                    <th class="text-left px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Producto</th>
-                    <th class="text-left px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Cantidad</th>
-                    <th class="text-left px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Precio Unit.</th>
-                    <th class="text-left px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Subtotal</th>
-                    <th class="px-3 py-2"></th>
+                    <th>Producto</th><th>Cantidad</th><th>Precio Unit.</th><th>Subtotal</th><th></th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
+                <tbody>
                   @for (item of items; track $index) {
-                    <tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
-                      <td class="px-3 py-2 text-gray-700 dark:text-gray-300">{{ getProductoNombre(item.producto_id) }}</td>
-                      <td class="px-3 py-2 font-mono text-gray-700 dark:text-gray-300">{{ item.cantidad }}</td>
-                      <td class="px-3 py-2 font-mono text-gray-700 dark:text-gray-300">Q {{ item.precio_unitario | number:'1.2-2' }}</td>
-                      <td class="px-3 py-2 font-mono font-bold" style="color:var(--primary)">Q {{ item.subtotal | number:'1.2-2' }}</td>
-                      <td class="px-3 py-2">
-                        <button type="button" class="btn-action hover:opacity-80 transition-opacity" (click)="removeItem($index)">
+                    <tr>
+                      <td>{{ getProductoNombre(item.producto_id) }}</td>
+                      <td class="font-mono">{{ item.cantidad }}</td>
+                      <td class="font-mono">Q {{ item.precio_unitario | number:'1.2-2' }}</td>
+                      <td class="font-mono font-bold" style="color:var(--primary)">Q {{ item.subtotal | number:'1.2-2' }}</td>
+                      <td>
+                        <button type="button" class="btn-action" (click)="removeItem($index)">
                           <ng-icon name="bootstrapXCircle" size="16" style="color:#ef4444"></ng-icon>
                         </button>
                       </td>
@@ -96,26 +79,16 @@
               </table>
             </div>
 
-            <div class="totales-box mt-4 bg-gray-50 dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-4 space-y-2 max-w-xs ml-auto">
-              <div class="totales-row flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                <span>Subtotal:</span><span class="font-mono">Q {{ subtotal | number:'1.2-2' }}</span>
-              </div>
-              <div class="totales-row flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                <span>IVA (12%):</span><span class="font-mono">Q {{ iva | number:'1.2-2' }}</span>
-              </div>
-              <div class="totales-row totales-total flex justify-between text-base font-bold text-gray-800 dark:text-gray-100 border-t border-gray-200 dark:border-slate-600 pt-2 mt-2">
-                <span>Total:</span><span class="font-mono" style="color:var(--primary)">Q {{ total | number:'1.2-2' }}</span>
-              </div>
+            <div class="totales-box">
+              <div class="totales-row"><span>Subtotal:</span><span>Q {{ subtotal | number:'1.2-2' }}</span></div>
+              <div class="totales-row"><span>IVA (12%):</span><span>Q {{ iva | number:'1.2-2' }}</span></div>
+              <div class="totales-row totales-total"><span>Total:</span><span>Q {{ total | number:'1.2-2' }}</span></div>
             </div>
           }
 
-          <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-slate-700">
-            <button type="button"
-              class="btn btn-outline px-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 text-sm transition-colors"
-              (click)="cancel()">Cancelar</button>
-            <button type="submit"
-              class="btn btn-primary flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-sm font-medium transition-colors"
-              [disabled]="saving || items.length === 0">
+          <div class="flex justify-end gap-3 mt-6 pt-4 border-t" style="border-color:var(--border)">
+            <button type="button" class="btn btn-outline" (click)="cancel()">Cancelar</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving || items.length === 0">
               @if (saving) { <span class="spinner-sm"></span> Guardando... }
               @else { <ng-icon name="matSaveOutline" size="16"></ng-icon> Crear Orden }
             </button>

@@ -32,6 +32,12 @@
           <ng-icon class="text-white font-bold m-1" size="17" name="matSearchOutline"></ng-icon>
         </div>
       </button>
+      <button class="btn-success h-10" (click)="exportarExcelReal()" [disabled]="!resumen">
+        <div class="flex text-center justify-center align-middle">
+          <p class="text-sm md:text-base align-middle">Exportar Excel</p>
+          <ng-icon class="text-white font-bold m-1" size="17" name="matDownloadOutline"></ng-icon>
+        </div>
+      </button>
       <div class="flex gap-2 ml-auto">
         <button (click)="setRango('semana')" class="btn-back h-10 text-sm font-semibold px-3">Esta semana</button>
         <button (click)="setRango('mes')"    class="btn-back h-10 text-sm font-semibold px-3">Este mes</button>

@@ -1,12 +1,13 @@
 // ================================================================
-// AGROSERVICIO EL TRIUNFO — Diseño basado en Librería Yami
+// AGROSERVICIO EL TRIUNFO — Estilos globales
 // ================================================================
+@use '@angular/material' as mat;
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-// ── Variables del sistema (paleta Agroservicio) ──────────────
+// ── Variables ────────────────────────────────────────────────
 :root {
   --primary:       #00C793;
   --primary-dark:  #009e75;
@@ -25,9 +26,11 @@
   --warning-bg:    #fffbeb;
   --success:       #10b981;
   --success-bg:    #ecfdf5;
+  --info:          #3b82f6;
+  --info-bg:       #eff6ff;
   --radius:        8px;
   --radius-lg:     12px;
-  --shadow:        0 1px 3px rgba(0,0,0,.08);
+  --shadow:        0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
   --shadow-md:     0 4px 12px rgba(0,0,0,.1);
   --font:          'Plus Jakarta Sans', sans-serif;
   --font-mono:     'JetBrains Mono', monospace;
@@ -35,233 +38,197 @@
 
 // ── Base ─────────────────────────────────────────────────────
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
 html, body {
-  height: 100%; font-family: var(--font); font-size: 14px;
-  color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased;
+  height: 100%;
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
 }
 
-// ================================================================
-// BOTONES — estilo Librería Yami
-// ================================================================
-.btn-primary {
-  background-color: #00C793;
-  @apply text-white rounded-xl p-4 pt-0 pb-0 m-2 mt-0 mb-0 inline-flex items-center justify-center gap-1;
-  &:hover   { background-color: #009e75; }
-  &:active  { opacity: .9; }
-  &:disabled{ opacity: .65; cursor: not-allowed; }
-}
-.btn-success {
-  @apply text-white rounded-xl p-4 pt-0 pb-0 m-2 mt-0 mb-0 bg-blue-500 inline-flex items-center justify-center gap-1;
-  &:hover  { @apply bg-blue-600; }
-  &:active { opacity: .9; }
-  &:disabled { opacity: .65; }
-}
-.btn-danger {
-  @apply bg-red-500 text-white rounded-xl p-4 pt-0 pb-0 m-2 mt-0 mb-0 inline-flex items-center justify-center gap-1;
-}
-.btn-back {
-  @apply pl-2 pr-3 bg-gray-100 dark:bg-slate-950 rounded-md pb-2 pt-2 flex gap-1 text-gray-500 dark:text-white;
-  &:active { @apply bg-gray-200 dark:bg-slate-800; }
-}
-.btn-action {
-  @apply p-1 rounded-lg inline-flex items-center justify-center;
-  &:active { @apply bg-gray-200 dark:bg-slate-800; }
-}
-.btn-pagination {
-  width: 25px !important; height: 25px !important;
-  @apply rounded-md text-center justify-center align-middle p-1 inline-flex items-center;
-  &:active { @apply bg-gray-100 dark:bg-slate-800 rounded-lg; }
-}
-
-// Alias para compatibilidad con agroservicio
+// ── Buttons ──────────────────────────────────────────────────
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   padding: 8px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 500;
   cursor: pointer; border: none; font-family: var(--font); transition: all .15s;
   white-space: nowrap; line-height: 1;
-  &.btn-primary   { background: var(--primary); color: #fff; border-radius: 12px; margin: 0 4px; &:hover { background: var(--primary-dark); } }
-  &.btn-success   { background: var(--blue); color: #fff; border-radius: 12px; margin: 0 4px; &:hover { background: #2d6fa3; } }
-  &.btn-danger    { background: var(--danger); color: #fff; border-radius: 12px; &:hover { background: #dc2626; } }
-  &.btn-outline   { background: var(--surface); color: var(--text-2); border: 1px solid var(--border); &:hover { background: var(--bg); } }
-  &.btn-ghost     { background: transparent; color: var(--text-2); &:hover { background: var(--bg); } }
-  &.btn-sm        { padding: 6px 12px; font-size: 12px; }
-  &.btn-icon      { width: 34px; height: 34px; padding: 0; background: none; border: none; color: var(--text-3); &:hover { background: var(--bg); color: var(--text); } }
-  &[disabled]     { opacity: .5; cursor: not-allowed; pointer-events: none; }
+
+  &-primary   { background: var(--primary); color: #fff; &:hover { background: var(--primary-dark); } }
+  &-success   { background: var(--blue); color: #fff; &:hover { background: #2d6fa3; } }
+  &-danger    { background: var(--danger); color: #fff; &:hover { background: #dc2626; } }
+  &-outline   { background: var(--surface); color: var(--text-2); border: 1px solid var(--border); &:hover { background: var(--bg); } }
+  &-ghost     { background: transparent; color: var(--text-2); &:hover { background: var(--bg); } }
+  &-sm        { padding: 6px 12px; font-size: 12px; }
+  &-xs        { padding: 4px 8px; font-size: 11px; }
+  &-icon      { width: 34px; height: 34px; padding: 0; border-radius: var(--radius); background: none; border: none; cursor: pointer; color: var(--text-3); transition: all .15s; &:hover { background: var(--bg); color: var(--text); } }
+  &[disabled] { opacity: .5; cursor: not-allowed; pointer-events: none; }
 }
 
-// ================================================================
-// TABLAS — estilo Librería Yami
-// ================================================================
+// ── Table ────────────────────────────────────────────────────
 .table-grid {
-  @apply w-full text-left border-separate;
+  width: 100%; border-collapse: collapse; font-size: 13px;
 
-  thead tr th {
-    @apply bg-gray-100 dark:bg-slate-950 rounded-lg w-auto text-gray-500 dark:text-gray-300;
-    button {
-      @apply text-gray-500 dark:text-gray-300 font-bold p-0 h-full align-middle flex pl-4 pr-2 w-full;
-      &:active { @apply bg-gray-200 dark:bg-slate-900 rounded-lg; }
-    }
+  thead th {
+    padding: 10px 14px; text-align: left; background: var(--bg);
+    border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 600;
+    color: var(--text-2); text-transform: uppercase; letter-spacing: .04em;
+    white-space: nowrap;
   }
-  tbody tr td { @apply text-gray-500 pl-3; }
-  tbody tr:hover { @apply bg-gray-100 text-gray-800 dark:bg-slate-700 dark:text-white; }
+
+  tbody td {
+    padding: 11px 14px; border-bottom: 1px solid rgba(0,0,0,.04);
+    color: var(--text); vertical-align: middle;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:nth-child(odd) td { background: rgba(248,250,252,.6); }
+  tbody tr:hover td { background: #f1f5f9; }
 }
 
-// ================================================================
-// PAGINACIÓN — estilo Librería Yami
-// ================================================================
-.pagination {
-  @apply w-full flex justify-center text-gray-600 dark:text-gray-400 mt-2;
-}
-.pagination-child {
-  @apply w-5/12 bg-gray-200 dark:bg-slate-950 flex rounded-lg p-4 pt-2 pb-2 align-middle justify-between;
-}
+// ── Badge ────────────────────────────────────────────────────
+.badge {
+  display: inline-flex; align-items: center; padding: 3px 9px;
+  border-radius: 20px; font-size: 11px; font-weight: 600;
 
-// ================================================================
-// ACCIONES
-// ================================================================
-.c-actions { @apply flex align-middle justify-center; }
-
-// ================================================================
-// KPI CARD — estilo Librería Yami con colores Agroservicio
-// ================================================================
-.kpi-card {
-  @apply bg-white dark:bg-slate-900 rounded-lg border dark:border-slate-800 p-3;
-  position: relative; overflow: hidden;
-  .kpi-accent {
-    position: absolute; top: 0; left: 0; bottom: 0; width: 4px; border-radius: 4px 0 0 4px;
-  }
-  .kpi-label {
-    @apply text-xs text-gray-400 dark:text-gray-500 font-semibold uppercase;
-    letter-spacing: .05em; padding-left: 8px;
-  }
-  .kpi-value {
-    @apply text-2xl font-bold text-gray-700 dark:text-gray-200;
-    padding-left: 8px; margin: 4px 0 2px;
-  }
-  .kpi-sub { @apply text-xs text-gray-400 dark:text-gray-500 pl-2; }
-  .kpi-icon {
-    position: absolute; right: 14px; top: 14px; width: 36px; height: 36px;
-    border-radius: 9px; display: flex; align-items: center; justify-content: center;
-  }
+  &-success { background: var(--success-bg); color: var(--success); }
+  &-warning { background: var(--warning-bg); color: var(--warning); }
+  &-danger  { background: var(--danger-bg);  color: var(--danger);  }
+  &-info    { background: var(--info-bg);    color: var(--info);    }
+  &-gray    { background: #f1f5f9; color: var(--text-2); }
 }
 
-// ================================================================
-// HEADER DE PÁGINA — estilo Librería Yami/Agroservicio
-// ================================================================
-.page-header-agro {
-  @apply md:p-1 m-2 bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-md p-2 text-center md:text-left md:rounded;
-  .page-header-title { @apply text-gray-400 dark:text-gray-300 text-lg font-bold; }
-  .page-header-desc  { @apply text-gray-400 dark:text-gray-300 text-xs hidden sm:block; }
-}
-
-// ================================================================
-// CARD — componente genérico
-// ================================================================
+// ── Card ─────────────────────────────────────────────────────
 .card {
   background: var(--surface); border-radius: var(--radius-lg);
   border: 1px solid var(--border); box-shadow: var(--shadow);
+
   &-header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    padding: 16px 18px; border-bottom: 1px solid var(--border);
   }
-  &-title  { font-size: 14px; font-weight: 600; color: var(--text); }
-  &-body   { padding: 18px; }
+  &-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  &-body { padding: 18px; }
 }
 
-// ================================================================
-// FORMULARIOS — estilo Librería Yami inputs
-// ================================================================
+// ── Form ─────────────────────────────────────────────────────
 .form-group {
   display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px;
+
   label { font-size: 12px; font-weight: 600; color: var(--text-2); }
+
   input, select, textarea {
     padding: 9px 12px; border: 1.5px solid var(--border); border-radius: var(--radius);
     font-size: 13px; color: var(--text); font-family: var(--font); outline: none;
-    background: var(--surface); transition: border-color .15s;
-    @apply bg-gray-200 dark:bg-slate-950 rounded-2xl dark:text-white;
+    background: var(--surface); transition: border-color .15s, box-shadow .15s;
+
     &:focus {
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(0,199,147,.1);
-      @apply dark:border-slate-700;
     }
     &.ng-invalid.ng-touched { border-color: var(--danger); }
   }
+
   textarea { resize: vertical; min-height: 80px; }
-  .error-msg { font-size: 11px; color: var(--danger); }
+
+  .error-msg { font-size: 11px; color: var(--danger); margin-top: 3px; }
 }
 
 .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .form-full   { grid-column: 1 / -1; }
 
-// section-title dentro de formularios
-.section-title {
-  font-size: 13px; font-weight: 700; color: var(--text-2);
-  text-transform: uppercase; letter-spacing: .05em;
-  padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 14px;
-}
+// ── Pagination ───────────────────────────────────────────────
+.pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 8px;
 
-// ================================================================
-// BADGES — estilo Librería Yami
-// ================================================================
-.badge {
-  display: inline-flex; align-items: center; padding: 3px 9px;
-  border-radius: 20px; font-size: 11px; font-weight: 600;
-  &-success { background: var(--success-bg); color: var(--success); }
-  &-warning { background: var(--warning-bg); color: var(--warning); }
-  &-danger  { background: var(--danger-bg);  color: var(--danger);  }
-  &-info    { background: var(--blue-light); color: var(--blue);    }
-  &-gray    { background: #f1f5f9; color: var(--text-2); }
-}
+  &-info { font-size: 12px; color: var(--text-2); b { color: var(--text); } }
+  &-controls { display: flex; align-items: center; gap: 4px; }
 
-// ================================================================
-// SEARCH WRAP — estilo Librería Yami
-// ================================================================
-.search-wrap {
-  position: relative;
-  .search-icon {
-    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
-    color: var(--text-3); pointer-events: none;
-  }
-  .search-input {
-    width: 100%; padding: 8px 12px 8px 32px;
-    @apply text-gray-400 bg-gray-100 py-2 font-bold text-left
-           focus:border-gray-300 focus:outline-none focus:border
-           dark:border-slate-800 dark:bg-slate-950 dark:focus:border-slate-700 dark:text-white
-           disabled:opacity-50 rounded-2xl placeholder-gray-400;
+  .pag-btn {
+    width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: var(--text-2); transition: all .15s; font-size: 12px;
+    &:hover { background: var(--bg); }
+    &.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    &:disabled { opacity: .4; cursor: not-allowed; }
   }
 }
 
-.date-input {
-  padding: 8px 10px; border: 1.5px solid var(--border); border-radius: var(--radius);
-  font-size: 12px; font-family: var(--font); background: var(--bg); outline: none;
-  @apply dark:bg-slate-950 dark:border-slate-700 dark:text-gray-300;
-  &:focus { border-color: var(--primary); }
+// ── KPI Card ─────────────────────────────────────────────────
+.kpi-card {
+  background: var(--surface); border-radius: var(--radius-lg);
+  border: 1px solid var(--border); padding: 16px; position: relative; overflow: hidden;
+
+  .kpi-accent { position: absolute; top: 0; left: 0; bottom: 0; width: 4px; }
+  .kpi-label  { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+  .kpi-value  { font-size: 24px; font-weight: 700; margin: 6px 0 3px; color: var(--text); }
+  .kpi-sub    { font-size: 11px; color: var(--text-3); }
+  .kpi-icon   { position: absolute; right: 14px; top: 14px; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
 }
 
-// ================================================================
-// FILTER BAR — compatible con ambos sistemas
-// ================================================================
+// ── Filter bar ───────────────────────────────────────────────
 .filter-bar {
-  display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+  display: flex; align-items: center; gap: 8px; padding: 12px 16px;
   border-bottom: 1px solid var(--border); background: var(--surface);
-  flex-wrap: wrap;
+  flex-wrap: wrap; position: sticky; top: 56px; z-index: 30;
+
+  .search-wrap { position: relative; flex: 1; max-width: 260px; min-width: 140px; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-3); pointer-events: none; }
+  .search-input {
+    width: 100%; padding: 8px 12px 8px 32px; border: 1.5px solid var(--border);
+    border-radius: var(--radius); font-size: 13px; background: var(--bg); font-family: var(--font);
+    outline: none; transition: border-color .15s;
+    &:focus { border-color: var(--primary); }
+  }
+  .date-input {
+    padding: 8px 10px; border: 1.5px solid var(--border); border-radius: var(--radius);
+    font-size: 12px; font-family: var(--font); background: var(--bg); cursor: pointer; outline: none;
+    &:focus { border-color: var(--primary); }
+  }
   .spacer { flex: 1; }
 }
 
-// ================================================================
-// TABS — estilo Librería Yami
-// ================================================================
+// ── Status dot ───────────────────────────────────────────────
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px;
+  &-success { background: var(--success); }
+  &-warning { background: var(--warning); }
+  &-danger  { background: var(--danger);  }
+  &-info    { background: var(--info);    }
+  &-gray    { background: var(--text-3);  }
+}
+
+// ── Tabs ─────────────────────────────────────────────────────
+.tabs-wrap { display: flex; gap: 4px; padding: 8px 16px; border-bottom: 1px solid var(--border); overflow-x: auto; background: var(--surface); }
 .tab-btn {
   padding: 7px 16px; border-radius: 20px; font-size: 12px; font-weight: 500;
-  cursor: pointer; border: 1px solid var(--border); background: var(--surface);
-  color: var(--text-2); white-space: nowrap; transition: all .15s;
+  cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text-2);
+  white-space: nowrap; transition: all .15s;
   &.active { background: var(--primary); color: #fff; border-color: var(--primary); }
   &:hover:not(.active) { background: var(--bg); }
 }
 
-// ================================================================
-// SKELETON — estilo Librería Yami
-// ================================================================
+// ── Time tabs ────────────────────────────────────────────────
+.time-tabs { display: flex; gap: 6px; padding: 12px 16px; }
+.time-tab {
+  flex: 1; padding: 9px; border-radius: var(--radius); text-align: center;
+  font-size: 13px; font-weight: 500; cursor: pointer; border: 1.5px solid var(--border);
+  background: var(--surface); color: var(--text-2); transition: all .15s;
+  &.active { background: #60a5fa; color: #fff; border-color: #60a5fa; }
+  &:hover:not(.active) { background: var(--bg); }
+}
+
+// ── Empty state ──────────────────────────────────────────────
+.empty-state {
+  text-align: center; padding: 60px 24px;
+  .empty-icon { width: 72px; height: 72px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+  .empty-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .empty-desc  { font-size: 13px; color: var(--text-2); margin-bottom: 20px; }
+}
+
+// ── Skeleton ─────────────────────────────────────────────────
 .skeleton {
   background: linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%);
   background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite;
@@ -269,96 +236,220 @@ html, body {
 }
 @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-// ================================================================
-// EMPTY STATE
-// ================================================================
-.empty-state {
-  text-align: center; padding: 60px 24px;
-  .empty-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
-  .empty-desc  { font-size: 13px; color: var(--text-2); margin-bottom: 20px; }
-}
-
-// ================================================================
-// DIALOG / MODAL — estilo Librería Yami
-// ================================================================
-.dialog-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.5);
-  z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px;
-}
-.dialog {
-  background: var(--surface); border-radius: 12px; width: 100%;
-  max-width: 480px; box-shadow: var(--shadow-md);
-  @apply dark:bg-slate-900 dark:border dark:border-slate-800;
-}
-.dialog-header {
-  padding: 16px 20px 12px; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-}
-.dialog-title  { font-size: 15px; font-weight: 700; }
-.dialog-body   { padding: 18px 20px; }
-.dialog-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
-
-// ================================================================
-// TOTALES — compras/ventas
-// ================================================================
-.totales-box {
-  margin-top: 14px; padding: 14px;
-  @apply bg-gray-50 dark:bg-slate-800 rounded-lg border dark:border-slate-700;
-  .totales-row {
-    display: flex; justify-content: space-between; font-size: 13px;
-    padding: 4px 0; color: var(--text-2);
-    span:last-child { font-family: var(--font-mono); }
-  }
-  .totales-total {
-    border-top: 1.5px solid var(--border); margin-top: 6px; padding-top: 8px;
-    font-size: 15px; font-weight: 700; color: var(--text);
-    span:last-child { color: var(--primary); }
-  }
-}
-
-// ================================================================
-// SPINNER
-// ================================================================
-.spinner-sm {
-  width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3);
-  border-top-color: #fff; border-radius: 50%;
-  animation: spin .7s linear infinite; display: inline-block; margin-right: 6px;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-// ================================================================
-// RESPONSIVE HELPERS — Librería Yami
-// ================================================================
+// ── Responsive content helpers ────────────────────────────────
 .content-sm      { @apply block sm:hidden; }
 .content-desktop { @apply hidden sm:block; }
 
+// ── Action button ─────────────────────────────────────────────
+.btn-action {
+  width: 30px; height: 30px; border-radius: 6px; border: none;
+  background: none; cursor: pointer; display: inline-flex; align-items: center;
+  justify-content: center; transition: background .15s;
+  &:hover { background: var(--bg); }
+  mat-icon { font-size: 18px !important; width: 18px !important; height: 18px !important; }
+}
+
+
+// ================================================================
+// RESPONSIVE — Tabla desktop vs tabla móvil
+// Breakpoint: 640px (sm de Tailwind)
+// ================================================================
+
+// En MÓVIL (<640px): mostrar tabla móvil, ocultar tabla desktop
 @media (max-width: 639px) {
+  // Ocultar tabla desktop
   table.sm\:table   { display: none !important; }
   .hidden.sm\:table { display: none !important; }
+
+  // Mostrar tabla móvil
   table.sm\:hidden  { display: table !important; }
+
+  // content-sm visible, content-desktop oculto
   .content-sm       { display: block !important; }
   .content-desktop  { display: none  !important; }
+
+  // Filtros: ocultar desktop, mostrar móvil
   .md\:flex.hidden  { display: none  !important; }
   .md\:hidden       { display: block !important; }
 }
+
+// En DESKTOP (>=640px): mostrar tabla desktop, ocultar tabla móvil
 @media (min-width: 640px) {
+  // Mostrar tabla desktop
   table.sm\:table   { display: table !important; }
   .hidden.sm\:table { display: table !important; }
+
+  // Ocultar tabla móvil
   table.sm\:hidden  { display: none  !important; }
+
+  // content-sm oculto, content-desktop visible
   .content-sm       { display: none  !important; }
   .content-desktop  { display: block !important; }
 }
 
 // ================================================================
-// INPUTS FOCUS — estilo Librería Yami
+// DARK MODE — Variables y overrides globales
 // ================================================================
-input[type="text"]:focus,
-input[type="password"]:focus,
-input[type="number"]:focus,
-input[type="email"]:focus,
-input[type="date"]:focus {
-  outline: 2px solid transparent; outline-offset: 2px;
-  --tw-ring-color: rgba(0,199,147,.2);
-  --tw-ring-shadow: 0 0 0 3px var(--tw-ring-color);
-  box-shadow: var(--tw-ring-shadow);
+:root {
+  --primary:       #00C793;
+  --primary-dark:  #009e75;
+  --primary-light: #e6faf5;
+  --blue:          #3b82f6;
+  --warning:       #f59e0b;
+  --danger:        #ef4444;
+  --success:       #10b981;
+  --bg:            #f9fafb;
+  --bg-card:       #ffffff;
+  --border:        #e5e7eb;
+  --text:          #111827;
+  --text-2:        #6b7280;
+  --input-bg:      #f3f4f6;
+  --warning-bg:    #fef3c7;
+}
+.dark {
+  --bg:            #0f172a;
+  --bg-card:       #1e293b;
+  --border:        #334155;
+  --text:          #f1f5f9;
+  --text-2:        #94a3b8;
+  --input-bg:      #1e293b;
+  --primary-light: #064e3b;
+  --warning-bg:    #292524;
+}
+
+// Formularios — modo oscuro
+.dark input:not([type='checkbox']):not([type='radio']),
+.dark select,
+.dark textarea {
+  background-color: var(--input-bg) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+.dark input::placeholder, .dark textarea::placeholder { color: #64748b !important; }
+.dark label { color: var(--text-2) !important; }
+
+// date-input
+.date-input {
+  @apply bg-gray-100 dark:bg-slate-950 text-gray-700 dark:text-gray-300
+         border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2
+         text-sm focus:outline-none focus:ring-2 focus:ring-primary/30;
+  height: 40px;
+}
+
+// search-wrap
+.search-wrap {
+  @apply relative flex items-center;
+  .search-icon { @apply absolute left-3 text-gray-400 pointer-events-none; }
+  .search-input {
+    @apply w-full pl-9 pr-4 py-2 rounded-xl text-sm
+           bg-gray-100 dark:bg-slate-950
+           text-gray-700 dark:text-gray-300
+           border border-gray-200 dark:border-slate-700
+           focus:outline-none focus:ring-2 focus:ring-primary/30;
+    height: 40px;
+  }
+}
+
+// btn-back
+.btn-back {
+  @apply flex items-center gap-1 px-3 rounded-lg text-sm font-medium
+         bg-gray-100 dark:bg-slate-800
+         text-gray-600 dark:text-gray-300
+         border border-gray-200 dark:border-slate-700
+         hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors;
+  height: 40px;
+}
+
+// tab-btn
+.tab-btn {
+  @apply px-4 py-1.5 rounded-xl text-xs font-semibold transition-colors
+         bg-gray-100 dark:bg-slate-800
+         text-gray-600 dark:text-gray-400
+         border border-gray-200 dark:border-slate-700;
+  &.active {
+    background: var(--primary);
+    color: white;
+    border-color: transparent;
+  }
+}
+
+// kpi-card — dark mode
+.kpi-card {
+  @apply relative overflow-hidden rounded-xl border p-3 flex flex-col gap-1
+         bg-white dark:bg-slate-900
+         border-gray-200 dark:border-slate-700;
+  .kpi-accent { @apply absolute left-0 top-0 bottom-0 w-1 rounded-l-xl; }
+  .kpi-label  { @apply text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 pl-3; }
+  .kpi-value  { @apply text-xl font-bold text-gray-800 dark:text-gray-100 pl-3; }
+  .kpi-sub    { @apply text-xs text-gray-400 dark:text-gray-500 pl-3; }
+}
+
+// badge — dark mode
+.badge {
+  @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold;
+  &.badge-success { background: #d1fae5; color: #065f46; }
+  &.badge-danger  { background: #fee2e2; color: #991b1b; }
+  &.badge-warning { background: #fef3c7; color: #92400e; }
+  &.badge-info    { background: #dbeafe; color: #1e40af; }
+  &.badge-gray    { background: #f3f4f6; color: #4b5563; }
+}
+.dark .badge {
+  &.badge-success { background: #064e3b; color: #6ee7b7; }
+  &.badge-danger  { background: #450a0a; color: #fca5a5; }
+  &.badge-warning { background: #292524; color: #fcd34d; }
+  &.badge-info    { background: #1e3a5f; color: #93c5fd; }
+  &.badge-gray    { background: #1e293b; color: #94a3b8; }
+}
+
+// card
+.card {
+  @apply rounded-xl border bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-700;
+  .card-header {
+    @apply flex items-center justify-between px-4 py-3
+           border-b border-gray-100 dark:border-slate-700
+           bg-gray-50 dark:bg-slate-800;
+    .card-title { @apply font-semibold text-sm text-gray-700 dark:text-gray-300; }
+  }
+  .card-body { @apply p-4; }
+}
+
+// section-title (formularios)
+.section-title {
+  @apply text-xs font-bold uppercase tracking-wider
+         text-gray-500 dark:text-gray-400
+         pb-2 border-b border-gray-200 dark:border-slate-700 mb-3;
+}
+
+// form-group / form-grid
+.form-group {
+  @apply flex flex-col gap-1;
+  label {
+    @apply text-xs font-semibold text-gray-600 dark:text-gray-400;
+  }
+  input, select, textarea {
+    @apply w-full rounded-lg px-3 py-2 text-sm
+           bg-gray-100 dark:bg-slate-950
+           text-gray-700 dark:text-gray-200
+           border border-gray-200 dark:border-slate-700
+           focus:outline-none focus:ring-2 focus:ring-primary/40;
+    &:disabled { @apply opacity-50 cursor-not-allowed; }
+  }
+  textarea { min-height: 80px; }
+  &.form-full { @apply col-span-2; }
+  .error-msg { @apply text-xs text-red-500 dark:text-red-400; }
+}
+.form-grid-2 { @apply grid grid-cols-1 sm:grid-cols-2 gap-4; }
+
+// Botones adicionales
+.btn-primary {
+  @apply flex items-center justify-center gap-1 px-4 rounded-lg text-sm font-semibold text-white transition-colors;
+  background: var(--primary);
+  &:hover { background: var(--primary-dark); }
+  &:disabled { @apply opacity-50 cursor-not-allowed; }
+}
+.btn-success {
+  @apply flex items-center justify-center gap-1 px-4 rounded-lg text-sm font-semibold text-white transition-colors;
+  background: #3b82f6;
+  &:hover { background: #2563eb; }
+  &:disabled { @apply opacity-50 cursor-not-allowed; }
 }

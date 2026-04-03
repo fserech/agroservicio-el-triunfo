@@ -1,214 +1,152 @@
+<!-- productos-list.component.html -->
 <app-header headerTitle="Productos"
-  headerDescription="Catálogo de productos con precios de compra, venta y márgenes de ganancia.">
+  headerDescription="Catálogo de productos con precios de compra, venta y márgenes.">
 </app-header>
 
 <div class="p-2 m-2 bg-white rounded dark:bg-slate-900 border dark:border-slate-800">
 
-  <!-- FILTROS -->
-  <div class="sticky top-0 z-10 grid grid-cols-1 gap-2 p-1 bg-white dark:bg-slate-900 border-b dark:border-slate-600">
-    <div class="border-none m-0 p-0 pb-2 w-full">
-      <button (click)="add()" type="button" class="btn-primary h-10 float-right w-28">
-        <div class="flex text-center justify-center align-middle">
-          <p class="text-sm">Nuevo</p>
-          <ng-icon class="text-white font-bold m-1" size="15" name="matAddOutline"></ng-icon>
-        </div>
-      </button>
+  <div class="filter-bar sticky top-0 z-10">
+    <div class="search-wrap">
+      <ng-icon class="search-icon" name="matSearchOutline" size="15"></ng-icon>
+      <input class="search-input" type="text" placeholder="Buscar nombre o código..."
+        [(ngModel)]="searchText" (input)="loadData()">
     </div>
-    <!-- DESKTOP -->
-    <div class="md:flex w-full hidden pl-2 gap-2 items-center">
-      <div class="search-wrap w-80">
-        <ng-icon class="search-icon" name="matSearchOutline" size="15"></ng-icon>
-        <input class="search-input" type="text" placeholder="Nombre o código..."
-               [(ngModel)]="searchText" (input)="loadData()">
-      </div>
-      <select class="date-input" [(ngModel)]="catFilter" (change)="loadData()">
-        <option [ngValue]="undefined">Todas las categorías</option>
-        @for (c of categorias; track c.id) { <option [value]="c.id">{{ c.nombre }}</option> }
-      </select>
-    </div>
-    <!-- MÓVIL -->
-    <div class="w-full md:hidden">
-      <div class="flex gap-2">
-        <div class="search-wrap flex-1">
-          <ng-icon class="search-icon" name="matSearchOutline" size="15"></ng-icon>
-          <input class="search-input w-full" type="text" placeholder="Buscar..."
-                 [(ngModel)]="searchText" (input)="loadData()">
-        </div>
-        <select class="date-input" [(ngModel)]="catFilter" (change)="loadData()">
-          <option [ngValue]="undefined">Todas</option>
-          @for (c of categorias; track c.id) { <option [value]="c.id">{{ c.nombre }}</option> }
-        </select>
-      </div>
-    </div>
+    <select class="date-input" [(ngModel)]="catFilter" (change)="loadData()">
+      <option value="">Todas las categorías</option>
+      @for (c of categorias; track c.id) { <option [value]="c.id">{{ c.nombre }}</option> }
+    </select>
+    <select class="date-input" [(ngModel)]="activoFilter" (change)="loadData()">
+      <option value="true">Solo activos</option>
+      <option value="false">Solo inactivos</option>
+      <option value="">Todos</option>
+    </select>
+    <div class="spacer"></div>
+    <button class="btn btn-primary btn-sm" (click)="add()">
+      <ng-icon name="matAddOutline" size="16"></ng-icon> Nuevo Producto
+    </button>
   </div>
 
-  <!-- KPIs -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-2 my-3">
-    <div class="kpi-card"><span class="kpi-accent" style="background:var(--primary)"></span><div class="kpi-label">Productos</div><div class="kpi-value">{{ totalItems }}</div></div>
-    <div class="kpi-card"><span class="kpi-accent" style="background:var(--warning)"></span><div class="kpi-label">Margen Prom.</div><div class="kpi-value">{{ margenPromedio | number:'1.1-1' }}%</div></div>
-    <div class="kpi-card"><span class="kpi-accent" style="background:var(--danger)"></span><div class="kpi-label">Stock Crítico</div><div class="kpi-value">{{ stockCritico }}</div></div>
-    <div class="kpi-card"><span class="kpi-accent" style="background:var(--blue)"></span><div class="kpi-label">Categorías</div><div class="kpi-value">{{ categorias.length }}</div></div>
+  <!-- KPI STRIP -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-3">
+    <div class="kpi-card"><span class="kpi-accent" style="background:var(--primary)"></span>
+      <div class="kpi-label">Productos</div><div class="kpi-value">{{ totalItems }}</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:var(--warning)"></span>
+      <div class="kpi-label">Margen Promedio</div>
+      <div class="kpi-value">{{ margenPromedio | number:'1.1-1' }}%</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:var(--danger)"></span>
+      <div class="kpi-label">Stock Crítico</div><div class="kpi-value">{{ stockCritico }}</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:var(--blue)"></span>
+      <div class="kpi-label">Categorías</div><div class="kpi-value">{{ categorias.length }}</div></div>
   </div>
 
-  <!-- PAGINACIÓN SUPERIOR MÓVIL -->
-  <div class="content-sm">
+  @if (load) {
+    <div class="p-4">@for (i of [1,2,3,4,5,6]; track i) {
+      <div class="skeleton h-10 mb-2 rounded-lg"></div>}</div>
+  }
+
+  @if (!load && items.length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon"><ng-icon name="matInventory2Outline" size="36" style="color:var(--text-3)"></ng-icon></div>
+      <div class="empty-title">No hay productos</div>
+      <button (click)="add()" class="btn btn-primary"><ng-icon name="matAddOutline" size="18"></ng-icon> Agregar producto</button>
+    </div>
+  }
+
+  @if (!load && items.length > 0) {
+    <div class="table-wrap">
+      <table class="table-grid w-full hidden sm:table">
+        <thead>
+          <tr>
+            <th>Código</th><th>Producto</th><th>Categoría</th>
+            <th>P. Compra</th><th>P. Venta</th><th>Margen</th>
+            <th>Unidad</th><th>Stock</th><th>Estado</th><th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of items; track p.id; let odd = $odd) {
+            <tr [class.bg-gray-50]="odd" class="hover:bg-blue-50 transition-colors">
+              <td class="font-mono text-xs text-gray-500">{{ p.codigo || '—' }}</td>
+              <td>
+                <div class="font-medium">{{ p.nombre }}</div>
+                <div class="text-xs text-gray-400 truncate max-w-xs">{{ p.descripcion }}</div>
+              </td>
+              <td><span class="badge badge-info text-xs">{{ p.cat_nombre }}</span></td>
+              <td class="font-mono text-sm">Q {{ p.precio_compra | number:'1.2-2' }}</td>
+              <td class="font-mono text-sm font-bold" style="color:var(--primary)">Q {{ p.precio_venta | number:'1.2-2' }}</td>
+              <td>
+                <span class="font-bold text-sm"
+                  [class.text-green-600]="(p.margen||0) >= 25"
+                  [class.text-yellow-600]="(p.margen||0) > 0 && (p.margen||0) < 25"
+                  [class.text-red-600]="(p.margen||0) <= 0">
+                  {{ p.margen | number:'1.1-1' }}%
+                </span>
+              </td>
+              <td class="text-sm text-gray-600">{{ p.unidad_medida }}</td>
+              <td>
+                <span class="font-mono text-sm"
+                  [ngClass]="{
+                    'text-red-600':    p.estado_stock === 'critico' || p.estado_stock === 'sin_stock',
+                    'text-yellow-600': p.estado_stock === 'bajo',
+                    'text-green-600':  p.estado_stock === 'normal' }">
+                  {{ p.stock_actual ?? '—' }}
+                </span>
+              </td>
+              <td>
+                <span class="badge" [class.badge-success]="p.activo" [class.badge-gray]="!p.activo">
+                  {{ p.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <div class="flex justify-center gap-1">
+                  <button class="btn-action" title="Ver detalle" (click)="view(p.id)">
+                    <ng-icon name="matRemoveRedEyeOutline" size="18" style="color:#3b82f6"></ng-icon></button>
+                  <button class="btn-action" title="Editar" (click)="edit(p.id)">
+                    <ng-icon name="matModeEditOutline" size="18" style="color:#f59e0b"></ng-icon></button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- MOBILE -->
+      <div class="sm:hidden">
+        @for (p of items; track p.id; let odd = $odd) {
+          <div class="border-b p-3" [class.bg-gray-50]="odd">
+            <div class="flex justify-between items-start mb-1">
+              <div>
+                <div class="font-medium text-sm">{{ p.nombre }}</div>
+                <div class="text-xs text-gray-400">{{ p.cat_nombre }} · {{ p.unidad_medida }}</div>
+              </div>
+              <div class="text-right">
+                <div class="font-bold text-sm" style="color:var(--primary)">Q {{ p.precio_venta | number:'1.2-2' }}</div>
+                <div class="text-xs text-green-600">{{ p.margen | number:'1.1-1' }}% margen</div>
+              </div>
+            </div>
+            <div class="flex justify-between items-center mt-2">
+              <span class="text-xs" [ngClass]="{'text-red-600': p.estado_stock!=='normal', 'text-green-600': p.estado_stock==='normal'}">
+                Stock: {{ p.stock_actual ?? '—' }} {{ p.unidad_medida }}
+              </span>
+              <div class="flex gap-1">
+                <button class="btn-action" (click)="edit(p.id)">
+                  <ng-icon name="matModeEditOutline" size="16" style="color:#f59e0b"></ng-icon></button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- PAGINATION -->
     <div class="pagination">
-      <div class="w-full bg-gray-100 block rounded-lg dark:bg-slate-950">
-        <div class="flex justify-between">
-          <p class="bg-white dark:bg-slate-900 p-1 m-1 rounded text-xs pl-2 w-48"><b>Páginas: </b>{{ page }} de {{ totalPages }}</p>
-          <p class="bg-white dark:bg-slate-900 p-1 m-1 rounded text-xs pl-2 w-48"><b>Items: </b>{{ startIndex }}-{{ endIndex }} de {{ totalItems }}</p>
-        </div>
+      <span class="pagination-info hidden sm:inline">Items <b>{{ startIndex }}</b>–<b>{{ endIndex }}</b> de <b>{{ totalItems }}</b></span>
+      <div class="pagination-controls">
+        <span class="pagination-info mr-2 hidden sm:inline">Página <b>{{ page }}</b> de <b>{{ totalPages }}</b></span>
+        <button class="pag-btn" (click)="firstPage()"    [disabled]="page===1"><ng-icon name="bootstrapChevronBarLeft"  size="13"></ng-icon></button>
+        <button class="pag-btn" (click)="previousPage()" [disabled]="page===1"><ng-icon name="bootstrapChevronLeft"     size="13"></ng-icon></button>
+        <button class="pag-btn" (click)="nextPage()"     [disabled]="page>=totalPages"><ng-icon name="bootstrapChevronRight"    size="13"></ng-icon></button>
+        <button class="pag-btn" (click)="lastPage()"     [disabled]="page>=totalPages"><ng-icon name="bootstrapChevronBarRight" size="13"></ng-icon></button>
       </div>
     </div>
-  </div>
-
-  <!-- TABLE DESKTOP -->
-  @if (!load) {
-    <table class="table-grid w-full mt-4 hidden sm:table">
-      <thead>
-        <tr>
-          <th><button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1" (click)="changeSortOrderBy('codigo')"><p>Código</p>@if(sortConfig.sortBy==='codigo'&&sortConfig.sortOrder==='asc'){<ng-icon size="18" name="matArrowDownwardOutline"></ng-icon>}@if(sortConfig.sortBy==='codigo'&&sortConfig.sortOrder==='desc'){<ng-icon size="18" name="matArrowUpwardOutline"></ng-icon>}</button></th>
-          <th><button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1" (click)="changeSortOrderBy('nombre')"><p>Producto</p>@if(sortConfig.sortBy==='nombre'&&sortConfig.sortOrder==='asc'){<ng-icon size="18" name="matArrowDownwardOutline"></ng-icon>}@if(sortConfig.sortBy==='nombre'&&sortConfig.sortOrder==='desc'){<ng-icon size="18" name="matArrowUpwardOutline"></ng-icon>}</button></th>
-          <th><button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"><p>Categoría</p></button></th>
-          <th><button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1" (click)="changeSortOrderBy('precio_compra')"><p>P. Compra</p>@if(sortConfig.sortBy==='precio_compra'&&sortConfig.sortOrder==='asc'){<ng-icon size="18" name="matArrowDownwardOutline"></ng-icon>}@if(sortConfig.sortBy==='precio_compra'&&sortConfig.sortOrder==='desc'){<ng-icon size="18" name="matArrowUpwardOutline"></ng-icon>}</button></th>
-          <th><button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1" (click)="changeSortOrderBy('precio_venta')"><p>P. Venta</p>@if(sortConfig.sortBy==='precio_venta'&&sortConfig.sortOrder==='asc'){<ng-icon size="18" name="matArrowDownwardOutline"></ng-icon>}@if(sortConfig.sortBy==='precio_venta'&&sortConfig.sortOrder==='desc'){<ng-icon size="18" name="matArrowUpwardOutline"></ng-icon>}</button></th>
-          <th><button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"><p>Margen</p></button></th>
-          <th><button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"><p>Stock</p></button></th>
-          <th><div class="w-full bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1 text-center"><p>Acciones</p></div></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (p of items; track p.id; let odd = $odd) {
-          <tr class="text-gray-500 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800"
-              [ngClass]="{'bg-gray-200 dark:bg-slate-950': odd}">
-            <td class="rounded font-mono text-xs text-gray-400">{{ p.codigo || '—' }}</td>
-            <td class="rounded">
-              <div class="font-medium text-gray-700 dark:text-gray-300">{{ p.nombre }}</div>
-              <div class="text-xs text-gray-400">{{ p.unidad_medida }}</div>
-            </td>
-            <td class="rounded"><span class="badge badge-info text-xs">{{ p.cat_nombre }}</span></td>
-            <td class="rounded font-mono text-sm">Q {{ p.precio_compra | number:'1.2-2' }}</td>
-            <td class="rounded font-mono text-sm font-bold" style="color:var(--primary)">Q {{ p.precio_venta | number:'1.2-2' }}</td>
-            <td class="rounded font-bold text-sm"
-                [class.text-green-600]="(p.margen||0)>=25"
-                [class.text-yellow-600]="(p.margen||0)<25">
-              {{ p.margen | number:'1.1-1' }}%
-            </td>
-            <td class="rounded text-sm"
-                [class.text-red-600]="p.estado_stock!=='normal'"
-                [class.text-green-600]="p.estado_stock==='normal'">
-              {{ p.stock_actual ?? '—' }}
-            </td>
-            <td class="rounded">
-              <div class="w-full c-actions flex justify-center gap-1">
-                <button (click)="view(p.id)" class="btn-action content-desktop">
-                  <ng-icon class="text-blue-500 font-bold" size="20" name="matRemoveRedEyeOutline"></ng-icon>
-                </button>
-                <button (click)="edit(p.id)" class="btn-action content-desktop">
-                  <ng-icon class="text-yellow-500 font-bold" size="20" name="matModeEditOutline"></ng-icon>
-                </button>
-                <button (click)="delete(p.id)" class="btn-action content-desktop">
-                  <ng-icon class="text-red-500 font-bold" size="20" name="matDeleteOutline"></ng-icon>
-                </button>
-              </div>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  } @else {
-    <table class="table-grid w-full mt-4 hidden sm:table">
-      <thead><tr>@for(i of [1,2,3,4,5,6,7,8]; track i){<td><div class="animate-pulse h-7 bg-gray-400 dark:bg-slate-500 rounded m-1"></div></td>}</tr></thead>
-      <tbody>@for(i of [1,2,3,4,5,6,7,8,9,10]; track i){<tr [ngClass]="{'bg-gray-200 dark:bg-slate-950':$odd}">@for(col of [1,2,3,4,5,6,7]; track col){<td class="w-20"><div class="animate-pulse h-2 m-2 bg-gray-400 dark:bg-slate-800 rounded"></div></td>}<td class="w-20"><div class="flex gap-1 p-1"><div class="animate-pulse rounded-md bg-blue-400 h-5 w-5"></div><div class="animate-pulse rounded-md bg-yellow-400 h-5 w-5"></div><div class="animate-pulse rounded-md bg-red-400 h-5 w-5"></div></div></td></tr>}</tbody>
-    </table>
-  }
-
-  <!-- TABLE MOBILE -->
-  @if (!load) {
-    <table class="table-grid w-full mt-4 sm:hidden">
-      <thead>
-        <tr>
-          <th>
-            <button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"
-                    (click)="changeSortOrderBy('nombre')">
-              <p>Productos del catálogo</p>
-              @if(sortConfig.sortBy==='nombre'&&sortConfig.sortOrder==='desc'){<ng-icon size="22" name="matArrowDownwardOutline"></ng-icon>}
-              @if(sortConfig.sortBy==='nombre'&&sortConfig.sortOrder==='asc'){<ng-icon size="22" name="matArrowUpwardOutline"></ng-icon>}
-            </button>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (p of items; track p.id; let odd = $odd) {
-          <tr class="text-gray-500 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800"
-              [ngClass]="{'bg-gray-200 dark:bg-slate-950': odd}">
-            <td class="rounded">
-              <div class="flex justify-between mt-4 mb-4 px-1">
-                <div>
-                  <p class="text-xs text-gray-400 font-mono">{{ p.codigo }}</p>
-                  <p class="font-bold text-gray-700 dark:text-gray-300">{{ p.nombre }}</p>
-                  <p class="text-xs text-gray-400">{{ p.cat_nombre }} · {{ p.unidad_medida }}</p>
-                  <div class="flex gap-3 mt-1">
-                    <p class="text-sm font-bold" style="color:var(--primary)">Q {{ p.precio_venta | number:'1.2-2' }}</p>
-                    <p class="text-sm text-green-600 font-medium">{{ p.margen | number:'1.1-1' }}%</p>
-                  </div>
-                </div>
-                <div class="flex flex-col gap-1 items-end">
-                  <span class="badge text-xs" [class.badge-success]="p.activo" [class.badge-gray]="!p.activo">
-                    {{ p.activo ? 'Activo' : 'Inactivo' }}
-                  </span>
-                  <p class="text-xs mt-1"
-                     [class.text-red-500]="p.estado_stock!=='normal'"
-                     [class.text-green-600]="p.estado_stock==='normal'">
-                    Stock: {{ p.stock_actual ?? '—' }}
-                  </p>
-                  <div class="flex gap-1 mt-1">
-                    <button (click)="edit(p.id)" class="btn-action">
-                      <ng-icon class="text-yellow-500" size="20" name="matModeEditOutline"></ng-icon>
-                    </button>
-                    <button (click)="delete(p.id)" class="btn-action">
-                      <ng-icon class="text-red-500" size="20" name="matDeleteOutline"></ng-icon>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  } @else {
-    <table class="table-grid w-full mt-4 sm:hidden">
-      <thead><tr><th><button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"><p>Productos</p></button></th></tr></thead>
-      <tbody>@for(i of [1,2,3,4,5,6]; track i){<tr [ngClass]="{'bg-gray-200 dark:bg-slate-950':$odd}"><td class="rounded"><div class="flex gap-2 p-2"><div class="rounded-md p-2 flex-1"><div class="animate-pulse space-y-2"><div class="h-2 bg-gray-300 dark:bg-slate-700 rounded w-3/4"></div><div class="h-2 bg-gray-300 dark:bg-slate-700 rounded w-1/2"></div><div class="h-2 bg-gray-300 dark:bg-slate-700 rounded w-2/3"></div></div></div><div class="rounded-md p-2 w-16"><div class="animate-pulse"><div class="float-end h-9 w-2 bg-gray-300 dark:bg-slate-700 rounded"></div></div></div></div></td></tr>}</tbody>
-    </table>
-  }
-
-  <!-- PAGINACIÓN DESKTOP -->
-  @if (!load) {
-    <div class="content-desktop"><div class="pagination"><div class="pagination-child">
-      <p><b class="bg-white dark:bg-slate-800 p-2 m-1 rounded text-sm">Página {{ page }} de {{ totalPages }}</b></p>
-      <p>Items {{ startIndex }} - {{ endIndex }} de {{ totalItems }}</p>
-      <button><ng-icon (click)="firstPage()"    class="btn-pagination" name="bootstrapChevronBarLeft"></ng-icon></button>
-      <button><ng-icon (click)="previousPage()" class="btn-pagination" name="bootstrapChevronLeft"></ng-icon></button>
-      <button><ng-icon (click)="nextPage()"     class="btn-pagination" name="bootstrapChevronRight"></ng-icon></button>
-      <button><ng-icon (click)="lastPage()"     class="btn-pagination" name="bootstrapChevronBarRight"></ng-icon></button>
-    </div></div></div>
-  }
-
-  <!-- PAGINACIÓN MÓVIL INFERIOR -->
-  @if (!load) {
-    <div class="content-sm"><div class="pagination"><div class="w-full bg-gray-100 block rounded-lg dark:bg-slate-950">
-      <div class="flex justify-between mb-2 p-2 rounded-lg border m-1 bg-white dark:bg-slate-900 dark:border-slate-700">
-        <button class="btn-pagination"><ng-icon (click)="firstPage()"    size="22" name="bootstrapChevronBarLeft"></ng-icon></button>
-        <button class="btn-pagination"><ng-icon (click)="previousPage()" size="22" name="bootstrapChevronLeft"></ng-icon></button>
-        <button class="btn-pagination"><ng-icon (click)="nextPage()"     size="22" name="bootstrapChevronRight"></ng-icon></button>
-        <button class="btn-pagination"><ng-icon (click)="lastPage()"     size="22" name="bootstrapChevronBarRight"></ng-icon></button>
-      </div>
-      <div class="flex justify-between">
-        <p class="bg-white dark:bg-slate-900 p-1 m-1 rounded text-sm pl-2"><b>Páginas: </b>{{ page }} de {{ totalPages }}</p>
-        <p class="bg-white dark:bg-slate-900 p-1 m-1 rounded text-sm pl-2"><b>Items: </b>{{ startIndex }}-{{ endIndex }} de {{ totalItems }}</p>
-      </div>
-    </div></div></div>
   }
 </div>

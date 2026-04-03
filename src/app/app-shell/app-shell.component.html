@@ -1,31 +1,41 @@
-<!-- app-shell.component.html — Layout estilo Librería Yami -->
-<div class="flex h-screen overflow-hidden bg-gray-50 dark:bg-slate-950">
-
+<!-- app-shell.component.html -->
+<div class="app-shell">
   <!-- SIDEBAR -->
   <app-sidebar></app-sidebar>
 
   <!-- MAIN CONTENT -->
-  <main class="flex flex-col flex-1 overflow-hidden min-w-0">
-
-    <!-- TOPBAR MOBILE -->
-    <header class="flex items-center justify-between px-4 h-14 bg-white dark:bg-slate-900
-                   border-b dark:border-slate-800 flex-shrink-0 lg:hidden">
-      <div class="flex items-center gap-2">
-        <div class="w-7 h-7 rounded-lg flex items-center justify-center"
-             style="background: linear-gradient(135deg, #00C793, #009e75);">
-          <svg viewBox="0 0 24 24" fill="white" width="14" height="14">
+  <main class="app-main">
+    <!-- TOP NAVBAR -->
+    <header class="topbar">
+      <div class="topbar-brand">
+        <div class="topbar-logo">
+          <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
             <path d="M12 2C8 2 4 6 4 10c0 6 8 12 8 12s8-6 8-12c0-4-4-8-8-8zm0 10a2 2 0 110-4 2 2 0 010 4z"/>
           </svg>
         </div>
-        <span class="text-sm font-bold text-gray-700 dark:text-white">Agroservicio El Triunfo</span>
+        <span class="topbar-name">Agroservicio El Triunfo</span>
       </div>
-      <div class="flex items-center gap-2">
-        <span class="text-xs text-gray-400 dark:text-gray-500">{{ user?.nombre }}</span>
+      <div class="topbar-actions">
+        <span class="topbar-user hidden sm:inline">{{ user?.nombre }}</span>
+
+        <!-- TOGGLE TEMA OSCURO/CLARO -->
+        <button class="btn-icon" (click)="toggleTheme()"
+          [title]="theme.isDark() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+          @if (theme.isDark()) {
+            <ng-icon name="matLightModeOutline" size="18"></ng-icon>
+          } @else {
+            <ng-icon name="matDarkModeOutline" size="18"></ng-icon>
+          }
+        </button>
+
+        <button class="btn-icon" title="Cerrar sesión" (click)="logout()">
+          <ng-icon name="matLogoutOutline" size="18"></ng-icon>
+        </button>
       </div>
     </header>
 
     <!-- ROUTER OUTLET -->
-    <div class="flex-1 overflow-y-auto pb-16 lg:pb-0">
+    <div class="app-content">
       <router-outlet></router-outlet>
     </div>
   </main>

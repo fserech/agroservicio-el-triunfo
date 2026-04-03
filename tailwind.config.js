@@ -1,15 +1,23 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: 'class',
   content: [
-    "./src/**/*.{html,ts}",
-    "./node_modules/flowbite/**/*.js"
+    "./src/**/*.{html,ts,scss}"
   ],
+  darkMode: 'class',
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: {
+          DEFAULT: '#00C793',
+          dark:    '#009e75',
+          light:   '#e6faf5',
+        }
+      },
+      fontFamily: {
+        sans:  ['Plus Jakarta Sans', 'sans-serif'],
+        mono:  ['JetBrains Mono', 'monospace'],
+      }
+    },
   },
-  plugins: [
-    require('tailwind-scrollbar'),
-    // require('flowbite/plugin')
-  ],
+  plugins: [],
 }

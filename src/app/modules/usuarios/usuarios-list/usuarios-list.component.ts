@@ -1,8 +1,9 @@
+// usuarios-list.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { matAddOutline, matModeEditOutline, matDeleteOutline } from '@ng-icons/material-icons/outline';
+import { matAddOutline, matModeEditOutline } from '@ng-icons/material-icons/outline';
 import { bootstrapToggleOn, bootstrapToggleOff } from '@ng-icons/bootstrap-icons';
 import { UsuariosService, ToastService } from '../../../core/services/services';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
@@ -12,7 +13,7 @@ import { Usuario } from '../../../core/models/models';
   selector: 'app-usuarios-list',
   standalone: true,
   imports: [CommonModule, NgIconComponent, DatePipe, HeaderComponent],
-  providers: [provideIcons({ matAddOutline, matModeEditOutline, matDeleteOutline, bootstrapToggleOn, bootstrapToggleOff })],
+  providers: [provideIcons({ matAddOutline, matModeEditOutline, bootstrapToggleOn, bootstrapToggleOff })],
   templateUrl: './usuarios-list.component.html',
   styleUrls: ['./usuarios-list.component.scss']
 })
@@ -35,11 +36,14 @@ export class UsuariosListComponent implements OnInit {
   }
 
   getRolLabel(rol: string): string {
-    return ({
+    return {
       admin: 'Administrador', supervisor: 'Supervisor',
       vendedor: 'Vendedor', bodeguero: 'Bodeguero', contador: 'Contador'
-    } as Record<string,string>)[rol] || rol;
+    }[rol] || rol;
   }
+
+  add():          void { this.router.navigate(['/usuarios/nuevo']); }
+  edit(id:number):void { this.router.navigate(['/usuarios', id, 'editar']); }
 
   toggleActivo(u: Usuario): void {
     this.svc.update(u.id, { ...u, activo: !u.activo }).subscribe({
@@ -47,18 +51,4 @@ export class UsuariosListComponent implements OnInit {
       error: e  => this.toast.error(e?.error?.error || 'Error')
     });
   }
-
- delete(id: number): void {
-  if (!confirm('¿Eliminar este usuario? Esta acción es permanente.')) return;
-  this.svc.delete(id).subscribe({
-    next: () => {
-      this.toast.success('Usuario eliminado');
-      this.items = this.items.filter(u => u.id !== id);
-    },
-    error: (e) => this.toast.error(e?.error?.error || 'Error al eliminar')
-  });
-}
-
-  add():           void { this.router.navigate(['/usuarios/nuevo']); }
-  edit(id: number):void { this.router.navigate(['/usuarios', id, 'editar']); }
 }

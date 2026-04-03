@@ -1,35 +1,26 @@
-// theme.service.ts
-import { Injectable, signal } from '@angular/core';
+// theme.service.ts — servicio centralizado para modo oscuro/claro
+import { Injectable, signal, effect } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
-  public default = 'light';
-  public themeChanged = signal(this.theme);
+  isDark = signal<boolean>(this.loadTheme());
 
   constructor() {
-    // Aplicar tema guardado al iniciar
-    this.applyTheme(this.theme);
+    // Aplicar tema al iniciar y cada vez que cambia
+    effect(() => {
+      const dark = this.isDark();
+      document.documentElement.classList.toggle('dark', dark);
+      localStorage.setItem('theme', dark ? 'dark' : 'light');
+    });
   }
 
-  public get theme(): string {
-    return localStorage.getItem('theme') ?? this.default;
-  }
+  toggle(): void { this.isDark.update(v => !v); }
 
-  public set theme(value: string) {
-    localStorage.setItem('theme', value);
-    this.themeChanged.set(value);
-    this.applyTheme(value);
-  }
+  setDark(val: boolean): void { this.isDark.set(val); }
 
-  public get isDark(): boolean {
-    return this.theme === 'dark';
-  }
-
-  private applyTheme(theme: string): void {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+  private loadTheme(): boolean {
+    const stored = localStorage.getItem('theme');
+    if (stored) return stored === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
 }
