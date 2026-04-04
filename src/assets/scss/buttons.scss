@@ -1,0 +1,78 @@
+.btn-primary{
+  background-color: #00C793;
+  @apply text-white rounded-xl p-4 pt-0 pb-0 m-2 mt-0 mb-0;
+}
+
+.btn-primary:active{
+  background-color: #00C793;
+  @apply opacity-90;
+}
+
+.btn-primary:disabled{
+  background-color: #00C793;
+  @apply opacity-65;
+}
+
+.btn-danger{
+  @apply bg-red-500 text-white rounded-xl p-4 pt-0 pb-0 m-2 mt-0 mb-0;
+}
+
+.btn-danger:active{
+  @apply opacity-90;
+}
+
+.btn-danger:disabled{
+  @apply opacity-65;
+}
+
+
+.btn-warning{
+  @apply bg-yellow-400 text-black rounded-xl p-4 pt-0 pb-0 m-2 mt-0 mb-0;
+}
+
+.btn-warning:active{
+  @apply bg-yellow-400 opacity-90;
+}
+
+.btn-success{
+  @apply text-white rounded-xl p-4 pt-0 pb-0 m-2 mt-0 mb-0 bg-blue-500;
+}
+
+.btn-success:active{
+  @apply opacity-90 bg-blue-500;
+}
+
+.btn-success:disabled{
+  @apply opacity-65;
+}
+
+
+.btn-action {
+  @apply p-1 rounded-lg;
+}
+
+.btn-action:active{
+  @apply bg-gray-200 dark:bg-slate-800 p-1 rounded-lg;
+}
+
+.btn-pagination {
+  width: 25px !important;
+  height: 25px !important;
+  @apply rounded-md text-center justify-center align-middle p-1;
+}
+
+.btn-pagination:active{
+  @apply bg-gray-100 dark:bg-slate-800 rounded-lg;
+}
+
+.btn-back {
+ @apply pl-2 pr-3 bg-gray-100 dark:bg-slate-950 rounded-md pb-2 pt-2 flex gap-1;
+}
+
+.btn-back:active {
+ @apply bg-gray-200 dark:bg-slate-800;
+}
+
+.btn-back {
+  @apply text-gray-500 dark:text-white;
+}

@@ -7,7 +7,8 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
   matSearchOutline, matAddOutline, matRemoveRedEyeOutline,
-  matModeEditOutline, matInventory2Outline
+  matModeEditOutline, matInventory2Outline,
+  matArrowDownwardOutline, matArrowUpwardOutline
 } from '@ng-icons/material-icons/outline';
 import {
   bootstrapChevronLeft, bootstrapChevronRight,
@@ -19,11 +20,11 @@ import { Producto, Categoria } from '../../../core/models/models';
 @Component({
   selector: 'app-productos-list',
   standalone: true,
-  imports: [
-    HeaderComponent,CommonModule, FormsModule, NgIconComponent, DecimalPipe],
+  imports: [HeaderComponent, CommonModule, FormsModule, NgIconComponent, DecimalPipe],
   providers: [provideIcons({
     matSearchOutline, matAddOutline, matRemoveRedEyeOutline,
     matModeEditOutline, matInventory2Outline,
+    matArrowDownwardOutline, matArrowUpwardOutline,
     bootstrapChevronLeft, bootstrapChevronRight,
     bootstrapChevronBarLeft, bootstrapChevronBarRight
   })],
@@ -35,17 +36,26 @@ export class ProductosListComponent implements OnInit {
   private toast  = inject(ToastService);
   private router = inject(Router);
 
-  items: Producto[]    = [];
+  items: Producto[]       = [];
   categorias: Categoria[] = [];
-  load = false;
-  searchText = ''; catFilter: number|undefined; activoFilter = 'true';
+  load        = false;
+  searchText  = '';
+  catFilter: number | undefined;
+  activoFilter = 'true';
+
+  sortBy    = 'nombre';
+  sortOrder = 'asc';
+
   page = 1; limit = 15; totalItems = 0;
 
   get totalPages()    { return Math.max(1, Math.ceil(this.totalItems / this.limit)); }
   get startIndex()    { return (this.page - 1) * this.limit + 1; }
   get endIndex()      { return Math.min(this.page * this.limit, this.totalItems); }
-  get margenPromedio(){ const m = this.items.map(i => i.margen||0); return m.length ? m.reduce((a,b)=>a+b,0)/m.length : 0; }
+  get margenPromedio(){ const m = this.items.map(i => i.margen || 0); return m.length ? m.reduce((a, b) => a + b, 0) / m.length : 0; }
   get stockCritico()  { return this.items.filter(i => i.estado_stock === 'critico' || i.estado_stock === 'sin_stock').length; }
+
+  // Objeto compatible con el template (sortConfig.sortBy / sortConfig.sortOrder)
+  sortConfig = { sortBy: 'nombre', sortOrder: 'asc' };
 
   ngOnInit(): void {
     this.svc.getCategorias().subscribe(c => this.categorias = c);
@@ -57,6 +67,22 @@ export class ProductosListComponent implements OnInit {
     this.svc.getAll(this.searchText, this.catFilter, this.activoFilter, this.page, this.limit).subscribe({
       next:  r => { this.items = r.data; this.totalItems = r.total; this.load = false; },
       error: () => { this.load = false; this.toast.error('Error cargando productos'); }
+    });
+  }
+
+  changeSortOrderBy(field: string): void {
+    if (this.sortConfig.sortBy === field) {
+      this.sortConfig.sortOrder = this.sortConfig.sortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortConfig.sortBy    = field;
+      this.sortConfig.sortOrder = 'asc';
+    }
+    // Ordenar localmente el array
+    this.items = [...this.items].sort((a: any, b: any) => {
+      const va = a[field] ?? '';
+      const vb = b[field] ?? '';
+      const cmp = va > vb ? 1 : va < vb ? -1 : 0;
+      return this.sortConfig.sortOrder === 'asc' ? cmp : -cmp;
     });
   }
 

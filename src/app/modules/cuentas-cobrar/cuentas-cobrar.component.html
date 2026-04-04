@@ -49,7 +49,7 @@
 
   @if (!load && items.length > 0) {
     <div class="table-wrap">
-      <table class="table-grid w-full hidden sm:table">
+      <table class="table-grid w-full hidden md:table">
         <thead>
           <tr>
             <th>Factura</th><th>Cliente</th><th>Total</th>
@@ -92,7 +92,7 @@
       </table>
 
       <!-- MOBILE -->
-      <div class="sm:hidden">
+      <div class="md:hidden">
         @for (c of items; track c.id; let odd=$odd) {
           <div class="border-b p-3" [class.bg-gray-50]="odd" [class.bg-red-50]="c.estado==='vencida'">
             <div class="flex justify-between items-start mb-1">

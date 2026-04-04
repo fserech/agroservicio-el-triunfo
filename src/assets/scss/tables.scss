@@ -1,0 +1,41 @@
+.table-grid {
+ @apply w-full text-left border-separate;
+}
+
+.table-grid thead tr th {
+  @apply bg-gray-100 dark:bg-slate-950 rounded-lg w-auto text-gray-500 dark:text-gray-300;
+ }
+
+ .table-grid thead tr th button {
+  @apply text-gray-500 dark:text-gray-300 font-bold p-0 h-full align-middle flex pl-4 pr-2 w-full;
+ }
+
+ .table-grid thead tr th button:active {
+  @apply bg-gray-200 dark:bg-slate-900 rounded-lg font-bold p-0 align-middle pl-4 pr-2;
+ }
+
+ .table-grid tbody tr td {
+  @apply text-gray-500 pl-3;
+ }
+
+ .table-grid tbody tr {
+  // @apply rounded-lg border bg-blue-500 border-slate-950;
+  // border-radius: 90% !important;
+  // @apply rounded-lg;
+ }
+
+ .table-grid tbody tr:hover {
+  @apply bg-gray-100 text-gray-800 dark:bg-slate-700 dark:text-white;
+ }
+
+ .c-actions{
+  @apply flex align-middle justify-center;
+ }
+
+ .pagination {
+  @apply w-full flex justify-center text-gray-600 dark:text-gray-400 mt-2;
+ }
+
+ .pagination-child {
+  @apply w-5/12 bg-gray-200 dark:bg-slate-950 flex rounded-lg p-4 pt-2 pb-2  align-middle justify-between;
+ }
