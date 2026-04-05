@@ -48,9 +48,21 @@
             <td><span class="badge" [ngClass]="getRolClass(u.rol)">{{ getRolLabel(u.rol) }}</span></td>
             <td class="text-xs text-gray-500 dark:text-gray-400">{{ u.ultimo_acceso ? (u.ultimo_acceso | date:'dd/MM/yy HH:mm') : 'Nunca' }}</td>
             <td><span class="badge" [class.badge-success]="u.activo" [class.badge-gray]="!u.activo">{{ u.activo ? 'Activo' : 'Inactivo' }}</span></td>
-            <td><div class="flex items-center justify-center">
-              <button (click)="edit(u.id)" class="btn-action" title="Editar"><ng-icon class="text-amber-500" size="18" name="matModeEditOutline"></ng-icon></button>
-            </div></td>
+            <td>
+              <div class="flex items-center justify-center gap-1">
+                <button (click)="edit(u.id, $event)" class="btn-action" title="Editar">
+                  <ng-icon class="text-amber-500" size="18" name="matModeEditOutline"></ng-icon>
+                </button>
+                <button (click)="delete(u, $event)" class="btn-action" title="Eliminar"
+                  [disabled]="deletingId === u.id">
+                  @if (deletingId === u.id) {
+                    <span class="inline-block w-4 h-4 border-2 border-red-300 border-t-red-500 rounded-full animate-spin"></span>
+                  } @else {
+                    <ng-icon class="text-red-500" size="18" name="matDeleteOutline"></ng-icon>
+                  }
+                </button>
+              </div>
+            </td>
           </tr>
         }
         @empty {<tr><td colspan="7" class="text-center py-10 text-gray-400 dark:text-gray-500">Sin usuarios</td></tr>}
@@ -59,7 +71,7 @@
   } @else {
     <table class="table-grid w-full mt-2 hidden sm:table">
       <thead><tr>@for(i of [1,2,3,4,5,6,7]; track i){<td><div class="animate-pulse h-8 bg-gray-200 dark:bg-slate-700 rounded-lg m-0.5"></div></td>}</tr></thead>
-      <tbody>@for(i of [1,2,3,4,5]; track i){<tr [ngClass]="{'bg-gray-50 dark:bg-slate-950':$odd}">@for(col of [1,2,3,4,5,6]; track col){<td><div class="animate-pulse h-3 bg-gray-200 dark:bg-slate-700 rounded my-2"></div></td>}<td><div class="flex gap-1 p-1 justify-center"><div class="animate-pulse rounded-lg bg-amber-200 dark:bg-amber-900/30 h-7 w-7"></div></div></td></tr>}</tbody>
+      <tbody>@for(i of [1,2,3,4,5]; track i){<tr [ngClass]="{'bg-gray-50 dark:bg-slate-950':$odd}">@for(col of [1,2,3,4,5,6]; track col){<td><div class="animate-pulse h-3 bg-gray-200 dark:bg-slate-700 rounded my-2"></div></td>}<td><div class="flex gap-1 p-1 justify-center"><div class="animate-pulse rounded-lg bg-amber-200 dark:bg-amber-900/30 h-7 w-7"></div><div class="animate-pulse rounded-lg bg-red-200 dark:bg-red-900/30 h-7 w-7"></div></div></td></tr>}</tbody>
     </table>
   }
 
@@ -90,9 +102,18 @@
                     <div class="text-xs text-gray-400 dark:text-gray-500">{{ u.email || 'Sin correo' }}</div>
                   </div>
                 </div>
-                <div class="flex items-center gap-2 flex-shrink-0 ml-2">
+                <div class="flex items-center gap-1 flex-shrink-0 ml-2">
                   <span class="badge" [class.badge-success]="u.activo" [class.badge-gray]="!u.activo">{{ u.activo ? 'Activo' : 'Inact.' }}</span>
-                  <button (click)="edit(u.id)" class="btn-action"><ng-icon class="text-amber-500" size="20" name="matModeEditOutline"></ng-icon></button>
+                  <button (click)="edit(u.id, $event)" class="btn-action">
+                    <ng-icon class="text-amber-500" size="20" name="matModeEditOutline"></ng-icon>
+                  </button>
+                  <button (click)="delete(u, $event)" class="btn-action" [disabled]="deletingId === u.id">
+                    @if (deletingId === u.id) {
+                      <span class="inline-block w-4 h-4 border-2 border-red-300 border-t-red-500 rounded-full animate-spin"></span>
+                    } @else {
+                      <ng-icon class="text-red-500" size="20" name="matDeleteOutline"></ng-icon>
+                    }
+                  </button>
                 </div>
               </div>
             </td>
@@ -104,7 +125,7 @@
   } @else {
     <table class="table-grid w-full mt-2 sm:hidden">
       <thead><tr><th><div class="animate-pulse h-8 bg-gray-200 dark:bg-slate-700 rounded-lg m-0.5"></div></th></tr></thead>
-      <tbody>@for(i of [1,2,3,4,5]; track i){<tr [ngClass]="{'bg-gray-50 dark:bg-slate-950':$odd}"><td class="py-3 px-2"><div class="flex items-center gap-3"><div class="animate-pulse rounded-full bg-gray-200 dark:bg-slate-700 h-10 w-10 flex-shrink-0"></div><div class="flex-1 space-y-2"><div class="animate-pulse h-4 bg-gray-200 dark:bg-slate-700 rounded w-36"></div><div class="animate-pulse h-3 bg-gray-100 dark:bg-slate-800 rounded w-24"></div></div><div class="animate-pulse rounded-lg bg-amber-200 dark:bg-amber-900/30 h-8 w-8"></div></div></td></tr>}</tbody>
+      <tbody>@for(i of [1,2,3,4,5]; track i){<tr [ngClass]="{'bg-gray-50 dark:bg-slate-950':$odd}"><td class="py-3 px-2"><div class="flex items-center gap-3"><div class="animate-pulse rounded-full bg-gray-200 dark:bg-slate-700 h-10 w-10 flex-shrink-0"></div><div class="flex-1 space-y-2"><div class="animate-pulse h-4 bg-gray-200 dark:bg-slate-700 rounded w-36"></div><div class="animate-pulse h-3 bg-gray-100 dark:bg-slate-800 rounded w-24"></div></div><div class="flex gap-1"><div class="animate-pulse rounded-lg bg-amber-200 dark:bg-amber-900/30 h-8 w-8"></div><div class="animate-pulse rounded-lg bg-red-200 dark:bg-red-900/30 h-8 w-8"></div></div></div></td></tr>}</tbody>
     </table>
   }
 </div>
