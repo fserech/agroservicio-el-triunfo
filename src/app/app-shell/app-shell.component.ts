@@ -21,11 +21,13 @@ import { Usuario } from '../core/models/models';
   styleUrls: ['./app-shell.component.scss']
 })
 export class AppShellComponent implements OnInit {
-  private auth = inject(AuthService);
+  private auth  = inject(AuthService);
   public  theme = inject(ThemeService);
   user?: Usuario | null;
 
   ngOnInit(): void { this.user = this.auth.user; }
-  logout(): void { this.auth.logout(); }
+  logout(): void   { this.auth.logout(); }
   toggleTheme(): void { this.theme.toggle(); }
+
+  get darkMode(): boolean { return this.theme.isDark; }
 }

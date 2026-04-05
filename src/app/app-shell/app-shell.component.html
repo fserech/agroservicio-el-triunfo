@@ -2,7 +2,6 @@
 <div class="app-shell">
   <!-- SIDEBAR -->
   <app-sidebar></app-sidebar>
-
   <!-- MAIN CONTENT -->
   <main class="app-main">
     <!-- TOP NAVBAR -->
@@ -17,29 +16,25 @@
       </div>
       <div class="topbar-actions">
         <span class="topbar-user hidden sm:inline">{{ user?.nombre }}</span>
-
         <!-- TOGGLE TEMA OSCURO/CLARO -->
         <button class="btn-icon" (click)="toggleTheme()"
-          [title]="theme.isDark() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
-          @if (theme.isDark()) {
-            <ng-icon name="matLightModeOutline" size="18"></ng-icon>
-          } @else {
-            <ng-icon name="matDarkModeOutline" size="18"></ng-icon>
-          }
-        </button>
-
+  [title]="darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+  @if (darkMode) {
+    <ng-icon name="matLightModeOutline" size="18"></ng-icon>
+  } @else {
+    <ng-icon name="matDarkModeOutline" size="18"></ng-icon>
+  }
+</button>
         <button class="btn-icon" title="Cerrar sesión" (click)="logout()">
           <ng-icon name="matLogoutOutline" size="18"></ng-icon>
         </button>
       </div>
     </header>
-
     <!-- ROUTER OUTLET -->
     <div class="app-content">
       <router-outlet></router-outlet>
     </div>
   </main>
 </div>
-
 <!-- TOAST GLOBAL -->
 <app-toast></app-toast>
