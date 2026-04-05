@@ -1,157 +1,134 @@
 <app-header headerTitle="Proveedores" headerDescription="Directorio de proveedores. Gestiona contactos, categorías y condiciones de crédito."></app-header>
 
-<div class="p-2 m-2 bg-white rounded dark:bg-slate-900 border dark:border-slate-800">
-
-  <div class="sticky top-0 z-10 grid grid-cols-1 gap-2 p-1 bg-white dark:bg-slate-900 border-b dark:border-slate-600">
-    <div class="border-none m-0 p-0 pb-2 w-full">
-      <button (click)="add()" type="button" class="btn btn-primary h-10 float-right w-28">
-        <div class="flex text-center justify-center align-middle">
-          <p class="text-sm">Nuevo</p>
-          <ng-icon class="text-white font-bold m-1" size="15" name="matAddOutline"></ng-icon>
-        </div>
-      </button>
+<div class="p-2 m-2 bg-white rounded-xl dark:bg-slate-900 border border-gray-200 dark:border-slate-800">
+  <!-- TOOLBAR -->
+  <div class="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 p-2 pb-3">
+    <div class="flex items-center gap-2 sm:hidden">
+      <div class="search-wrap flex-1"><ng-icon class="search-icon" name="matSearchOutline" size="15"></ng-icon><input class="search-input" type="text" placeholder="Buscar proveedor..." [(ngModel)]="searchText" (input)="loadData()"></div>
+      <button (click)="add()" class="btn-primary h-10 px-3"><ng-icon name="matAddOutline" size="18"></ng-icon></button>
     </div>
-    <div class="md:flex w-full hidden pl-2 gap-2 items-center">
-      <div class="search-wrap w-80">
-        <ng-icon class="search-icon" name="matSearchOutline" size="15"></ng-icon>
-        <input class="search-input" type="text" placeholder="Nombre o NIT..." [(ngModel)]="searchText" (input)="loadData()">
-      </div>
+    <div class="hidden sm:flex items-center gap-2">
+      <div class="search-wrap w-72"><ng-icon class="search-icon" name="matSearchOutline" size="15"></ng-icon><input class="search-input" type="text" placeholder="Nombre, NIT..." [(ngModel)]="searchText" (input)="loadData()"></div>
       <div class="flex-1"></div>
-      <button (click)="add()" type="button" class="btn btn-primary h-10">
-        <ng-icon class="text-white m-1" size="17" name="matAddOutline"></ng-icon> Nuevo Proveedor
-      </button>
-    </div>
-    <div class="w-full md:hidden">
-      <div class="search-wrap w-full">
-        <ng-icon class="search-icon" name="matSearchOutline" size="15"></ng-icon>
-        <input class="search-input w-full" type="text" placeholder="Buscar proveedor..." [(ngModel)]="searchText" (input)="loadData()">
-      </div>
+      <button (click)="add()" class="btn-primary h-10"><ng-icon name="matAddOutline" size="16"></ng-icon> Nuevo Proveedor</button>
     </div>
   </div>
 
-  <div class="grid grid-cols-2 md:grid-cols-3 gap-3 p-2 my-3">
-    <div class="kpi-card"><span class="kpi-accent" style="background:var(--primary)"></span><div class="kpi-label">Proveedores</div><div class="kpi-value">{{ items.length }}</div></div>
-    <div class="kpi-card"><span class="kpi-accent" style="background:var(--blue)"></span><div class="kpi-label">Compras Totales</div><div class="kpi-value">Q {{ comprasTotal | number:'1.0-0' }}</div></div>
-    <div class="kpi-card"><span class="kpi-accent" style="background:var(--warning)"></span><div class="kpi-label">Con Crédito</div><div class="kpi-value">{{ conCredito }}</div></div>
+  <!-- KPIs -->
+  <div class="grid grid-cols-3 gap-3 p-2 my-2">
+    <div class="kpi-card"><span class="kpi-accent" style="background:#00C793"></span><div class="kpi-label">Proveedores</div><div class="kpi-value">{{ items.length }}</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:#3887BF"></span><div class="kpi-label">Compras Tot.</div><div class="kpi-value text-sm">Q {{ comprasTotal|number:'1.0-0' }}</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:#f59e0b"></span><div class="kpi-label">Con Crédito</div><div class="kpi-value">{{ conCredito }}</div></div>
   </div>
 
-  <!-- TABLE DESKTOP -->
+  <!-- TABLA DESKTOP -->
   @if (!load) {
-    <table class="table-grid w-full mt-4 hidden sm:table">
+    <table class="table-grid w-full mt-2 hidden sm:table">
       <thead>
         <tr>
-          <th><button class="w-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1" (click)="changeSortOrderBy('nombre')"><p>Proveedor</p>@if(sortConfig.sortBy==='nombre'&&sortConfig.sortOrder==='asc'){<ng-icon size="18" name="matArrowDownwardOutline"></ng-icon>}@if(sortConfig.sortBy==='nombre'&&sortConfig.sortOrder==='desc'){<ng-icon size="18" name="matArrowUpwardOutline"></ng-icon>}</button></th>
-          <th><button class="w-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"><p>Categoría</p></button></th>
-          <th><button class="w-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"><p>Contacto</p></button></th>
-          <th><button class="w-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"><p>Plazo Crédito</p></button></th>
-          <th><button class="w-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1" (click)="changeSortOrderBy('compras_totales')"><p>Compras</p></button></th>
-          <th><button class="w-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"><p>Estado</p></button></th>
-          <th><div class="w-full bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1 text-center"><p>Acciones</p></div></th>
+          <th><button class="w-full flex items-center gap-1 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors" (click)="changeSortOrderBy('nombre')">Proveedor @if(sortConfig.sortBy==='nombre'&&sortConfig.sortOrder==='asc'){<ng-icon size="14" name="matArrowDownwardOutline"></ng-icon>}@if(sortConfig.sortBy==='nombre'&&sortConfig.sortOrder==='desc'){<ng-icon size="14" name="matArrowUpwardOutline"></ng-icon>}</button></th>
+          <th><div class="flex items-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5">Categoría</div></th>
+          <th><div class="flex items-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5">Contacto</div></th>
+          <th><div class="flex items-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5">Crédito</div></th>
+          <th><button class="w-full flex items-center gap-1 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors" (click)="changeSortOrderBy('compras_totales')">Compras</button></th>
+          <th><div class="flex items-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5">Estado</div></th>
+          <th><div class="flex items-center justify-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5">Acciones</div></th>
         </tr>
       </thead>
       <tbody>
         @for (p of items; track p.id; let odd = $odd) {
-          <tr class="text-gray-500 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800" [ngClass]="{'bg-gray-200 dark:bg-slate-950': odd}">
-            <td class="rounded"><div class="font-medium text-gray-700 dark:text-gray-300">{{ p.nombre }}</div><div class="text-xs text-gray-400">{{ p.razon_social }}</div></td>
-            <td class="rounded"><span class="badge badge-info text-xs">{{ p.categoria || 'General' }}</span></td>
-            <td class="rounded text-sm">{{ p.contacto || '—' }}<br><span class="text-xs text-gray-400">{{ p.telefono }}</span></td>
-            <td class="rounded text-sm">{{ p.plazo_credito > 0 ? p.plazo_credito + ' días' : 'Contado' }}</td>
-            <td class="rounded font-bold font-mono text-sm" style="color:var(--primary)">Q {{ (p.compras_totales||0) | number:'1.0-0' }}</td>
-            <td class="rounded"><span class="badge" [class.badge-success]="p.activo" [class.badge-gray]="!p.activo">{{ p.activo ? 'Activo':'Inactivo' }}</span></td>
-            <td class="rounded">
-              <div class="w-full flex justify-center gap-1">
-                <button class="btn-action" (click)="view(p.id)"><ng-icon class="text-blue-500" size="20" name="matRemoveRedEyeOutline"></ng-icon></button>
-                <button class="btn-action" (click)="edit(p.id)"><ng-icon class="text-yellow-500" size="20" name="matModeEditOutline"></ng-icon></button>
-                <button class="btn-action" (click)="nuevaOrden(p.id)"><ng-icon class="text-purple-500" size="20" name="matShoppingCartOutline"></ng-icon></button>
-              </div>
-            </td>
+          <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-colors" [ngClass]="{'bg-gray-50 dark:bg-slate-950': odd}">
+            <td><div class="font-semibold text-gray-800 dark:text-gray-200 text-sm">{{ p.nombre }}</div><div class="text-xs text-gray-400 dark:text-gray-500">{{ p.razon_social }}</div></td>
+            <td><span class="badge badge-info">{{ p.categoria || 'General' }}</span></td>
+            <td class="text-sm text-gray-600 dark:text-gray-400"><div>{{ p.contacto || '—' }}</div><div class="text-xs text-gray-400 dark:text-gray-500">{{ p.telefono }}</div></td>
+            <td class="text-sm text-gray-600 dark:text-gray-400">{{ p.plazo_credito > 0 ? p.plazo_credito + ' días' : 'Contado' }}</td>
+            <td class="font-bold font-mono text-sm" style="color:#00C793">Q {{ (p.compras_totales||0)|number:'1.0-0' }}</td>
+            <td><span class="badge" [class.badge-success]="p.activo" [class.badge-gray]="!p.activo">{{ p.activo ? 'Activo' : 'Inactivo' }}</span></td>
+            <td><div class="flex items-center justify-center gap-1">
+              <button (click)="view(p.id)" class="btn-action"><ng-icon class="text-blue-500" size="18" name="matRemoveRedEyeOutline"></ng-icon></button>
+              <button (click)="edit(p.id)" class="btn-action"><ng-icon class="text-amber-500" size="18" name="matModeEditOutline"></ng-icon></button>
+              <button (click)="nuevaOrden(p.id)" class="btn-action" title="Nueva orden"><ng-icon class="text-purple-500" size="18" name="matShoppingCartOutline"></ng-icon></button>
+            </div></td>
           </tr>
         }
+        @empty {<tr><td colspan="7" class="text-center py-10 text-gray-400 dark:text-gray-500">Sin proveedores</td></tr>}
       </tbody>
     </table>
   } @else {
-    <table class="table-grid w-full mt-4 hidden sm:table">
-      <thead><tr>@for(i of [1,2,3,4,5,6,7]; track i){<td><div class="animate-pulse h-7 bg-gray-400 dark:bg-slate-500 rounded m-1"></div></td>}</tr></thead>
-      <tbody>@for(i of [1,2,3,4,5,6,7,8,9,10]; track i){
-        <tr [ngClass]="{'bg-gray-200 dark:bg-slate-950':$odd}">
-          @for(col of [1,2,3,4,5,6]; track col){<td class="w-20"><div class="animate-pulse h-2 m-2 bg-gray-400 dark:bg-slate-800 rounded" [ngClass]="{'dark:bg-slate-500':$odd}"></div></td>}
-          <td class="w-20"><div class="flex gap-1 p-1"><div class="animate-pulse rounded-md bg-blue-400 h-5 w-5"></div><div class="animate-pulse rounded-md bg-yellow-400 h-5 w-5"></div><div class="animate-pulse rounded-md bg-purple-400 h-5 w-5"></div></div></td>
-        </tr>
-      }</tbody>
+    <table class="table-grid w-full mt-2 hidden sm:table">
+      <thead><tr>@for(i of [1,2,3,4,5,6,7]; track i){<td><div class="animate-pulse h-8 bg-gray-200 dark:bg-slate-700 rounded-lg m-0.5"></div></td>}</tr></thead>
+      <tbody>@for(i of [1,2,3,4,5,6,7,8]; track i){<tr [ngClass]="{'bg-gray-50 dark:bg-slate-950':$odd}">@for(col of [1,2,3,4,5,6]; track col){<td><div class="animate-pulse h-3 bg-gray-200 dark:bg-slate-700 rounded my-2"></div></td>}<td><div class="flex gap-1 p-1"><div class="animate-pulse rounded-lg bg-blue-200 dark:bg-blue-900/30 h-7 w-7"></div><div class="animate-pulse rounded-lg bg-amber-200 dark:bg-amber-900/30 h-7 w-7"></div><div class="animate-pulse rounded-lg bg-purple-200 dark:bg-purple-900/30 h-7 w-7"></div></div></td></tr>}</tbody>
     </table>
   }
 
-  <!-- TABLE MOBILE -->
+  <!-- TABLA MOBILE -->
   @if (!load) {
-    <table class="table-grid w-full mt-4 sm:hidden">
-      <thead><tr><th><button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1" (click)="changeSortOrderBy('nombre')"><p>Proveedores</p>@if(sortConfig.sortBy==='nombre'&&sortConfig.sortOrder==='desc'){<ng-icon size="22" name="matArrowDownwardOutline"></ng-icon>}@if(sortConfig.sortBy==='nombre'&&sortConfig.sortOrder==='asc'){<ng-icon size="22" name="matArrowUpwardOutline"></ng-icon>}</button></th></tr></thead>
+    <table class="table-grid w-full mt-2 sm:hidden">
+      <thead><tr><th>
+        <button class="w-full flex items-center gap-1 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5" (click)="changeSortOrderBy('nombre')">
+          <span class="font-semibold">Proveedores</span>
+          @if(sortConfig.sortBy==='nombre'&&sortConfig.sortOrder==='asc'){<ng-icon size="14" name="matArrowUpwardOutline"></ng-icon>}
+          @if(sortConfig.sortBy==='nombre'&&sortConfig.sortOrder==='desc'){<ng-icon size="14" name="matArrowDownwardOutline"></ng-icon>}
+          <span class="ml-auto text-xs text-gray-400 dark:text-gray-500 font-normal">{{ items.length }}</span>
+        </button>
+      </th></tr></thead>
       <tbody>
         @for (p of items; track p.id; let odd = $odd) {
-          <tr class="text-gray-500 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800" [ngClass]="{'bg-gray-200 dark:bg-slate-950': odd}">
-            <td class="rounded">
-              <div class="flex justify-between mt-4 mb-4 px-1">
-                <div>
-                  <p class="font-bold text-gray-700 dark:text-gray-300">{{ p.nombre }}</p>
-                  <p class="text-xs text-gray-400 mt-0.5">{{ p.categoria || 'General' }} · {{ p.telefono }}</p>
-                  <p class="text-xs text-gray-400">{{ p.contacto }}</p>
-                  <p class="text-sm font-bold mt-1" style="color:var(--primary)">Q {{ (p.compras_totales||0) | number:'1.0-0' }}</p>
-                </div>
-                <div class="flex flex-col gap-1 items-end">
-                  <span class="badge text-xs" [class.badge-success]="p.activo" [class.badge-gray]="!p.activo">{{ p.activo ? 'Activo':'Inactivo' }}</span>
-                  <div class="flex gap-1 mt-2">
-                    <button class="btn-action" (click)="edit(p.id)"><ng-icon class="text-yellow-500" size="20" name="matModeEditOutline"></ng-icon></button>
-                    <button class="btn-action" (click)="nuevaOrden(p.id)"><ng-icon class="text-purple-500" size="20" name="matShoppingCartOutline"></ng-icon></button>
+          <tr [ngClass]="{'bg-gray-50 dark:bg-slate-950': odd}">
+            <td class="py-2">
+              <div class="flex items-start justify-between px-1">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-0.5">
+                    <span class="font-bold text-gray-800 dark:text-gray-200 text-sm truncate">{{ p.nombre }}</span>
+                    <span class="badge" [class.badge-success]="p.activo" [class.badge-gray]="!p.activo">{{ p.activo ? 'Activo' : 'Inact.' }}</span>
                   </div>
+                  <div class="text-xs text-gray-400 dark:text-gray-500 mb-1">{{ p.categoria || 'General' }} · {{ p.telefono || '—' }}</div>
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm font-bold" style="color:#00C793">Q {{ (p.compras_totales||0)|number:'1.0-0' }}</span>
+                    <span class="text-xs text-gray-400 dark:text-gray-500">{{ p.plazo_credito > 0 ? p.plazo_credito + ' días crédito' : 'Contado' }}</span>
+                  </div>
+                </div>
+                <div class="flex gap-1 flex-shrink-0 ml-2">
+                  <button (click)="edit(p.id)" class="btn-action"><ng-icon class="text-amber-500" size="20" name="matModeEditOutline"></ng-icon></button>
+                  <button (click)="nuevaOrden(p.id)" class="btn-action"><ng-icon class="text-purple-500" size="20" name="matShoppingCartOutline"></ng-icon></button>
                 </div>
               </div>
             </td>
           </tr>
         }
+        @empty {<tr><td class="text-center py-10 text-gray-400 dark:text-gray-500">Sin proveedores</td></tr>}
       </tbody>
     </table>
   } @else {
-    <table class="table-grid w-full mt-4 sm:hidden">
-      <thead><tr><th><button class="w-full h-full flex bg-gray-200 text-gray-600 dark:bg-slate-950 dark:text-gray-100 rounded-lg p-1"><p>Proveedores</p></button></th></tr></thead>
-      <tbody>@for(i of [1,2,3,4,5,6]; track i){
-        <tr [ngClass]="{'bg-gray-200 dark:bg-slate-950':$odd}">
-          <td class="rounded"><div class="flex"><div class="rounded-md p-2 w-60"><div class="animate-pulse flex space-x-4"><div class="flex-1 space-y-6 py-1"><div class="space-y-3"><div class="grid grid-cols-2 gap-2"><div class="h-2 bg-gray-300 dark:bg-slate-700 rounded col-span-1"></div><div class="h-2 bg-gray-300 dark:bg-slate-700 rounded col-span-1"></div><div class="h-2 bg-gray-300 dark:bg-slate-700 rounded col-span-2"></div><div class="h-2 bg-gray-300 dark:bg-slate-700 rounded col-span-1"></div></div></div></div></div></div><div class="rounded-md p-2 w-20"><div class="animate-pulse flex space-x-4"><div class="flex-1 space-y-6 py-1"><div class="float-end h-9 w-2 bg-gray-300 dark:bg-slate-700 rounded col-span-1"></div></div></div></div></div></td>
-        </tr>
-      }</tbody>
+    <table class="table-grid w-full mt-2 sm:hidden">
+      <thead><tr><th><div class="animate-pulse h-8 bg-gray-200 dark:bg-slate-700 rounded-lg m-0.5"></div></th></tr></thead>
+      <tbody>@for(i of [1,2,3,4,5,6]; track i){<tr [ngClass]="{'bg-gray-50 dark:bg-slate-950':$odd}"><td class="py-3 px-2"><div class="flex items-center justify-between"><div class="flex-1 space-y-2 pr-3"><div class="animate-pulse h-4 bg-gray-200 dark:bg-slate-700 rounded w-40"></div><div class="animate-pulse h-3 bg-gray-100 dark:bg-slate-800 rounded w-28"></div><div class="animate-pulse h-4 bg-gray-200 dark:bg-slate-700 rounded w-20"></div></div><div class="flex gap-1"><div class="animate-pulse rounded-lg bg-amber-200 dark:bg-amber-900/30 h-8 w-8"></div><div class="animate-pulse rounded-lg bg-purple-200 dark:bg-purple-900/30 h-8 w-8"></div></div></div></td></tr>}</tbody>
     </table>
   }
 
-  <!-- PAGINATION DESKTOP -->
+  <!-- PAGINACIÓN DESKTOP -->
   @if (!load) {
     <div class="content-desktop"><div class="pagination"><div class="pagination-child">
-      <p><b class="bg-white dark:bg-slate-800 p-2 m-1 rounded text-sm">Página {{ page }} de {{ totalPages }}</b></p>
-      <p>Items {{ startIndex }} - {{ endIndex }} de {{ totalItems }}</p>
-      <button><ng-icon (click)="firstPage()"    class="btn-pagination" name="bootstrapChevronBarLeft"></ng-icon></button>
-      <button><ng-icon (click)="previousPage()" class="btn-pagination" name="bootstrapChevronLeft"></ng-icon></button>
-      <button><ng-icon (click)="nextPage()"     class="btn-pagination" name="bootstrapChevronRight"></ng-icon></button>
-      <button><ng-icon (click)="lastPage()"     class="btn-pagination" name="bootstrapChevronBarRight"></ng-icon></button>
+      <b>Página {{ page }} de {{ totalPages }}</b><span class="text-gray-300 dark:text-gray-600">·</span><span class="text-gray-500 dark:text-gray-400">{{ startIndex }}-{{ endIndex }} de {{ totalItems }}</span>
+      <div class="flex-1"></div>
+      <button (click)="firstPage()"    [disabled]="page===1"><ng-icon class="btn-pagination" size="18" name="bootstrapChevronBarLeft"></ng-icon></button>
+      <button (click)="previousPage()" [disabled]="page===1"><ng-icon class="btn-pagination" size="18" name="bootstrapChevronLeft"></ng-icon></button>
+      <span class="px-2 py-1 rounded-lg bg-gray-100 dark:bg-slate-800 text-xs font-bold min-w-[2rem] text-center text-gray-700 dark:text-gray-300">{{ page }}</span>
+      <button (click)="nextPage()"     [disabled]="page===totalPages"><ng-icon class="btn-pagination" size="18" name="bootstrapChevronRight"></ng-icon></button>
+      <button (click)="lastPage()"     [disabled]="page===totalPages"><ng-icon class="btn-pagination" size="18" name="bootstrapChevronBarRight"></ng-icon></button>
     </div></div></div>
   } @else {
-    <div class="content-desktop"><div class="pagination"><div class="pagination-child">
-      <div class="animate-pulse flex gap-2"><div class="h-5 bg-slate-700 rounded w-28 m-1"></div><div class="rounded-full bg-slate-700 h-6 w-6"></div><div class="rounded-full bg-slate-700 h-6 w-6"></div><div class="rounded-full bg-slate-700 h-6 w-6"></div><div class="rounded-full bg-slate-700 h-6 w-6"></div></div>
-    </div></div></div>
+    <div class="content-desktop"><div class="pagination"><div class="pagination-child"><div class="animate-pulse h-5 bg-slate-200 dark:bg-slate-700 rounded w-32"></div><div class="flex-1"></div>@for(i of [1,2,3,4]; track i){<div class="animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700 h-7 w-7"></div>}</div></div></div>
   }
   @if (!load) {
-    <div class="content-sm"><div class="w-full bg-gray-100 rounded-lg dark:bg-slate-950">
-      <div class="flex justify-between mb-2 p-2 rounded-lg border m-1 bg-white dark:bg-slate-900 dark:border-slate-700">
-        <button class="btn-action"><ng-icon (click)="firstPage()"    size="22" name="bootstrapChevronBarLeft"></ng-icon></button>
-        <button class="btn-action"><ng-icon (click)="previousPage()" size="22" name="bootstrapChevronLeft"></ng-icon></button>
-        <button class="btn-action"><ng-icon (click)="nextPage()"     size="22" name="bootstrapChevronRight"></ng-icon></button>
-        <button class="btn-action"><ng-icon (click)="lastPage()"     size="22" name="bootstrapChevronBarRight"></ng-icon></button>
-      </div>
-      <div class="flex justify-between">
-        <p class="bg-white dark:bg-slate-900 p-1 m-1 rounded text-sm pl-2"><b>Páginas: </b>{{ page }} de {{ totalPages }}</p>
-        <p class="bg-white dark:bg-slate-900 p-1 m-1 rounded text-sm pl-2"><b>Items: </b>{{ startIndex }}-{{ endIndex }} de {{ totalItems }}</p>
-      </div>
+    <div class="content-sm px-2 pb-2"><div class="flex items-center justify-between bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl p-2 mt-2">
+      <button (click)="firstPage()"    [disabled]="page===1"          class="btn-action"><ng-icon class="text-gray-500 dark:text-gray-400" size="20" name="bootstrapChevronBarLeft"></ng-icon></button>
+      <button (click)="previousPage()" [disabled]="page===1"          class="btn-action"><ng-icon class="text-gray-500 dark:text-gray-400" size="20" name="bootstrapChevronLeft"></ng-icon></button>
+      <span class="text-xs font-semibold text-gray-600 dark:text-gray-300">{{ page }} / {{ totalPages }} <span class="text-gray-400 dark:text-gray-500 font-normal">({{ items.length }})</span></span>
+      <button (click)="nextPage()"     [disabled]="page===totalPages" class="btn-action"><ng-icon class="text-gray-500 dark:text-gray-400" size="20" name="bootstrapChevronRight"></ng-icon></button>
+      <button (click)="lastPage()"     [disabled]="page===totalPages" class="btn-action"><ng-icon class="text-gray-500 dark:text-gray-400" size="20" name="bootstrapChevronBarRight"></ng-icon></button>
     </div></div>
   } @else {
-    <div class="content-sm"><div class="w-full bg-gray-100 rounded-lg dark:bg-slate-950">
-      <div class="rounded-md w-full p-2 pb-1"><div class="animate-pulse flex w-full justify-between"><div class="rounded-full bg-slate-700 h-6 w-6"></div><div class="rounded-full bg-slate-700 h-6 w-6"></div><div class="rounded-full bg-slate-700 h-6 w-6"></div><div class="rounded-full bg-slate-700 h-6 w-6"></div></div></div>
-      <div class="rounded-md w-full p-2 pt-1"><div class="animate-pulse flex w-full justify-between gap-1"><div class="h-5 bg-slate-700 rounded w-48"></div><div class="h-5 bg-slate-700 rounded w-48"></div></div></div>
-    </div></div>
+    <div class="content-sm px-2 pb-2"><div class="animate-pulse flex justify-between items-center bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl p-3 mt-2">@for(i of [1,2,3,4]; track i){<div class="rounded-lg bg-slate-200 dark:bg-slate-700 h-7 w-7"></div>}</div></div>
   }
 </div>

@@ -1,30 +1,36 @@
-<!-- clientes-form.component.html -->
-<app-header [headerTitle]="isEdit ? 'Editar Cliente' : 'Nuevo Cliente'"
-  headerDescription="Completa el formulario para registrar o actualizar el cliente.">
+<app-header
+  [headerTitle]="isEdit ? 'Editar Cliente' : 'Nuevo Cliente'"
+  headerDescription="Registra o actualiza la información del cliente.">
 </app-header>
 
 <div class="p-2 m-2">
-  <div class="card max-w-3xl mx-auto">
-    <div class="card-header">
-      <span class="card-title">{{ isEdit ? 'Editar Cliente' : 'Datos del Cliente' }}</span>
-      <button class="btn btn-outline btn-sm" (click)="cancel()">
-        <ng-icon name="matArrowBackOutline" size="16"></ng-icon> Volver
+  <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 max-w-3xl mx-auto">
+
+    <!-- Header card -->
+    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-slate-700">
+      <div>
+        <h2 class="text-base font-bold text-gray-800 dark:text-gray-100">{{ isEdit ? 'Editar Cliente' : 'Datos del Cliente' }}</h2>
+        @if (isEdit) { <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">ID: {{ clienteId }}</p> }
+      </div>
+      <button class="btn-back" (click)="cancel()">
+        <ng-icon class="btn-back-icon" size="16" name="matArrowBackOutline"></ng-icon>
+        <span class="hidden sm:block text-sm font-bold">Regresar</span>
       </button>
     </div>
-    <div class="card-body p-5">
+
+    <div class="p-5">
       @if (form) {
         <form [formGroup]="form" (ngSubmit)="save()">
 
-          <h3 class="section-title">Información General</h3>
-          <div class="form-grid-2">
-            <div class="form-group form-full">
+          <!-- Información general -->
+          <h3 class="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 pb-2 border-b border-gray-200 dark:border-slate-700 mb-4">Información General</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div class="sm:col-span-2">
               <label>Nombre completo / Razón social *</label>
-              <input formControlName="nombre" type="text" placeholder="Nombre o razón social">
-              @if (f['nombre'].invalid && f['nombre'].touched) {
-                <span class="error-msg">Nombre es requerido</span>
-              }
+              <input formControlName="nombre" type="text" placeholder="Nombre del cliente">
+              @if(f['nombre'].invalid && f['nombre'].touched){<span class="error-msg">Nombre es requerido</span>}
             </div>
-            <div class="form-group">
+            <div>
               <label>Tipo de cliente</label>
               <select formControlName="tipo">
                 <option value="individual">Individual</option>
@@ -34,35 +40,37 @@
                 <option value="otro">Otro</option>
               </select>
             </div>
-            <div class="form-group">
+            <div>
               <label>NIT</label>
               <input formControlName="nit" type="text" placeholder="0000000-0">
             </div>
-            <div class="form-group">
+            <div>
               <label>CUI / DPI</label>
-              <input formControlName="cui" type="text" placeholder="0000 00000 0000">
+              <input formControlName="cui" type="text" placeholder="Número de DPI">
             </div>
-            <div class="form-group">
+            <div>
               <label>Teléfono</label>
               <input formControlName="telefono" type="tel" placeholder="0000-0000">
             </div>
-            <div class="form-group">
+            <div class="sm:col-span-2">
               <label>Correo electrónico</label>
-              <input formControlName="email" type="email" placeholder="correo@ejemplo.com">
+              <input formControlName="email" type="email" placeholder="correo@cliente.com">
+              @if(f['email'].invalid && f['email'].touched){<span class="error-msg">Correo inválido</span>}
             </div>
           </div>
 
-          <h3 class="section-title mt-4">Ubicación</h3>
-          <div class="form-grid-2">
-            <div class="form-group form-full">
+          <!-- Dirección -->
+          <h3 class="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 pb-2 border-b border-gray-200 dark:border-slate-700 mb-4 mt-6">Ubicación</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div class="sm:col-span-2">
               <label>Dirección</label>
-              <input formControlName="direccion" type="text" placeholder="Aldea, zona, colonia...">
+              <input formControlName="direccion" type="text" placeholder="Dirección completa">
             </div>
-            <div class="form-group">
+            <div>
               <label>Municipio</label>
               <input formControlName="municipio" type="text" placeholder="Municipio">
             </div>
-            <div class="form-group">
+            <div>
               <label>Departamento</label>
               <select formControlName="departamento">
                 <option value="">Seleccionar...</option>
@@ -71,30 +79,42 @@
             </div>
           </div>
 
-          <h3 class="section-title mt-4">Crédito</h3>
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label>Crédito máximo (Q)</label>
-              <input formControlName="credito_maximo" type="number" min="0" step="100" placeholder="0.00">
+          <!-- Crédito -->
+          <h3 class="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 pb-2 border-b border-gray-200 dark:border-slate-700 mb-4 mt-6">Condiciones de Crédito</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label>Límite de crédito (Q)</label>
+              <input formControlName="credito_maximo" type="number" min="0" placeholder="0.00">
             </div>
-            <div class="form-group">
+            <div>
               <label>Días de crédito</label>
               <input formControlName="dias_credito" type="number" min="0" placeholder="0">
             </div>
-            <div class="form-group form-full">
-              <label>Notas / Observaciones</label>
-              <textarea formControlName="notas" placeholder="Información adicional..."></textarea>
+            <div class="sm:col-span-2">
+              <label>Notas</label>
+              <textarea formControlName="notas" placeholder="Observaciones adicionales..." rows="3" class="h-auto"></textarea>
             </div>
           </div>
 
-          <div class="flex justify-end gap-3 mt-6 pt-4 border-t" style="border-color:var(--border)">
-            <button type="button" class="btn btn-outline" (click)="cancel()">Cancelar</button>
-            <button type="submit" class="btn btn-primary" [disabled]="saving">
-              @if (saving) { <span class="spinner-sm"></span> Guardando... }
-              @else { <ng-icon name="matSaveOutline" size="16"></ng-icon> {{ isEdit ? 'Actualizar' : 'Guardar' }} }
+          <!-- Estado -->
+          <div class="flex items-center gap-3 mb-4">
+            <input type="checkbox" formControlName="activo" id="activo" class="w-4 h-4 accent-primary">
+            <label for="activo" class="!mb-0 cursor-pointer text-sm text-gray-700 dark:text-gray-300">Cliente activo</label>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-slate-700">
+            <button type="button" class="btn-back h-10 px-4" (click)="cancel()">Cancelar</button>
+            <button type="submit" class="btn-primary h-10 px-6" [disabled]="saving">
+              @if(saving){<span class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-1"></span>Guardando...}
+              @else{<ng-icon name="matSaveOutline" size="16"></ng-icon> {{ isEdit ? 'Actualizar' : 'Guardar' }}}
             </button>
           </div>
         </form>
+      } @else {
+        <div class="space-y-4">
+          @for(i of [1,2,3,4]; track i){<div class="animate-pulse h-10 bg-gray-200 dark:bg-slate-700 rounded-xl"></div>}
+        </div>
       }
     </div>
   </div>

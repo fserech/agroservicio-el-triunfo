@@ -1,165 +1,155 @@
-<!-- cuentas-cobrar.component.html -->
-<app-header headerTitle="Cuentas por Cobrar"
-  headerDescription="Gestión de crédito a clientes. Registra abonos y controla saldos pendientes.">
-</app-header>
+<app-header headerTitle="Cuentas por Cobrar" headerDescription="Seguimiento de créditos y pagos pendientes de clientes."></app-header>
 
-<div class="p-2 m-2 bg-white rounded dark:bg-slate-900 border dark:border-slate-800">
+<div class="p-2 m-2 bg-white rounded-xl dark:bg-slate-900 border border-gray-200 dark:border-slate-800">
 
-  <div class="filter-bar sticky top-0 z-10">
-    <select class="date-input" [(ngModel)]="estadoFilter" (change)="loadData()">
-      <option value="">Todos los estados</option>
-      <option value="pendiente">Pendiente</option>
-      <option value="parcial">Parcial</option>
-      <option value="vencida">Vencida</option>
-      <option value="pagada">Pagada</option>
-    </select>
-    <div class="spacer"></div>
-    <span class="text-sm font-semibold" style="color:var(--danger)">
-      Total pendiente: Q {{ totalPendiente | number:'1.2-2' }}
-    </span>
+  <!-- TOOLBAR -->
+  <div class="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 p-2 pb-3">
+    <div class="flex items-center gap-2">
+      <select class="date-input" [(ngModel)]="estadoFilter" (change)="loadData()">
+        <option value="">Todos los estados</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="parcial">Parcial</option>
+        <option value="pagada">Pagada</option>
+        <option value="vencida">Vencida</option>
+      </select>
+      <div class="flex-1"></div>
+    </div>
   </div>
 
-  <!-- KPI STRIP -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-3">
-    <div class="kpi-card"><span class="kpi-accent" style="background:var(--danger)"></span>
-      <div class="kpi-label">Por Cobrar</div>
-      <div class="kpi-value">Q {{ totalPendiente | number:'1.0-0' }}</div></div>
-    <div class="kpi-card"><span class="kpi-accent" style="background:var(--warning)"></span>
-      <div class="kpi-label">Cuentas Activas</div>
-      <div class="kpi-value">{{ cuentasActivas }}</div></div>
-    <div class="kpi-card"><span class="kpi-accent" style="background:var(--danger)"></span>
-      <div class="kpi-label">Vencidas</div>
-      <div class="kpi-value">{{ vencidas }}</div></div>
-    <div class="kpi-card"><span class="kpi-accent" style="background:var(--success)"></span>
-      <div class="kpi-label">Pagadas</div>
-      <div class="kpi-value">{{ pagadas }}</div></div>
-  </div>
-
-  @if (load) {
-    <div class="p-4">@for (i of [1,2,3,4]; track i) {
-      <div class="skeleton h-10 mb-2 rounded-lg"></div>}</div>
-  }
-
-  @if (!load && items.length === 0) {
-    <div class="empty-state">
-      <div class="empty-title">Sin cuentas por cobrar</div>
-      <div class="empty-desc">No hay cuentas con el filtro seleccionado</div>
+  <!-- ALERTA VENCIDAS -->
+  @if (!load && vencidas > 0) {
+    <div class="mx-2 mt-3 p-3 rounded-xl flex items-center gap-2 text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50">
+      <ng-icon class="text-red-500 flex-shrink-0" name="matPaymentsOutline" size="18"></ng-icon>
+      <span class="text-red-800 dark:text-red-300"><strong>{{ vencidas }} cuentas vencidas</strong> requieren atención urgente</span>
     </div>
   }
 
-  @if (!load && items.length > 0) {
-    <div class="table-wrap">
-      <table class="table-grid w-full hidden md:table">
-        <thead>
-          <tr>
-            <th>Factura</th><th>Cliente</th><th>Total</th>
-            <th>Pagado</th><th>Saldo</th><th>Vence</th><th>Estado</th><th class="text-center">Acciones</th>
+  <!-- KPIs -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-2 my-2">
+    <div class="kpi-card"><span class="kpi-accent" style="background:#00C793"></span><div class="kpi-label">Total Cuentas</div><div class="kpi-value">{{ items.length }}</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:#ef4444"></span><div class="kpi-label">Saldo Total</div><div class="kpi-value text-sm">Q {{ totalSaldo|number:'1.0-0' }}</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:#10b981"></span><div class="kpi-label">Cobrado</div><div class="kpi-value text-sm">Q {{ totalCobrado|number:'1.0-0' }}</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:#f59e0b"></span><div class="kpi-label">Vencidas</div><div class="kpi-value">{{ vencidas }}</div></div>
+  </div>
+
+  <!-- PAGINACIÓN MOBILE TOP -->
+  <div class="content-sm px-2 mb-1">
+    <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+      <span><b class="text-gray-700 dark:text-gray-300">Página {{ page }}</b> de {{ totalPages }}</span>
+      <span>{{ startIndex }}-{{ endIndex }} de <b class="text-gray-700 dark:text-gray-300">{{ totalItems }}</b></span>
+    </div>
+  </div>
+
+  <!-- TABLA DESKTOP -->
+  @if (!load) {
+    <table class="table-grid w-full mt-2 hidden sm:table">
+      <thead>
+        <tr>
+          <th><div class="flex items-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5">Nº Factura</div></th>
+          <th><button class="w-full flex items-center gap-1 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors" (click)="changeSortOrderBy('cliente_nombre')">Cliente</button></th>
+          <th><button class="w-full flex items-center gap-1 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors" (click)="changeSortOrderBy('monto_total')">Monto Total</button></th>
+          <th><div class="flex items-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5">Pagado</div></th>
+          <th><button class="w-full flex items-center gap-1 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors" (click)="changeSortOrderBy('saldo')">Saldo @if(sortConfig.sortBy==='saldo'&&sortConfig.sortOrder==='asc'){<ng-icon size="14" name="matArrowDownwardOutline"></ng-icon>}@if(sortConfig.sortBy==='saldo'&&sortConfig.sortOrder==='desc'){<ng-icon size="14" name="matArrowUpwardOutline"></ng-icon>}</button></th>
+          <th><button class="w-full flex items-center gap-1 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors" (click)="changeSortOrderBy('fecha_vence')">Vencimiento @if(sortConfig.sortBy==='fecha_vence'&&sortConfig.sortOrder==='asc'){<ng-icon size="14" name="matArrowDownwardOutline"></ng-icon>}@if(sortConfig.sortBy==='fecha_vence'&&sortConfig.sortOrder==='desc'){<ng-icon size="14" name="matArrowUpwardOutline"></ng-icon>}</button></th>
+          <th><div class="flex items-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5">Estado</div></th>
+          <th><div class="flex items-center justify-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5">Acciones</div></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of items; track c.id; let odd = $odd) {
+          <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-colors" [ngClass]="{'bg-gray-50 dark:bg-slate-950': odd}">
+            <td class="font-mono text-sm font-bold" style="color:#00C793">{{ c.numero_factura }}</td>
+            <td class="font-medium text-gray-800 dark:text-gray-200 text-sm">{{ c.cliente_nombre }}</td>
+            <td class="font-mono text-sm text-gray-600 dark:text-gray-400">Q {{ c.monto_total|number:'1.2-2' }}</td>
+            <td class="font-mono text-sm text-green-600 dark:text-green-400">Q {{ c.monto_pagado|number:'1.2-2' }}</td>
+            <td class="font-bold font-mono text-sm" [class.text-red-500]="c.saldo>0" [class.text-green-600]="c.saldo===0">Q {{ c.saldo|number:'1.2-2' }}</td>
+            <td class="text-sm" [class.text-red-500]="c.estado==='vencida'" [class.text-gray-600]="c.estado!=='vencida'" [class.dark:text-red-400]="c.estado==='vencida'" [class.dark:text-gray-400]="c.estado!=='vencida'">{{ c.fecha_vence ? (c.fecha_vence | date:'dd/MM/yyyy') : '—' }}</td>
+            <td><span class="badge" [ngClass]="{'badge-warning':c.estado==='pendiente','badge-info':c.estado==='parcial','badge-success':c.estado==='pagada','badge-danger':c.estado==='vencida'}">{{ getEstadoLabel(c.estado) }}</span></td>
+            <td><div class="flex items-center justify-center gap-1">
+              @if(c.estado!=='pagada'){<button (click)="registrarPago(c.id, c.saldo)" class="btn-action" title="Registrar pago"><ng-icon class="text-emerald-500" size="18" name="matPaymentsOutline"></ng-icon></button>}
+            </div></td>
           </tr>
-        </thead>
-        <tbody>
-          @for (c of items; track c.id; let odd=$odd) {
-            <tr [class.bg-gray-50]="odd" class="hover:bg-blue-50 transition-colors"
-              [class.row-vencida]="c.estado === 'vencida'">
-              <td class="font-mono text-sm font-bold" style="color:var(--primary)">{{ c.numero_factura }}</td>
-              <td class="font-medium">{{ c.cliente_nombre }}</td>
-              <td class="font-mono text-sm">Q {{ c.monto_total | number:'1.2-2' }}</td>
-              <td class="font-mono text-sm text-green-600">Q {{ c.monto_pagado | number:'1.2-2' }}</td>
-              <td class="font-mono text-sm font-bold" [class.text-red-600]="c.saldo > 0">Q {{ c.saldo | number:'1.2-2' }}</td>
-              <td class="text-sm" [class.text-red-600]="estaVencida(c.fecha_vence)">
-                {{ c.fecha_vence ? (c.fecha_vence | date:'dd/MM/yyyy') : '—' }}
-              </td>
-              <td>
-                <span class="badge" [ngClass]="{
-                  'badge-warning': c.estado==='pendiente',
-                  'badge-info':    c.estado==='parcial',
-                  'badge-danger':  c.estado==='vencida',
-                  'badge-success': c.estado==='pagada'}">
-                  {{ getEstadoLabel(c.estado) }}
-                </span>
-              </td>
-              <td>
-                <div class="flex justify-center gap-1">
-                  @if (c.estado !== 'pagada') {
-                    <button class="btn btn-sm btn-primary" (click)="openPago(c)" title="Registrar pago">
-                      <ng-icon name="matPaymentsOutline" size="14"></ng-icon> Abonar
-                    </button>
+        }
+        @empty {<tr><td colspan="8" class="text-center py-10 text-gray-400 dark:text-gray-500">Sin cuentas por cobrar</td></tr>}
+      </tbody>
+    </table>
+  } @else {
+    <table class="table-grid w-full mt-2 hidden sm:table">
+      <thead><tr>@for(i of [1,2,3,4,5,6,7,8]; track i){<td><div class="animate-pulse h-8 bg-gray-200 dark:bg-slate-700 rounded-lg m-0.5"></div></td>}</tr></thead>
+      <tbody>@for(i of [1,2,3,4,5,6,7,8]; track i){<tr [ngClass]="{'bg-gray-50 dark:bg-slate-950':$odd}">@for(col of [1,2,3,4,5,6,7]; track col){<td><div class="animate-pulse h-3 bg-gray-200 dark:bg-slate-700 rounded my-2"></div></td>}<td><div class="flex gap-1 p-1 justify-center"><div class="animate-pulse rounded-lg bg-emerald-200 dark:bg-emerald-900/30 h-7 w-7"></div></div></td></tr>}</tbody>
+    </table>
+  }
+
+  <!-- TABLA MOBILE -->
+  @if (!load) {
+    <table class="table-grid w-full mt-2 sm:hidden">
+      <thead><tr><th>
+        <button class="w-full flex items-center gap-1 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5" (click)="changeSortOrderBy('saldo')">
+          <span class="font-semibold">Cuentas por Cobrar</span>
+          @if(sortConfig.sortBy==='saldo'&&sortConfig.sortOrder==='asc'){<ng-icon size="14" name="matArrowUpwardOutline"></ng-icon>}
+          @if(sortConfig.sortBy==='saldo'&&sortConfig.sortOrder==='desc'){<ng-icon size="14" name="matArrowDownwardOutline"></ng-icon>}
+          <span class="ml-auto text-xs text-gray-400 dark:text-gray-500 font-normal">{{ items.length }}</span>
+        </button>
+      </th></tr></thead>
+      <tbody>
+        @for (c of items; track c.id; let odd = $odd) {
+          <tr [ngClass]="{'bg-gray-50 dark:bg-slate-950': odd}">
+            <td class="py-2">
+              <div class="flex items-start justify-between px-1">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-0.5">
+                    <span class="font-mono font-bold text-sm" style="color:#00C793">{{ c.numero_factura }}</span>
+                    <span class="badge text-xs" [ngClass]="{'badge-warning':c.estado==='pendiente','badge-info':c.estado==='parcial','badge-success':c.estado==='pagada','badge-danger':c.estado==='vencida'}">{{ getEstadoLabel(c.estado) }}</span>
+                  </div>
+                  <div class="font-medium text-gray-800 dark:text-gray-200 text-sm mt-0.5">{{ c.cliente_nombre }}</div>
+                  <div class="text-xs text-gray-400 dark:text-gray-500">Vence: {{ c.fecha_vence ? (c.fecha_vence | date:'dd/MM/yyyy') : 'Sin fecha' }}</div>
+                  <div class="flex items-center gap-3 mt-1">
+                    <span class="text-sm font-bold font-mono" [class.text-red-500]="c.saldo>0" [class.text-green-600]="c.saldo===0">Saldo: Q {{ c.saldo|number:'1.0-0' }}</span>
+                    <span class="text-xs text-gray-400 dark:text-gray-500">Total: Q {{ c.monto_total|number:'1.0-0' }}</span>
+                  </div>
+                </div>
+                <div class="flex gap-1 flex-shrink-0 ml-2">
+                  @if(c.estado!=='pagada'){
+                    <button (click)="registrarPago(c.id, c.saldo)" class="btn-action"><ng-icon class="text-emerald-500" size="20" name="matPaymentsOutline"></ng-icon></button>
                   }
                 </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-
-      <!-- MOBILE -->
-      <div class="md:hidden">
-        @for (c of items; track c.id; let odd=$odd) {
-          <div class="border-b p-3" [class.bg-gray-50]="odd" [class.bg-red-50]="c.estado==='vencida'">
-            <div class="flex justify-between items-start mb-1">
-              <div>
-                <div class="font-mono text-xs font-bold" style="color:var(--primary)">{{ c.numero_factura }}</div>
-                <div class="font-medium text-sm">{{ c.cliente_nombre }}</div>
               </div>
-              <div class="text-right">
-                <div class="font-bold text-sm text-red-600">Q {{ c.saldo | number:'1.2-2' }}</div>
-                <span class="badge text-xs" [ngClass]="{'badge-warning':c.estado==='pendiente','badge-info':c.estado==='parcial','badge-danger':c.estado==='vencida','badge-success':c.estado==='pagada'}">
-                  {{ getEstadoLabel(c.estado) }}</span>
-              </div>
-            </div>
-            @if (c.estado !== 'pagada') {
-              <button class="btn btn-primary btn-sm w-full mt-2" (click)="openPago(c)">
-                <ng-icon name="matPaymentsOutline" size="14"></ng-icon> Registrar Abono
-              </button>
-            }
-          </div>
+            </td>
+          </tr>
         }
-      </div>
-    </div>
+        @empty {<tr><td class="text-center py-10 text-gray-400 dark:text-gray-500">Sin cuentas por cobrar</td></tr>}
+      </tbody>
+    </table>
+  } @else {
+    <table class="table-grid w-full mt-2 sm:hidden">
+      <thead><tr><th><div class="animate-pulse h-8 bg-gray-200 dark:bg-slate-700 rounded-lg m-0.5"></div></th></tr></thead>
+      <tbody>@for(i of [1,2,3,4,5,6]; track i){<tr [ngClass]="{'bg-gray-50 dark:bg-slate-950':$odd}"><td class="py-3 px-2"><div class="flex items-center justify-between"><div class="flex-1 space-y-2 pr-3"><div class="animate-pulse h-4 bg-gray-200 dark:bg-slate-700 rounded w-40"></div><div class="animate-pulse h-3 bg-gray-100 dark:bg-slate-800 rounded w-28"></div><div class="animate-pulse h-4 bg-gray-200 dark:bg-slate-700 rounded w-24"></div></div><div class="animate-pulse rounded-lg bg-emerald-200 dark:bg-emerald-900/30 h-8 w-8"></div></div></td></tr>}</tbody>
+    </table>
+  }
+
+  <!-- PAGINACIÓN DESKTOP -->
+  @if (!load) {
+    <div class="content-desktop"><div class="pagination"><div class="pagination-child">
+      <b>Página {{ page }} de {{ totalPages }}</b><span class="text-gray-300 dark:text-gray-600">·</span><span class="text-gray-500 dark:text-gray-400">{{ startIndex }}-{{ endIndex }} de {{ totalItems }}</span>
+      <div class="flex-1"></div>
+      <button (click)="firstPage()"    [disabled]="page===1"><ng-icon class="btn-pagination" size="18" name="bootstrapChevronBarLeft"></ng-icon></button>
+      <button (click)="previousPage()" [disabled]="page===1"><ng-icon class="btn-pagination" size="18" name="bootstrapChevronLeft"></ng-icon></button>
+      <span class="px-2 py-1 rounded-lg bg-gray-100 dark:bg-slate-800 text-xs font-bold min-w-[2rem] text-center text-gray-700 dark:text-gray-300">{{ page }}</span>
+      <button (click)="nextPage()"     [disabled]="page===totalPages"><ng-icon class="btn-pagination" size="18" name="bootstrapChevronRight"></ng-icon></button>
+      <button (click)="lastPage()"     [disabled]="page===totalPages"><ng-icon class="btn-pagination" size="18" name="bootstrapChevronBarRight"></ng-icon></button>
+    </div></div></div>
+  } @else {
+    <div class="content-desktop"><div class="pagination"><div class="pagination-child"><div class="animate-pulse h-5 bg-slate-200 dark:bg-slate-700 rounded w-32"></div><div class="flex-1"></div>@for(i of [1,2,3,4]; track i){<div class="animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700 h-7 w-7"></div>}</div></div></div>
+  }
+  @if (!load) {
+    <div class="content-sm px-2 pb-2"><div class="flex items-center justify-between bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl p-2 mt-2">
+      <button (click)="firstPage()"    [disabled]="page===1"          class="btn-action"><ng-icon class="text-gray-500 dark:text-gray-400" size="20" name="bootstrapChevronBarLeft"></ng-icon></button>
+      <button (click)="previousPage()" [disabled]="page===1"          class="btn-action"><ng-icon class="text-gray-500 dark:text-gray-400" size="20" name="bootstrapChevronLeft"></ng-icon></button>
+      <span class="text-xs font-semibold text-gray-600 dark:text-gray-300">{{ page }} / {{ totalPages }} <span class="text-gray-400 dark:text-gray-500 font-normal">({{ totalItems }})</span></span>
+      <button (click)="nextPage()"     [disabled]="page===totalPages" class="btn-action"><ng-icon class="text-gray-500 dark:text-gray-400" size="20" name="bootstrapChevronRight"></ng-icon></button>
+      <button (click)="lastPage()"     [disabled]="page===totalPages" class="btn-action"><ng-icon class="text-gray-500 dark:text-gray-400" size="20" name="bootstrapChevronBarRight"></ng-icon></button>
+    </div></div>
+  } @else {
+    <div class="content-sm px-2 pb-2"><div class="animate-pulse flex justify-between items-center bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl p-3 mt-2">@for(i of [1,2,3,4]; track i){<div class="rounded-lg bg-slate-200 dark:bg-slate-700 h-7 w-7"></div>}</div></div>
   }
 </div>
-
-<!-- MODAL PAGO -->
-@if (cuentaSeleccionada) {
-  <div class="dialog-overlay" (click)="closePago()">
-    <div class="dialog" (click)="$event.stopPropagation()">
-      <div class="dialog-header">
-        <span class="dialog-title">Registrar Abono</span>
-        <button class="btn-icon" (click)="closePago()">
-          <ng-icon name="matCloseOutline" size="18"></ng-icon>
-        </button>
-      </div>
-      <div class="dialog-body">
-        <div class="pago-info">
-          <div class="pago-info-row"><span>Cliente:</span><b>{{ cuentaSeleccionada.cliente_nombre }}</b></div>
-          <div class="pago-info-row"><span>Factura:</span><b>{{ cuentaSeleccionada.numero_factura }}</b></div>
-          <div class="pago-info-row"><span>Saldo pendiente:</span><b class="text-red-600">Q {{ cuentaSeleccionada.saldo | number:'1.2-2' }}</b></div>
-        </div>
-        <div class="form-group mt-4">
-          <label>Monto del abono (Q) *</label>
-          <input type="number" [(ngModel)]="pagoMonto" [max]="cuentaSeleccionada.saldo"
-            min="0.01" step="0.01" placeholder="0.00">
-        </div>
-        <div class="form-group">
-          <label>Método de pago</label>
-          <select [(ngModel)]="pagoMetodo">
-            <option value="efectivo">Efectivo</option>
-            <option value="tarjeta">Tarjeta</option>
-            <option value="transferencia">Transferencia</option>
-            <option value="cheque">Cheque</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Referencia / Número de cheque</label>
-          <input type="text" [(ngModel)]="pagoRef" placeholder="Opcional">
-        </div>
-      </div>
-      <div class="dialog-footer">
-        <button class="btn btn-outline" (click)="closePago()">Cancelar</button>
-        <button class="btn btn-primary" (click)="savePago()" [disabled]="savingPago">
-          @if (savingPago) { <span class="spinner-sm"></span> Guardando... }
-          @else { <ng-icon name="matPaymentsOutline" size="16"></ng-icon> Registrar Pago }
-        </button>
-      </div>
-    </div>
-  </div>
-}

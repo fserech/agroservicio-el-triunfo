@@ -1,124 +1,110 @@
-<!-- usuarios-list.component.html -->
-<app-header headerTitle="Usuarios del Sistema"
-  headerDescription="Gestión de cuentas de usuario, roles y permisos de acceso.">
-</app-header>
+<app-header headerTitle="Usuarios" headerDescription="Gestión de usuarios del sistema. Solo administradores pueden crear y editar usuarios."></app-header>
 
-<div class="p-2 m-2 bg-white rounded dark:bg-slate-900 border dark:border-slate-800">
+<div class="p-2 m-2 bg-white rounded-xl dark:bg-slate-900 border border-gray-200 dark:border-slate-800">
 
-  <div class="filter-bar sticky top-0 z-10">
-    <div class="spacer"></div>
-    <button class="btn btn-primary btn-sm" (click)="add()">
-      <ng-icon name="matAddOutline" size="16"></ng-icon> Nuevo Usuario
-    </button>
+  <!-- TOOLBAR -->
+  <div class="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 p-2 pb-3">
+    <div class="flex items-center justify-between">
+      <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-400">{{ items.length }} usuarios registrados</h3>
+      <button (click)="add()" class="btn-primary h-10">
+        <ng-icon name="matAddOutline" size="16"></ng-icon> Nuevo Usuario
+      </button>
+    </div>
   </div>
 
-  @if (load) {
-    <div class="p-4">
-      @for (i of [1,2,3]; track i) {
-        <div class="skeleton h-10 mb-2 rounded-lg"></div>
-      }
-    </div>
-  }
+  <!-- KPIs -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-2 my-2">
+    <div class="kpi-card"><span class="kpi-accent" style="background:#00C793"></span><div class="kpi-label">Total Usuarios</div><div class="kpi-value">{{ items.length }}</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:#10b981"></span><div class="kpi-label">Activos</div><div class="kpi-value">{{ activos }}</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:#ef4444"></span><div class="kpi-label">Inactivos</div><div class="kpi-value">{{ inactivos }}</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:#8b5cf6"></span><div class="kpi-label">Roles</div><div class="kpi-value">5</div></div>
+  </div>
 
-  @if (!load && items.length > 0) {
-
-    <!-- TABLE DESKTOP -->
-    <div class="table-wrap hidden sm:block">
-      <table class="table-grid w-full">
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Usuario</th>
-            <th>Email</th>
-            <th>Rol</th>
-            <th>Último acceso</th>
-            <th>Estado</th>
-            <th class="text-center">Acciones</th>
+  <!-- TABLA DESKTOP -->
+  @if (!load) {
+    <table class="table-grid w-full mt-2 hidden sm:table">
+      <thead>
+        <tr>
+          <th><button class="w-full flex items-center gap-1 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors" (click)="changeSortOrderBy('nombre')">Nombre @if(sortConfig.sortBy==='nombre'&&sortConfig.sortOrder==='asc'){<ng-icon size="14" name="matArrowDownwardOutline"></ng-icon>}@if(sortConfig.sortBy==='nombre'&&sortConfig.sortOrder==='desc'){<ng-icon size="14" name="matArrowUpwardOutline"></ng-icon>}</button></th>
+          <th><div class="flex items-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5">Usuario</div></th>
+          <th><div class="flex items-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5">Correo</div></th>
+          <th><button class="w-full flex items-center gap-1 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors" (click)="changeSortOrderBy('rol')">Rol</button></th>
+          <th><div class="flex items-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5">Último Acceso</div></th>
+          <th><div class="flex items-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5">Estado</div></th>
+          <th><div class="flex items-center justify-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5">Acciones</div></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of items; track u.id; let odd = $odd) {
+          <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-colors" [ngClass]="{'bg-gray-50 dark:bg-slate-950': odd}">
+            <td>
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style="background:#00C793">{{ u.nombre.charAt(0).toUpperCase() }}</div>
+                <div class="font-semibold text-gray-800 dark:text-gray-200 text-sm">{{ u.nombre }}</div>
+              </div>
+            </td>
+            <td class="font-mono text-sm text-gray-600 dark:text-gray-400">{{ u.username }}</td>
+            <td class="text-sm text-gray-600 dark:text-gray-400">{{ u.email || '—' }}</td>
+            <td><span class="badge" [ngClass]="getRolClass(u.rol)">{{ getRolLabel(u.rol) }}</span></td>
+            <td class="text-xs text-gray-500 dark:text-gray-400">{{ u.ultimo_acceso ? (u.ultimo_acceso | date:'dd/MM/yy HH:mm') : 'Nunca' }}</td>
+            <td><span class="badge" [class.badge-success]="u.activo" [class.badge-gray]="!u.activo">{{ u.activo ? 'Activo' : 'Inactivo' }}</span></td>
+            <td><div class="flex items-center justify-center">
+              <button (click)="edit(u.id)" class="btn-action" title="Editar"><ng-icon class="text-amber-500" size="18" name="matModeEditOutline"></ng-icon></button>
+            </div></td>
           </tr>
-        </thead>
-        <tbody>
-          @for (u of items; track u.id; let odd = $odd) {
-            <tr [class.bg-gray-50]="odd" class="hover:bg-blue-50">
-              <td class="font-medium">{{ u.nombre }}</td>
-              <td class="font-mono text-sm text-gray-500">{{ u.username }}</td>
-              <td class="text-sm text-gray-500">{{ u.email || '—' }}</td>
-              <td>
-                <span class="badge" [ngClass]="{
-                  'badge-danger':  u.rol === 'admin',
-                  'badge-warning': u.rol === 'supervisor',
-                  'badge-info':    u.rol === 'vendedor',
-                  'badge-gray':    u.rol === 'bodeguero' || u.rol === 'contador'}">
-                  {{ getRolLabel(u.rol) }}
-                </span>
-              </td>
-              <td class="text-xs text-gray-400">{{ u.ultimo_acceso | date:'dd/MM/yy HH:mm' }}</td>
-              <td>
-                <span class="badge"
-                  [class.badge-success]="u.activo"
-                  [class.badge-gray]="!u.activo">
-                  {{ u.activo ? 'Activo' : 'Inactivo' }}
-                </span>
-              </td>
-              <td>
-                <div class="flex justify-center gap-1">
-                  <button class="btn-action" title="Editar" (click)="edit(u.id)">
-                    <ng-icon name="matModeEditOutline" size="18" style="color:#f59e0b"></ng-icon>
-                  </button>
-                  <button class="btn-action" title="Activar/Desactivar" (click)="toggleActivo(u)">
-                    <ng-icon
-                      [name]="u.activo ? 'bootstrapToggleOn' : 'bootstrapToggleOff'"
-                      size="18"
-                      [style.color]="u.activo ? '#10b981' : '#94a3b8'">
-                    </ng-icon>
-                  </button>
+        }
+        @empty {<tr><td colspan="7" class="text-center py-10 text-gray-400 dark:text-gray-500">Sin usuarios</td></tr>}
+      </tbody>
+    </table>
+  } @else {
+    <table class="table-grid w-full mt-2 hidden sm:table">
+      <thead><tr>@for(i of [1,2,3,4,5,6,7]; track i){<td><div class="animate-pulse h-8 bg-gray-200 dark:bg-slate-700 rounded-lg m-0.5"></div></td>}</tr></thead>
+      <tbody>@for(i of [1,2,3,4,5]; track i){<tr [ngClass]="{'bg-gray-50 dark:bg-slate-950':$odd}">@for(col of [1,2,3,4,5,6]; track col){<td><div class="animate-pulse h-3 bg-gray-200 dark:bg-slate-700 rounded my-2"></div></td>}<td><div class="flex gap-1 p-1 justify-center"><div class="animate-pulse rounded-lg bg-amber-200 dark:bg-amber-900/30 h-7 w-7"></div></div></td></tr>}</tbody>
+    </table>
+  }
+
+  <!-- TABLA MOBILE -->
+  @if (!load) {
+    <table class="table-grid w-full mt-2 sm:hidden">
+      <thead><tr><th>
+        <button class="w-full flex items-center gap-1 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5" (click)="changeSortOrderBy('nombre')">
+          <span class="font-semibold">Usuarios del sistema</span>
+          @if(sortConfig.sortBy==='nombre'&&sortConfig.sortOrder==='asc'){<ng-icon size="14" name="matArrowUpwardOutline"></ng-icon>}
+          @if(sortConfig.sortBy==='nombre'&&sortConfig.sortOrder==='desc'){<ng-icon size="14" name="matArrowDownwardOutline"></ng-icon>}
+          <span class="ml-auto text-xs text-gray-400 dark:text-gray-500 font-normal">{{ items.length }}</span>
+        </button>
+      </th></tr></thead>
+      <tbody>
+        @for (u of items; track u.id; let odd = $odd) {
+          <tr [ngClass]="{'bg-gray-50 dark:bg-slate-950': odd}">
+            <td class="py-2">
+              <div class="flex items-center justify-between px-1">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0" style="background:#00C793">{{ u.nombre.charAt(0).toUpperCase() }}</div>
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2 mb-0.5">
+                      <span class="font-bold text-gray-800 dark:text-gray-200 text-sm truncate">{{ u.nombre }}</span>
+                      <span class="badge text-xs" [ngClass]="getRolClass(u.rol)">{{ getRolLabel(u.rol) }}</span>
+                    </div>
+                    <div class="text-xs font-mono text-gray-400 dark:text-gray-500">{{ u.username }}</div>
+                    <div class="text-xs text-gray-400 dark:text-gray-500">{{ u.email || 'Sin correo' }}</div>
+                  </div>
                 </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <!-- MOBILE CARDS -->
-    <div class="sm:hidden">
-      @for (u of items; track u.id; let odd = $odd) {
-        <div class="border-b p-3" [class.bg-gray-50]="odd">
-          <div class="flex justify-between items-start">
-            <div>
-              <div class="font-semibold text-sm">{{ u.nombre }}</div>
-              <div class="text-xs text-gray-400 mt-0.5">{{ u.username }}</div>
-            </div>
-            <span class="badge text-xs" [ngClass]="{
-              'badge-danger':  u.rol === 'admin',
-              'badge-warning': u.rol === 'supervisor',
-              'badge-info':    u.rol === 'vendedor',
-              'badge-gray':    u.rol === 'bodeguero' || u.rol === 'contador'}">
-              {{ getRolLabel(u.rol) }}
-            </span>
-          </div>
-          <div class="flex justify-end gap-1 mt-2">
-            <button class="btn-action" (click)="edit(u.id)">
-              <ng-icon name="matModeEditOutline" size="16" style="color:#f59e0b"></ng-icon>
-            </button>
-            <button class="btn-action" (click)="toggleActivo(u)">
-              <ng-icon
-                [name]="u.activo ? 'bootstrapToggleOn' : 'bootstrapToggleOff'"
-                size="16"
-                [style.color]="u.activo ? '#10b981' : '#94a3b8'">
-              </ng-icon>
-            </button>
-          </div>
-        </div>
-      }
-    </div>
-
+                <div class="flex items-center gap-2 flex-shrink-0 ml-2">
+                  <span class="badge" [class.badge-success]="u.activo" [class.badge-gray]="!u.activo">{{ u.activo ? 'Activo' : 'Inact.' }}</span>
+                  <button (click)="edit(u.id)" class="btn-action"><ng-icon class="text-amber-500" size="20" name="matModeEditOutline"></ng-icon></button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        }
+        @empty {<tr><td class="text-center py-10 text-gray-400 dark:text-gray-500">Sin usuarios</td></tr>}
+      </tbody>
+    </table>
+  } @else {
+    <table class="table-grid w-full mt-2 sm:hidden">
+      <thead><tr><th><div class="animate-pulse h-8 bg-gray-200 dark:bg-slate-700 rounded-lg m-0.5"></div></th></tr></thead>
+      <tbody>@for(i of [1,2,3,4,5]; track i){<tr [ngClass]="{'bg-gray-50 dark:bg-slate-950':$odd}"><td class="py-3 px-2"><div class="flex items-center gap-3"><div class="animate-pulse rounded-full bg-gray-200 dark:bg-slate-700 h-10 w-10 flex-shrink-0"></div><div class="flex-1 space-y-2"><div class="animate-pulse h-4 bg-gray-200 dark:bg-slate-700 rounded w-36"></div><div class="animate-pulse h-3 bg-gray-100 dark:bg-slate-800 rounded w-24"></div></div><div class="animate-pulse rounded-lg bg-amber-200 dark:bg-amber-900/30 h-8 w-8"></div></div></td></tr>}</tbody>
+    </table>
   }
-
-  @if (!load && items.length === 0) {
-    <div class="empty-state">
-      <div class="empty-title">No hay usuarios registrados</div>
-      <button (click)="add()" class="btn btn-primary">Crear usuario</button>
-    </div>
-  }
-
 </div>

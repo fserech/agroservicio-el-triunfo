@@ -1,134 +1,156 @@
-<!-- compras-list.component.html -->
-<app-header headerTitle="Órdenes de Compra"
-  headerDescription="Gestión de compras a proveedores. Crea, aprueba y recibe órdenes.">
-</app-header>
+<app-header headerTitle="Órdenes de Compra" headerDescription="Gestión de compras a proveedores. Crea, aprueba y recibe órdenes."></app-header>
 
-<div class="p-2 m-2 bg-white rounded dark:bg-slate-900 border dark:border-slate-800">
-
-  <div class="filter-bar sticky top-0 z-10">
-    <select class="date-input" [(ngModel)]="estadoFilter" (change)="loadData()">
-      <option value="">Todos los estados</option>
-      <option value="pendiente">Pendiente</option>
-      <option value="aprobada">Aprobada</option>
-      <option value="en_transito">En Tránsito</option>
-      <option value="recibida">Recibida</option>
-      <option value="cancelada">Cancelada</option>
-    </select>
-    <div class="spacer"></div>
-    <button class="btn btn-primary btn-sm" (click)="add()">
-      <ng-icon name="matAddOutline" size="16"></ng-icon> Nueva Orden
-    </button>
-  </div>
-
-  <!-- KPI STRIP -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-3">
-    <div class="kpi-card"><span class="kpi-accent" style="background:var(--primary)"></span>
-      <div class="kpi-label">Total Órdenes</div><div class="kpi-value">{{ items.length }}</div></div>
-    <div class="kpi-card"><span class="kpi-accent" style="background:var(--warning)"></span>
-      <div class="kpi-label">Pendientes</div><div class="kpi-value">{{ pendientes }}</div></div>
-    <div class="kpi-card"><span class="kpi-accent" style="background:var(--blue)"></span>
-      <div class="kpi-label">En Tránsito</div><div class="kpi-value">{{ enTransito }}</div></div>
-    <div class="kpi-card"><span class="kpi-accent" style="background:var(--success)"></span>
-      <div class="kpi-label">Monto Total</div>
-      <div class="kpi-value">Q {{ montoTotal | number:'1.0-0' }}</div></div>
-  </div>
-
-  @if (load) {
-    <div class="p-4">@for (i of [1,2,3,4,5]; track i) {
-      <div class="skeleton h-10 mb-2 rounded-lg"></div>}</div>
-  }
-
-  @if (!load && items.length === 0) {
-    <div class="empty-state">
-      <div class="empty-icon"><ng-icon name="matShoppingCartOutline" size="36" style="color:var(--text-3)"></ng-icon></div>
-      <div class="empty-title">Sin órdenes de compra</div>
-      <button (click)="add()" class="btn btn-primary"><ng-icon name="matAddOutline" size="18"></ng-icon> Nueva orden</button>
+<div class="p-2 m-2 bg-white rounded-xl dark:bg-slate-900 border border-gray-200 dark:border-slate-800">
+  <!-- TOOLBAR -->
+  <div class="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 p-2 pb-3">
+    <div class="flex items-center gap-2 sm:hidden">
+      <select class="date-input flex-1" [(ngModel)]="estadoFilter" (change)="loadData()">
+        <option value="">Todos los estados</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="aprobada">Aprobada</option>
+        <option value="en_transito">En Tránsito</option>
+        <option value="recibida">Recibida</option>
+        <option value="cancelada">Cancelada</option>
+      </select>
+      <button (click)="add()" class="btn-primary h-10 px-3"><ng-icon name="matAddOutline" size="18"></ng-icon></button>
     </div>
-  }
+    <div class="hidden sm:flex items-center gap-2">
+      <select class="date-input" [(ngModel)]="estadoFilter" (change)="loadData()">
+        <option value="">Todos los estados</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="aprobada">Aprobada</option>
+        <option value="en_transito">En Tránsito</option>
+        <option value="recibida">Recibida</option>
+        <option value="cancelada">Cancelada</option>
+      </select>
+      <div class="flex-1"></div>
+      <button (click)="add()" class="btn-primary h-10"><ng-icon name="matAddOutline" size="16"></ng-icon> Nueva Orden</button>
+    </div>
+  </div>
 
-  @if (!load && items.length > 0) {
-    <div class="table-wrap">
-      <table class="table-grid w-full hidden sm:table">
-        <thead>
-          <tr>
-            <th>Nº Orden</th><th>Proveedor</th><th>Fecha</th>
-            <th>F. Entrega</th><th>Total</th><th>Estado</th><th class="text-center">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (o of items; track o.id; let odd = $odd) {
-            <tr [class.bg-gray-50]="odd" class="hover:bg-blue-50 transition-colors">
-              <td class="font-mono text-sm font-bold" style="color:var(--primary)">{{ o.numero_orden }}</td>
-              <td>
-                <div class="font-medium">{{ o.prov_nombre }}</div>
-                <div class="text-xs text-gray-400">{{ o.creado_por }}</div>
-              </td>
-              <td class="text-sm">{{ o.fecha | date:'dd/MM/yyyy' }}</td>
-              <td class="text-sm">
-                @if (o.fecha_entrega) { {{ o.fecha_entrega | date:'dd/MM/yyyy' }} }
-                @else { <span class="text-gray-400">—</span> }
-              </td>
-              <td class="font-bold font-mono text-sm" style="color:var(--primary)">Q {{ o.total | number:'1.2-2' }}</td>
-              <td>
-                <span class="badge" [ngClass]="{
-                  'badge-warning': o.estado === 'pendiente',
-                  'badge-info':    o.estado === 'aprobada' || o.estado === 'en_transito',
-                  'badge-success': o.estado === 'recibida',
-                  'badge-gray':    o.estado === 'cancelada'}">
-                  {{ getEstadoLabel(o.estado) }}
-                </span>
-              </td>
-              <td>
-                <div class="flex justify-center gap-1">
-                  <button class="btn-action" title="Ver detalle" (click)="view(o.id)">
-                    <ng-icon name="matRemoveRedEyeOutline" size="18" style="color:#3b82f6"></ng-icon></button>
-                  @if (o.estado === 'en_transito' || o.estado === 'aprobada') {
-                    <button class="btn-action" title="Marcar recibida" (click)="recibir(o.id)">
-                      <ng-icon name="bootstrapCheckCircleFill" size="18" style="color:#10b981"></ng-icon></button>
-                  }
-                  @if (o.estado === 'pendiente') {
-                    <button class="btn-action" title="Aprobar orden" (click)="aprobar(o.id)">
-                      <ng-icon name="matThumbUpOutline" size="18" style="color:#3b82f6"></ng-icon></button>
-                    <button class="btn-action" title="Cancelar" (click)="cancelar(o.id)">
-                      <ng-icon name="bootstrapXCircle" size="18" style="color:#ef4444"></ng-icon></button>
-                  }
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+  <!-- KPIs -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-2 my-2">
+    <div class="kpi-card"><span class="kpi-accent" style="background:#00C793"></span><div class="kpi-label">Total Órdenes</div><div class="kpi-value">{{ items.length }}</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:#f59e0b"></span><div class="kpi-label">Pendientes</div><div class="kpi-value">{{ pendientes }}</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:#3887BF"></span><div class="kpi-label">En Tránsito</div><div class="kpi-value">{{ enTransito }}</div></div>
+    <div class="kpi-card"><span class="kpi-accent" style="background:#8b5cf6"></span><div class="kpi-label">Monto Total</div><div class="kpi-value text-sm">Q {{ montoTotal|number:'1.0-0' }}</div></div>
+  </div>
 
-      <!-- MOBILE -->
-      <div class="sm:hidden">
+  <!-- PAGINACIÓN MOBILE TOP -->
+  <div class="content-sm px-2 mb-1">
+    <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+      <span><b class="text-gray-700 dark:text-gray-300">Página {{ page }}</b> de {{ totalPages }}</span>
+      <span>{{ startIndex }}-{{ endIndex }} de <b class="text-gray-700 dark:text-gray-300">{{ totalItems }}</b></span>
+    </div>
+  </div>
+
+  <!-- TABLA DESKTOP -->
+  @if (!load) {
+    <table class="table-grid w-full mt-2 hidden sm:table">
+      <thead>
+        <tr>
+          <th><button class="w-full flex items-center gap-1 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors" (click)="changeSortOrderBy('numero_orden')">Nº Orden @if(sortConfig.sortBy==='numero_orden'&&sortConfig.sortOrder==='asc'){<ng-icon size="14" name="matArrowDownwardOutline"></ng-icon>}@if(sortConfig.sortBy==='numero_orden'&&sortConfig.sortOrder==='desc'){<ng-icon size="14" name="matArrowUpwardOutline"></ng-icon>}</button></th>
+          <th><button class="w-full flex items-center gap-1 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors" (click)="changeSortOrderBy('prov_nombre')">Proveedor</button></th>
+          <th><button class="w-full flex items-center gap-1 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors" (click)="changeSortOrderBy('fecha')">Fecha @if(sortConfig.sortBy==='fecha'&&sortConfig.sortOrder==='asc'){<ng-icon size="14" name="matArrowDownwardOutline"></ng-icon>}@if(sortConfig.sortBy==='fecha'&&sortConfig.sortOrder==='desc'){<ng-icon size="14" name="matArrowUpwardOutline"></ng-icon>}</button></th>
+          <th><div class="flex items-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5">F. Entrega</div></th>
+          <th><button class="w-full flex items-center gap-1 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors" (click)="changeSortOrderBy('total')">Total</button></th>
+          <th><div class="flex items-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5">Estado</div></th>
+          <th><div class="flex items-center justify-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5">Acciones</div></th>
+        </tr>
+      </thead>
+      <tbody>
         @for (o of items; track o.id; let odd = $odd) {
-          <div class="border-b p-3" [class.bg-gray-50]="odd">
-            <div class="flex justify-between items-start mb-1">
-              <div>
-                <div class="font-mono font-bold text-sm" style="color:var(--primary)">{{ o.numero_orden }}</div>
-                <div class="font-medium text-sm">{{ o.prov_nombre }}</div>
-                <div class="text-xs text-gray-400">{{ o.fecha | date:'dd/MM/yyyy' }}</div>
-              </div>
-              <div class="text-right">
-                <div class="font-bold text-sm">Q {{ o.total | number:'1.0-0' }}</div>
-                <span class="badge text-xs" [ngClass]="{
-                  'badge-warning': o.estado==='pendiente',
-                  'badge-info':    o.estado==='aprobada'||o.estado==='en_transito',
-                  'badge-success': o.estado==='recibida',
-                  'badge-gray':    o.estado==='cancelada'}">
-                  {{ getEstadoLabel(o.estado) }}
-                </span>
-              </div>
-            </div>
-            <div class="flex justify-end gap-1 mt-2">
-              <button class="btn-action" (click)="view(o.id)"><ng-icon name="matRemoveRedEyeOutline" size="16" style="color:#3b82f6"></ng-icon></button>
-              @if (o.estado === 'en_transito' || o.estado === 'aprobada') {
-                <button class="btn-action" (click)="recibir(o.id)"><ng-icon name="bootstrapCheckCircleFill" size="16" style="color:#10b981"></ng-icon></button>
-              }
-            </div>
-          </div>
+          <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-colors" [ngClass]="{'bg-gray-50 dark:bg-slate-950': odd}">
+            <td class="font-bold font-mono text-sm" style="color:#00C793">{{ o.numero_orden }}</td>
+            <td><div class="font-semibold text-gray-800 dark:text-gray-200 text-sm">{{ o.prov_nombre }}</div><div class="text-xs text-gray-400 dark:text-gray-500">{{ o.creado_por }}</div></td>
+            <td class="text-sm text-gray-600 dark:text-gray-400">{{ o.fecha | date:'dd/MM/yyyy' }}</td>
+            <td class="text-sm text-gray-600 dark:text-gray-400">{{ o.fecha_entrega ? (o.fecha_entrega | date:'dd/MM/yyyy') : '—' }}</td>
+            <td class="font-bold font-mono text-sm" style="color:#00C793">Q {{ o.total|number:'1.2-2' }}</td>
+            <td><span class="badge" [ngClass]="{'badge-warning':o.estado==='pendiente','badge-info':o.estado==='aprobada'||o.estado==='en_transito','badge-success':o.estado==='recibida','badge-gray':o.estado==='cancelada'}">{{ getEstadoLabel(o.estado) }}</span></td>
+            <td><div class="flex items-center justify-center gap-1">
+              <button (click)="view(o.id)" class="btn-action"><ng-icon class="text-blue-500" size="18" name="matRemoveRedEyeOutline"></ng-icon></button>
+              @if(o.estado==='pendiente'){<button (click)="aprobar(o.id)" class="btn-action" title="Aprobar"><ng-icon class="text-emerald-500" size="18" name="matThumbUpOutline"></ng-icon></button>}
+              @if(o.estado==='en_transito'||o.estado==='aprobada'){<button (click)="recibir(o.id)" class="btn-action" title="Recibir"><ng-icon class="text-emerald-500" size="18" name="bootstrapCheckCircleFill"></ng-icon></button>}
+              @if(o.estado==='pendiente'){<button (click)="cancelar(o.id)" class="btn-action" title="Cancelar"><ng-icon class="text-red-500" size="18" name="bootstrapXCircle"></ng-icon></button>}
+            </div></td>
+          </tr>
         }
-      </div>
-    </div>
+        @empty {<tr><td colspan="7" class="text-center py-10 text-gray-400 dark:text-gray-500">Sin órdenes</td></tr>}
+      </tbody>
+    </table>
+  } @else {
+    <table class="table-grid w-full mt-2 hidden sm:table">
+      <thead><tr>@for(i of [1,2,3,4,5,6,7]; track i){<td><div class="animate-pulse h-8 bg-gray-200 dark:bg-slate-700 rounded-lg m-0.5"></div></td>}</tr></thead>
+      <tbody>@for(i of [1,2,3,4,5,6,7,8]; track i){<tr [ngClass]="{'bg-gray-50 dark:bg-slate-950':$odd}">@for(col of [1,2,3,4,5,6]; track col){<td><div class="animate-pulse h-3 bg-gray-200 dark:bg-slate-700 rounded my-2"></div></td>}<td><div class="flex gap-1 p-1"><div class="animate-pulse rounded-lg bg-blue-200 dark:bg-blue-900/30 h-7 w-7"></div><div class="animate-pulse rounded-lg bg-emerald-200 dark:bg-emerald-900/30 h-7 w-7"></div></div></td></tr>}</tbody>
+    </table>
+  }
+
+  <!-- TABLA MOBILE -->
+  @if (!load) {
+    <table class="table-grid w-full mt-2 sm:hidden">
+      <thead><tr><th>
+        <button class="w-full flex items-center gap-1 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5" (click)="changeSortOrderBy('fecha')">
+          <span class="font-semibold">Órdenes de compra</span>
+          @if(sortConfig.sortBy==='fecha'&&sortConfig.sortOrder==='asc'){<ng-icon size="14" name="matArrowUpwardOutline"></ng-icon>}
+          @if(sortConfig.sortBy==='fecha'&&sortConfig.sortOrder==='desc'){<ng-icon size="14" name="matArrowDownwardOutline"></ng-icon>}
+          <span class="ml-auto text-xs text-gray-400 dark:text-gray-500 font-normal">{{ items.length }}</span>
+        </button>
+      </th></tr></thead>
+      <tbody>
+        @for (o of items; track o.id; let odd = $odd) {
+          <tr [ngClass]="{'bg-gray-50 dark:bg-slate-950': odd}">
+            <td class="py-2">
+              <div class="flex items-start justify-between px-1">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-0.5">
+                    <span class="font-mono font-bold text-sm" style="color:#00C793">{{ o.numero_orden }}</span>
+                    <span class="badge text-xs" [ngClass]="{'badge-warning':o.estado==='pendiente','badge-info':o.estado==='aprobada'||o.estado==='en_transito','badge-success':o.estado==='recibida','badge-gray':o.estado==='cancelada'}">{{ getEstadoLabel(o.estado) }}</span>
+                  </div>
+                  <div class="font-semibold text-gray-800 dark:text-gray-200 text-sm mt-0.5">{{ o.prov_nombre }}</div>
+                  <div class="text-xs text-gray-400 dark:text-gray-500">{{ o.fecha | date:'dd/MM/yyyy' }}</div>
+                  <div class="text-sm font-bold mt-1" style="color:#00C793">Q {{ o.total|number:'1.0-0' }}</div>
+                </div>
+                <div class="flex gap-1 flex-shrink-0 ml-2">
+                  <button (click)="view(o.id)" class="btn-action"><ng-icon class="text-blue-500" size="20" name="matRemoveRedEyeOutline"></ng-icon></button>
+                  @if(o.estado==='en_transito'||o.estado==='aprobada'){<button (click)="recibir(o.id)" class="btn-action"><ng-icon class="text-emerald-500" size="20" name="bootstrapCheckCircleFill"></ng-icon></button>}
+                </div>
+              </div>
+            </td>
+          </tr>
+        }
+        @empty {<tr><td class="text-center py-10 text-gray-400 dark:text-gray-500">Sin órdenes</td></tr>}
+      </tbody>
+    </table>
+  } @else {
+    <table class="table-grid w-full mt-2 sm:hidden">
+      <thead><tr><th><div class="animate-pulse h-8 bg-gray-200 dark:bg-slate-700 rounded-lg m-0.5"></div></th></tr></thead>
+      <tbody>@for(i of [1,2,3,4,5,6]; track i){<tr [ngClass]="{'bg-gray-50 dark:bg-slate-950':$odd}"><td class="py-3 px-2"><div class="flex items-center justify-between"><div class="flex-1 space-y-2 pr-3"><div class="animate-pulse h-4 bg-gray-200 dark:bg-slate-700 rounded w-40"></div><div class="animate-pulse h-3 bg-gray-100 dark:bg-slate-800 rounded w-28"></div><div class="animate-pulse h-4 bg-gray-200 dark:bg-slate-700 rounded w-20"></div></div><div class="flex gap-1"><div class="animate-pulse rounded-lg bg-blue-200 dark:bg-blue-900/30 h-8 w-8"></div><div class="animate-pulse rounded-lg bg-emerald-200 dark:bg-emerald-900/30 h-8 w-8"></div></div></div></td></tr>}</tbody>
+    </table>
+  }
+
+  <!-- PAGINACIÓN DESKTOP -->
+  @if (!load) {
+    <div class="content-desktop"><div class="pagination"><div class="pagination-child">
+      <b>Página {{ page }} de {{ totalPages }}</b><span class="text-gray-300 dark:text-gray-600">·</span><span class="text-gray-500 dark:text-gray-400">{{ startIndex }}-{{ endIndex }} de {{ totalItems }}</span>
+      <div class="flex-1"></div>
+      <button (click)="firstPage()"    [disabled]="page===1"><ng-icon class="btn-pagination" size="18" name="bootstrapChevronBarLeft"></ng-icon></button>
+      <button (click)="previousPage()" [disabled]="page===1"><ng-icon class="btn-pagination" size="18" name="bootstrapChevronLeft"></ng-icon></button>
+      <span class="px-2 py-1 rounded-lg bg-gray-100 dark:bg-slate-800 text-xs font-bold min-w-[2rem] text-center text-gray-700 dark:text-gray-300">{{ page }}</span>
+      <button (click)="nextPage()"     [disabled]="page===totalPages"><ng-icon class="btn-pagination" size="18" name="bootstrapChevronRight"></ng-icon></button>
+      <button (click)="lastPage()"     [disabled]="page===totalPages"><ng-icon class="btn-pagination" size="18" name="bootstrapChevronBarRight"></ng-icon></button>
+    </div></div></div>
+  } @else {
+    <div class="content-desktop"><div class="pagination"><div class="pagination-child"><div class="animate-pulse h-5 bg-slate-200 dark:bg-slate-700 rounded w-32"></div><div class="flex-1"></div>@for(i of [1,2,3,4]; track i){<div class="animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700 h-7 w-7"></div>}</div></div></div>
+  }
+  @if (!load) {
+    <div class="content-sm px-2 pb-2"><div class="flex items-center justify-between bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl p-2 mt-2">
+      <button (click)="firstPage()"    [disabled]="page===1"          class="btn-action"><ng-icon class="text-gray-500 dark:text-gray-400" size="20" name="bootstrapChevronBarLeft"></ng-icon></button>
+      <button (click)="previousPage()" [disabled]="page===1"          class="btn-action"><ng-icon class="text-gray-500 dark:text-gray-400" size="20" name="bootstrapChevronLeft"></ng-icon></button>
+      <span class="text-xs font-semibold text-gray-600 dark:text-gray-300">{{ page }} / {{ totalPages }} <span class="text-gray-400 dark:text-gray-500 font-normal">({{ totalItems }})</span></span>
+      <button (click)="nextPage()"     [disabled]="page===totalPages" class="btn-action"><ng-icon class="text-gray-500 dark:text-gray-400" size="20" name="bootstrapChevronRight"></ng-icon></button>
+      <button (click)="lastPage()"     [disabled]="page===totalPages" class="btn-action"><ng-icon class="text-gray-500 dark:text-gray-400" size="20" name="bootstrapChevronBarRight"></ng-icon></button>
+    </div></div>
+  } @else {
+    <div class="content-sm px-2 pb-2"><div class="animate-pulse flex justify-between items-center bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl p-3 mt-2">@for(i of [1,2,3,4]; track i){<div class="rounded-lg bg-slate-200 dark:bg-slate-700 h-7 w-7"></div>}</div></div>
   }
 </div>

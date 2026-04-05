@@ -115,4 +115,7 @@ export interface Configuracion { id: number; clave: string; valor: string; descr
 
 export interface PagedResponse<T> { data: T[]; total: number; page: number; limit: number; }
 
+// Extiende PagedResponse para incluir monto_total que devuelve el backend de ventas
+export interface VentasPagedResponse extends PagedResponse<Venta> { monto_total: number; }
+
 export interface SortConfig { sortBy: string; sortOrder: 'asc'|'desc'; }
