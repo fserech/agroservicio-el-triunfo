@@ -1,15 +1,18 @@
-// header.component.ts
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './header.component.html',
-  styleUrls: ['./header.component.scss']
+  styleUrl: './header.component.scss'
 })
 export class HeaderComponent {
-  @Input() headerTitle       = '';
-  @Input() headerDescription = '';
+
+  title: string = '';
+  description: string = '';
+  @Input() set headerTitle(title: string) { this.title = title; }
+  @Input() set headerDescription(description: string) { this.description = description; }
+
+
 }
