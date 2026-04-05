@@ -5,7 +5,10 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { matArrowBackOutline, matSearchOutline, matShoppingCartOutline } from '@ng-icons/material-icons/outline';
+import {
+  matArrowBackOutline, matSearchOutline, matShoppingCartOutline,
+  matAddCircleOutline
+} from '@ng-icons/material-icons/outline';
 import { bootstrapXCircle } from '@ng-icons/bootstrap-icons';
 import { VentasService, ProductosService, ClientesService, ToastService } from '../../../core/services/services';
 import { Producto, Cliente } from '../../../core/models/models';
@@ -18,9 +21,11 @@ interface CartItem {
 @Component({
   selector: 'app-ventas-form',
   standalone: true,
-  imports: [
-    HeaderComponent,CommonModule, FormsModule, NgIconComponent, DecimalPipe],
-  providers: [provideIcons({ matArrowBackOutline, matSearchOutline, matShoppingCartOutline, bootstrapXCircle })],
+  imports: [HeaderComponent, CommonModule, FormsModule, NgIconComponent, DecimalPipe],
+  providers: [provideIcons({
+    matArrowBackOutline, matSearchOutline, matShoppingCartOutline,
+    matAddCircleOutline, bootstrapXCircle
+  })],
   templateUrl: './ventas-form.component.html',
   styleUrls: ['./ventas-form.component.scss']
 })
@@ -37,15 +42,19 @@ export class VentasFormComponent implements OnInit {
   cart: CartItem[]               = [];
 
   selectedClienteId: number | null = null;
-  metodoPago   = 'efectivo';
-  descuento    = 0;
+  metodoPago    = 'efectivo';
+  descuento     = 0;
   observaciones = '';
-  searchProd   = '';
-  saving       = false;
+  searchProd    = '';
+  saving        = false;
 
-  get subtotal() { return this.cart.reduce((a, i) => a + i.subtotal, 0); }
-  get iva()      { return (this.subtotal - this.descuento) * 0.12; }
-  get total()    { return this.subtotal - this.descuento + this.iva; }
+  /** Toggle IVA — desactivado por defecto */
+  aplicarIva = false;
+
+  get subtotal()     { return this.cart.reduce((a, i) => a + i.subtotal, 0); }
+  get ivaCalculado() { return (this.subtotal - this.descuento) * 0.12; }
+  get iva()          { return this.aplicarIva ? this.ivaCalculado : 0; }
+  get total()        { return this.subtotal - this.descuento + this.iva; }
 
   ngOnInit(): void {
     this.prodSvc.getAll('', undefined, 'true', 1, 200).subscribe(r => {
@@ -58,7 +67,8 @@ export class VentasFormComponent implements OnInit {
   filterProductos(): void {
     const t = this.searchProd.toLowerCase();
     this.productosFiltrados = t
-      ? this.productos.filter(p => p.nombre.toLowerCase().includes(t) || p.cat_nombre?.toLowerCase().includes(t))
+      ? this.productos.filter(p =>
+          p.nombre.toLowerCase().includes(t) || p.cat_nombre?.toLowerCase().includes(t))
       : this.productos;
   }
 
@@ -73,6 +83,7 @@ export class VentasFormComponent implements OnInit {
         precio_unitario: p.precio_venta, cantidad: 1, subtotal: p.precio_venta
       });
     }
+    this.toast.success(`${p.nombre} agregado`);
   }
 
   changeQty(item: CartItem, delta: number): void {
@@ -85,15 +96,26 @@ export class VentasFormComponent implements OnInit {
   save(): void {
     if (!this.cart.length) { this.toast.warning('Agrega al menos un producto'); return; }
     this.saving = true;
-    this.svc.create({
+    const payload: any = {
       cliente_id:    this.selectedClienteId ?? undefined,
-      items:         this.cart.map(i => ({ producto_id: i.producto_id, cantidad: i.cantidad, precio_unitario: i.precio_unitario, subtotal: i.subtotal })),
+      items:         this.cart.map(i => ({
+        producto_id:    i.producto_id,
+        cantidad:       i.cantidad,
+        precio_unitario: i.precio_unitario,
+        subtotal:       i.subtotal
+      })),
       metodo_pago:   this.metodoPago,
       descuento:     this.descuento,
+      aplicar_iva:   this.aplicarIva,   // ← envía el flag al backend
       observaciones: this.observaciones
-    }).subscribe({
-      next:  v => { this.toast.success(`Venta ${v.numero_factura} creada por Q ${v.total}`); this.router.navigate(['/ventas']); },
-      error: e  => { this.saving = false; this.toast.error(e?.error?.error || 'Error procesando venta'); }
+    };
+
+    this.svc.create(payload).subscribe({
+      next:  v => {
+        this.toast.success(`Venta ${v.numero_factura} creada por Q ${v.total}`);
+        this.router.navigate(['/ventas']);
+      },
+      error: e => { this.saving = false; this.toast.error(e?.error?.error || 'Error procesando venta'); }
     });
   }
 

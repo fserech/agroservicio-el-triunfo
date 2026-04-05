@@ -14,11 +14,14 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./app-shell/app-shell.component').then(m => m.AppShellComponent),
     children: [
-      { path: 'dashboard',     loadComponent: () => import('./modules/dashboard/dashboard.component').then(m => m.DashboardComponent) },
+      { path: 'dashboard', loadComponent: () => import('./modules/dashboard/dashboard.component').then(m => m.DashboardComponent) },
 
       // VENTAS
-      { path: 'ventas',        loadComponent: () => import('./modules/ventas/ventas-list/ventas-list.component').then(m => m.VentasListComponent) },
-      { path: 'ventas/nuevo',  loadComponent: () => import('./modules/ventas/ventas-form/ventas-form.component').then(m => m.VentasFormComponent) },
+      { path: 'ventas',               loadComponent: () => import('./modules/ventas/ventas-list/ventas-list.component').then(m => m.VentasListComponent) },
+      { path: 'ventas/nuevo',         loadComponent: () => import('./modules/ventas/ventas-form/ventas-form.component').then(m => m.VentasFormComponent) },
+      { path: 'ventas/:id',           loadComponent: () => import('./modules/ventas/ventas-detail/ventas-detail.component').then(m => m.VentasDetailComponent) },
+      { path: 'ventas/:id/editar',    loadComponent: () => import('./modules/ventas/ventas-form/ventas-form.component').then(m => m.VentasFormComponent) },
+      { path: 'ventas/:id/imprimir',  loadComponent: () => import('./modules/ventas/ventas-print/ventas-print.component').then(m => m.VentasPrintComponent) },
 
       // CLIENTES
       { path: 'clientes',            loadComponent: () => import('./modules/clientes/clientes-list/clientes-list.component').then(m => m.ClientesListComponent) },
@@ -26,30 +29,30 @@ export const routes: Routes = [
       { path: 'clientes/:id/editar', loadComponent: () => import('./modules/clientes/clientes-form/clientes-form.component').then(m => m.ClientesFormComponent) },
 
       // PRODUCTOS
-      { path: 'productos',             loadComponent: () => import('./modules/productos/productos-list/productos-list.component').then(m => m.ProductosListComponent) },
-      { path: 'productos/nuevo',       loadComponent: () => import('./modules/productos/productos-form/productos-form.component').then(m => m.ProductosFormComponent) },
-      { path: 'productos/:id/editar',  loadComponent: () => import('./modules/productos/productos-form/productos-form.component').then(m => m.ProductosFormComponent) },
+      { path: 'productos',            loadComponent: () => import('./modules/productos/productos-list/productos-list.component').then(m => m.ProductosListComponent) },
+      { path: 'productos/nuevo',      loadComponent: () => import('./modules/productos/productos-form/productos-form.component').then(m => m.ProductosFormComponent) },
+      { path: 'productos/:id/editar', loadComponent: () => import('./modules/productos/productos-form/productos-form.component').then(m => m.ProductosFormComponent) },
 
       // INVENTARIO
-      { path: 'inventario',            loadComponent: () => import('./modules/inventario/inventario-list/inventario-list.component').then(m => m.InventarioListComponent) },
+      { path: 'inventario', loadComponent: () => import('./modules/inventario/inventario-list/inventario-list.component').then(m => m.InventarioListComponent) },
 
       // COMPRAS
-      { path: 'compras',        loadComponent: () => import('./modules/compras/compras-list/compras-list.component').then(m => m.ComprasListComponent) },
-      { path: 'compras/nuevo',  loadComponent: () => import('./modules/compras/compras-form/compras-form.component').then(m => m.ComprasFormComponent) },
+      { path: 'compras',       loadComponent: () => import('./modules/compras/compras-list/compras-list.component').then(m => m.ComprasListComponent) },
+      { path: 'compras/nuevo', loadComponent: () => import('./modules/compras/compras-form/compras-form.component').then(m => m.ComprasFormComponent) },
 
       // PROVEEDORES
-      { path: 'proveedores',             loadComponent: () => import('./modules/proveedores/proveedores-list/proveedores-list.component').then(m => m.ProveedoresListComponent) },
-      { path: 'proveedores/nuevo',       loadComponent: () => import('./modules/proveedores/proveedores-form/proveedores-form.component').then(m => m.ProveedoresFormComponent) },
-      { path: 'proveedores/:id/editar',  loadComponent: () => import('./modules/proveedores/proveedores-form/proveedores-form.component').then(m => m.ProveedoresFormComponent) },
+      { path: 'proveedores',            loadComponent: () => import('./modules/proveedores/proveedores-list/proveedores-list.component').then(m => m.ProveedoresListComponent) },
+      { path: 'proveedores/nuevo',      loadComponent: () => import('./modules/proveedores/proveedores-form/proveedores-form.component').then(m => m.ProveedoresFormComponent) },
+      { path: 'proveedores/:id/editar', loadComponent: () => import('./modules/proveedores/proveedores-form/proveedores-form.component').then(m => m.ProveedoresFormComponent) },
 
       // CUENTAS POR COBRAR
       { path: 'cuentas-cobrar', loadComponent: () => import('./modules/cuentas-cobrar/cuentas-cobrar.component').then(m => m.CuentasCobrarComponent) },
 
       // REPORTES
-      { path: 'reportes',       loadComponent: () => import('./modules/reportes/reportes.component').then(m => m.ReportesComponent) },
+      { path: 'reportes', loadComponent: () => import('./modules/reportes/reportes.component').then(m => m.ReportesComponent) },
 
       // CONFIGURACIÓN (solo admin)
-      { path: 'configuracion',  canActivate: [adminGuard], loadComponent: () => import('./modules/configuracion/configuracion.component').then(m => m.ConfiguracionComponent) },
+      { path: 'configuracion', canActivate: [adminGuard], loadComponent: () => import('./modules/configuracion/configuracion.component').then(m => m.ConfiguracionComponent) },
 
       // USUARIOS (solo admin)
       { path: 'usuarios',            canActivate: [adminGuard], loadComponent: () => import('./modules/usuarios/usuarios-list/usuarios-list.component').then(m => m.UsuariosListComponent) },

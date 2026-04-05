@@ -6,7 +6,8 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
   matAddOutline, matRemoveRedEyeOutline, matReceiptOutline,
-  matSearchOutline, matArrowDownwardOutline, matArrowUpwardOutline
+  matSearchOutline, matArrowDownwardOutline, matArrowUpwardOutline,
+  matEditOutline, matPrintOutline
 } from '@ng-icons/material-icons/outline';
 import {
   bootstrapCheckCircleFill, bootstrapXCircle,
@@ -22,6 +23,7 @@ import { Venta, VentaEstado, VentasPagedResponse } from '../../../core/models/mo
   providers: [provideIcons({
     matAddOutline, matRemoveRedEyeOutline, matReceiptOutline, matSearchOutline,
     matArrowDownwardOutline, matArrowUpwardOutline,
+    matEditOutline, matPrintOutline,
     bootstrapCheckCircleFill, bootstrapXCircle,
     bootstrapChevronLeft, bootstrapChevronRight,
     bootstrapChevronBarLeft, bootstrapChevronBarRight
@@ -38,7 +40,6 @@ export class VentasListComponent implements OnInit {
   sortConfig = { sortBy: 'fecha', sortOrder: 'desc' };
   page = 1; limit = 15; totalItems = 0;
 
-  // Suma total filtrada que devuelve el backend (excluye CANCEL, abarca todos los registros no solo la página)
   montoTotal = 0;
 
   get totalPages()  { return Math.max(1, Math.ceil(this.totalItems / this.limit)); }
@@ -58,7 +59,6 @@ export class VentasListComponent implements OnInit {
     if (this.hasta) f.hasta = this.hasta;
     this.svc.getAll(f).subscribe({
       next: (r: any) => {
-        // PostgreSQL devuelve campos numéricos como strings — casteamos a number
         this.items = r.data.map((v: Venta) => ({
           ...v,
           total:     Number(v.total)     || 0,
@@ -90,8 +90,10 @@ export class VentasListComponent implements OnInit {
     return ({efectivo:'Efectivo',tarjeta:'Tarjeta',credito:'Crédito',transferencia:'Transferencia',cheque:'Cheque'} as any)[m] || m;
   }
 
-  add():            void { this.router.navigate(['/ventas/nuevo']); }
-  view(id: number): void { this.router.navigate(['/ventas', id]); }
+  add():             void { this.router.navigate(['/ventas/nuevo']); }
+  view(id: number):  void { this.router.navigate(['/ventas', id]); }
+  edit(id: number):  void { this.router.navigate(['/ventas', id, 'editar']); }
+  print(id: number): void { this.router.navigate(['/ventas', id, 'imprimir']); }
 
   finalizar(id: number): void {
     if (!confirm('¿Finalizar esta venta?')) return;

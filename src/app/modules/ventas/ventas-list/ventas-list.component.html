@@ -72,13 +72,32 @@
             <td class="font-bold font-mono text-sm" style="color:#00C793">Q {{ v.total|number:'1.2-2' }}</td>
             <td><span class="badge badge-info">{{ getMetodoLabel(v.metodo_pago) }}</span></td>
             <td><span class="badge" [ngClass]="{'badge-warning':v.estado==='PENDING','badge-info':v.estado==='IN_PROCESS','badge-success':v.estado==='FINALIZED','badge-gray':v.estado==='CANCEL'}">{{ getEstadoLabel(v.estado) }}</span></td>
-            <td><div class="flex items-center justify-center gap-1">
-              <button (click)="view(v.id)" class="btn-action" title="Ver detalle"><ng-icon class="text-blue-500" size="18" name="matRemoveRedEyeOutline"></ng-icon></button>
-              @if(v.estado==='PENDING'||v.estado==='IN_PROCESS'){
-                <button (click)="finalizar(v.id)" class="btn-action" title="Finalizar"><ng-icon class="text-emerald-500" size="18" name="bootstrapCheckCircleFill"></ng-icon></button>
-                <button (click)="cancelar(v.id)" class="btn-action" title="Cancelar"><ng-icon class="text-red-500" size="18" name="bootstrapXCircle"></ng-icon></button>
-              }
-            </div></td>
+            <td>
+              <div class="flex items-center justify-center gap-1">
+                <!-- Ver detalle: siempre disponible -->
+                <button (click)="view(v.id)" class="btn-action" title="Ver detalle">
+                  <ng-icon class="text-blue-500" size="18" name="matRemoveRedEyeOutline"></ng-icon>
+                </button>
+                <!-- Editar: solo si PENDING o IN_PROCESS -->
+                @if (v.estado === 'PENDING' || v.estado === 'IN_PROCESS') {
+                  <button (click)="edit(v.id)" class="btn-action" title="Editar venta">
+                    <ng-icon class="text-amber-500" size="18" name="matEditOutline"></ng-icon>
+                  </button>
+                  <button (click)="finalizar(v.id)" class="btn-action" title="Finalizar">
+                    <ng-icon class="text-emerald-500" size="18" name="bootstrapCheckCircleFill"></ng-icon>
+                  </button>
+                  <button (click)="cancelar(v.id)" class="btn-action" title="Cancelar">
+                    <ng-icon class="text-red-500" size="18" name="bootstrapXCircle"></ng-icon>
+                  </button>
+                }
+                <!-- Imprimir: solo si FINALIZED -->
+                @if (v.estado === 'FINALIZED') {
+                  <button (click)="print(v.id)" class="btn-action" title="Imprimir recibo">
+                    <ng-icon class="text-purple-500" size="18" name="matPrintOutline"></ng-icon>
+                  </button>
+                }
+              </div>
+            </td>
           </tr>
         }
         @empty {<tr><td colspan="8" class="text-center py-10 text-gray-400 dark:text-gray-500">Sin ventas registradas</td></tr>}
@@ -118,8 +137,12 @@
                 </div>
                 <div class="flex gap-1 flex-shrink-0 ml-2">
                   <button (click)="view(v.id)" class="btn-action"><ng-icon class="text-blue-500" size="20" name="matRemoveRedEyeOutline"></ng-icon></button>
-                  @if(v.estado==='PENDING'||v.estado==='IN_PROCESS'){
+                  @if (v.estado === 'PENDING' || v.estado === 'IN_PROCESS') {
+                    <button (click)="edit(v.id)" class="btn-action"><ng-icon class="text-amber-500" size="20" name="matEditOutline"></ng-icon></button>
                     <button (click)="finalizar(v.id)" class="btn-action"><ng-icon class="text-emerald-500" size="20" name="bootstrapCheckCircleFill"></ng-icon></button>
+                  }
+                  @if (v.estado === 'FINALIZED') {
+                    <button (click)="print(v.id)" class="btn-action"><ng-icon class="text-purple-500" size="20" name="matPrintOutline"></ng-icon></button>
                   }
                 </div>
               </div>

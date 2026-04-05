@@ -6,7 +6,7 @@
 <div class="p-2 m-2">
   <div class="ventas-form-layout">
 
-    <!-- PANEL IZQUIERDO: Selector de productos -->
+    <!-- PANEL IZQUIERDO: Selector de productos en modo tabla -->
     <div class="card">
       <div class="card-header">
         <span class="card-title">Catálogo de Productos</span>
@@ -17,23 +17,54 @@
           <input class="search-input" style="width:100%" type="text"
             placeholder="Buscar producto..." [(ngModel)]="searchProd" (input)="filterProductos()">
         </div>
-        <div class="productos-grid">
-          @for (p of productosFiltrados; track p.id) {
-            <div class="prod-card" (click)="addToCart(p)"
-              [class.prod-card-low]="p.estado_stock === 'critico' || p.estado_stock === 'sin_stock'">
-              <div class="prod-card-name">{{ p.nombre }}</div>
-              <div class="prod-card-cat">{{ p.cat_nombre }} · {{ p.unidad_medida }}</div>
-              <div class="prod-card-price">Q {{ p.precio_venta | number:'1.2-2' }}</div>
-              <div class="prod-card-stock"
-                [class.text-red-500]="p.estado_stock !== 'normal'"
-                [class.text-green-600]="p.estado_stock === 'normal'">
-                Stock: {{ p.stock_actual ?? 0 }} {{ p.unidad_medida }}
-              </div>
-            </div>
-          }
-          @if (productosFiltrados.length === 0) {
-            <div class="col-span-full text-center text-gray-400 py-8 text-sm">Sin productos</div>
-          }
+
+        <!-- Tabla de productos -->
+        <div class="overflow-x-auto">
+          <table class="table-grid w-full text-sm">
+            <thead>
+              <tr>
+                <th><div class="bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5 text-xs font-semibold">Producto</div></th>
+                <th><div class="bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5 text-xs font-semibold">Categoría</div></th>
+                <th><div class="bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5 text-xs font-semibold text-right">Precio</div></th>
+                <th><div class="bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5 text-xs font-semibold text-center">Stock</div></th>
+                <th><div class="bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-1.5 text-xs font-semibold text-center">Agregar</div></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of productosFiltrados; track p.id; let odd = $odd) {
+                <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+                    [ngClass]="{'bg-gray-50 dark:bg-slate-950': odd}"
+                    (click)="addToCart(p)">
+                  <td>
+                    <div class="font-medium text-gray-800 dark:text-gray-200">{{ p.nombre }}</div>
+                    <div class="text-xs text-gray-400">{{ p.unidad_medida }}</div>
+                  </td>
+                  <td class="text-xs text-gray-500 dark:text-gray-400">{{ p.cat_nombre || '—' }}</td>
+                  <td class="text-right font-mono font-semibold text-sm" style="color:#00C793">
+                    Q {{ p.precio_venta | number:'1.2-2' }}
+                  </td>
+                  <td class="text-center">
+                    <span class="text-xs font-mono font-semibold"
+                      [ngClass]="{
+                        'text-red-500':   p.estado_stock === 'sin_stock' || p.estado_stock === 'critico',
+                        'text-amber-500': p.estado_stock === 'bajo',
+                        'text-emerald-600': p.estado_stock === 'normal'
+                      }">
+                      {{ p.stock_actual ?? 0 }}
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <button class="btn-action" title="Agregar al carrito" (click)="addToCart(p); $event.stopPropagation()">
+                      <ng-icon class="text-emerald-500" size="18" name="matAddCircleOutline"></ng-icon>
+                    </button>
+                  </td>
+                </tr>
+              }
+              @empty {
+                <tr><td colspan="5" class="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">Sin productos</td></tr>
+              }
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -72,6 +103,29 @@
           </div>
         </div>
 
+        <!-- Toggle IVA -->
+        <div class="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 mb-3">
+          <div>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Aplicar IVA (12%)</span>
+            <span class="text-xs text-gray-400 dark:text-gray-500 ml-2">
+              @if (aplicarIva) { Q {{ ivaCalculado | number:'1.2-2' }} } @else { No aplica }
+            </span>
+          </div>
+          <!-- Toggle switch con Tailwind -->
+          <button
+            type="button"
+            (click)="aplicarIva = !aplicarIva"
+            class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+            [ngClass]="aplicarIva ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-slate-600'"
+            role="switch"
+            [attr.aria-checked]="aplicarIva">
+            <span
+              class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+              [ngClass]="aplicarIva ? 'translate-x-5' : 'translate-x-0'">
+            </span>
+          </button>
+        </div>
+
         <hr style="border-color:var(--border);margin:12px 0">
 
         <!-- Carrito -->
@@ -108,7 +162,9 @@
             @if (descuento > 0) {
               <div class="totales-row" style="color:var(--success)"><span>Descuento</span><span>− Q {{ descuento | number:'1.2-2' }}</span></div>
             }
-            <div class="totales-row"><span>IVA (12%)</span><span>Q {{ iva | number:'1.2-2' }}</span></div>
+            @if (aplicarIva) {
+              <div class="totales-row"><span>IVA (12%)</span><span>Q {{ ivaCalculado | number:'1.2-2' }}</span></div>
+            }
             <div class="totales-row totales-total"><span>TOTAL</span><span>Q {{ total | number:'1.2-2' }}</span></div>
           </div>
 
