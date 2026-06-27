@@ -36,7 +36,7 @@ export class VentaFormComponent implements OnInit {
 
   clienteId       = '';
   metodoPago      = 'efectivo';
-  fechaVence      = '';       // ← nuevo
+  fechaVence      = '';
   observaciones   = '';
   buscarProd      = '';
   filtroCategoria = '';
@@ -46,16 +46,51 @@ export class VentaFormComponent implements OnInit {
   Math            = Math;
   fmtQ            = fmtQ;
 
+  // Nuevos campos
+  aplicaIva    = false;
+  tasaInteres  = 0;
+
   // Fecha mínima = mañana
-  get fechaMinVence() {
+  get fechaMinVence(): string {
     const d = new Date();
     d.setDate(d.getDate() + 1);
     return d.toISOString().split('T')[0];
   }
 
-  get subtotal() { return this.items().reduce((a, i) => a + i.subtotal, 0); }
-  get iva()      { return this.subtotal * 0.12; }
-  get total()    { return this.subtotal + this.iva; }
+  // Días de plazo calculados desde hoy hasta la fecha de vencimiento
+  get diasCredito(): number {
+    if (!this.fechaVence) return 0;
+    const hoy   = new Date();
+    const vence = new Date(this.fechaVence + 'T00:00:00');
+    return Math.ceil((vence.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+  }
+
+  // Cálculos del resumen
+  get subtotal(): number {
+    return this.items().reduce((a, i) => a + i.subtotal, 0);
+  }
+
+  get iva(): number {
+    return this.aplicaIva ? +(this.subtotal * 0.12).toFixed(2) : 0;
+  }
+
+  get totalBase(): number {
+    return +(this.subtotal + this.iva).toFixed(2);
+  }
+
+  get montoInteres(): number {
+    if (this.metodoPago !== 'credito' || this.tasaInteres <= 0) return 0;
+    return +(this.totalBase * (this.tasaInteres / 100)).toFixed(2);
+  }
+
+  get totalFinal(): number {
+    return +(this.totalBase + this.montoInteres).toFixed(2);
+  }
+
+  // Alias para compatibilidad
+  get total(): number {
+    return this.totalFinal;
+  }
 
   prodsFiltrados = computed(() => {
     const b   = this.buscarProd.toLowerCase().trim();
@@ -68,16 +103,24 @@ export class VentaFormComponent implements OnInit {
     );
   });
 
-  totalPaginas = computed(() => Math.max(1, Math.ceil(this.prodsFiltrados().length / POR_PAGINA)));
+  totalPaginas = computed(() =>
+    Math.max(1, Math.ceil(this.prodsFiltrados().length / POR_PAGINA))
+  );
 
   prodsPagina = computed(() => {
     const start = (this.pagina - 1) * POR_PAGINA;
     return this.prodsFiltrados().slice(start, start + POR_PAGINA);
   });
 
-  isEnCarrito(id: number) { return this.items().some(i => i.producto_id === id); }
+  isEnCarrito(id: number): boolean {
+    return this.items().some(i => i.producto_id === id);
+  }
 
-  constructor(private api: ApiService, private toast: ToastService, private router: Router) {}
+  constructor(
+    private api: ApiService,
+    private toast: ToastService,
+    private router: Router
+  ) {}
 
   async ngOnInit() {
     this.loading.set(true);
@@ -97,19 +140,27 @@ export class VentaFormComponent implements OnInit {
       this.allProductos.set(lista);
       const cats = [...new Set(lista.map((p: any) => p.cat_nombre).filter(Boolean))].sort();
       this.categorias.set(cats as string[]);
-    } catch(e: any) {
+    } catch (e: any) {
       this.toast.error('Error cargando datos: ' + e.message);
     } finally {
       this.loading.set(false);
     }
   }
 
-  onBuscar(val: string) { this.buscarProd = val; this.pagina = 1; }
-  onFiltroCategoria()   { this.pagina = 1; }
+  onBuscar(val: string) {
+    this.buscarProd = val;
+    this.pagina = 1;
+  }
+
+  onFiltroCategoria() {
+    this.pagina = 1;
+  }
 
   onMetodoPagoChange() {
-    // Limpiar fecha si cambia a método no crédito
-    if (this.metodoPago !== 'credito') this.fechaVence = '';
+    if (this.metodoPago !== 'credito') {
+      this.fechaVence  = '';
+      this.tasaInteres = 0;
+    }
   }
 
   seleccionarProducto(p: Producto) {
@@ -121,10 +172,15 @@ export class VentaFormComponent implements OnInit {
   agregarItem() {
     const prod = this.selProducto();
     if (!prod) return;
-    if (!this.selCantidad || this.selCantidad <= 0) { this.toast.warning('Cantidad inválida'); return; }
-    if (!this.selPrecio || this.selPrecio <= 0)     { this.toast.warning('Precio inválido'); return; }
+    if (!this.selCantidad || this.selCantidad <= 0) {
+      this.toast.warning('Cantidad inválida'); return;
+    }
+    if (!this.selPrecio || this.selPrecio <= 0) {
+      this.toast.warning('Precio inválido'); return;
+    }
     if (prod.stock_actual! > 0 && this.selCantidad > prod.stock_actual!) {
-      this.toast.warning(`Stock insuficiente. Disponible: ${prod.stock_actual} ${prod.unidad_medida}`); return;
+      this.toast.warning(`Stock insuficiente. Disponible: ${prod.stock_actual} ${prod.unidad_medida}`);
+      return;
     }
     const exist = this.items().find(i => i.producto_id === prod.id);
     if (exist) {
@@ -154,24 +210,34 @@ export class VentaFormComponent implements OnInit {
   }
 
   async save() {
-    if (!this.items().length) { this.toast.warning('Agrega al menos un producto'); return; }
+    if (!this.items().length) {
+      this.toast.warning('Agrega al menos un producto'); return;
+    }
     if (this.metodoPago === 'credito' && !this.fechaVence) {
       this.toast.warning('Ingresa la fecha de vencimiento del crédito'); return;
     }
+
     this.saving.set(true);
     try {
       await this.api.post('/ventas', {
         cliente_id:    this.clienteId ? +this.clienteId : null,
         metodo_pago:   this.metodoPago,
         fecha_vence:   this.metodoPago === 'credito' ? this.fechaVence : null,
+        tasa_interes:  this.metodoPago === 'credito' ? this.tasaInteres : 0,
+        aplica_iva:    this.aplicaIva,
         observaciones: this.observaciones || null,
         items: this.items().map(i => ({
-          producto_id: i.producto_id, cantidad: i.cantidad, precio_unitario: i.precio_unitario
+          producto_id:     i.producto_id,
+          cantidad:        i.cantidad,
+          precio_unitario: i.precio_unitario,
         }))
       });
       this.toast.success('✅ Venta registrada exitosamente');
       this.router.navigate(['/ventas']);
-    } catch(e: any) { this.toast.error(e.message); }
-    finally { this.saving.set(false); }
+    } catch (e: any) {
+      this.toast.error(e.message);
+    } finally {
+      this.saving.set(false);
+    }
   }
 }

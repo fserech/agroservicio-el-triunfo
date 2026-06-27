@@ -79,6 +79,9 @@ export interface Venta {
   estado: string;
   observaciones?: string;
   items?: VentaItem[];
+  aplica_iva:    boolean;
+  tasa_interes:  number;
+  monto_interes: number;
 }
 
 export interface VentaItem {

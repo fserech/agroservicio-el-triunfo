@@ -51,21 +51,34 @@ router.post('/', auth, async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const { cliente_id, sucursal_id = 1, items = [],
-            metodo_pago = 'efectivo', observaciones,
-            fecha_vence = null } = req.body;
 
-    if (!items.length) return res.status(400).json({ error: 'Debe agregar productos' });
+    const {
+      cliente_id,
+      sucursal_id  = 1,
+      items        = [],
+      metodo_pago  = 'efectivo',
+      observaciones,
+      fecha_vence  = null,
+      tasa_interes = 0,
+      aplica_iva   = true,
+    } = req.body;
+
+    if (!items.length)
+      return res.status(400).json({ error: 'Debe agregar productos' });
 
     if (metodo_pago === 'credito' && !fecha_vence)
       return res.status(400).json({ error: 'La fecha de vencimiento es requerida para ventas a crédito' });
 
+    // ── Validar stock y calcular subtotal ──
     let subtotal = 0;
     const lineItems = [];
+
     for (const item of items) {
       const { rows: pr } = await client.query(
-        'SELECT precio_venta FROM productos WHERE id=$1 AND activo=true', [item.producto_id]);
-      if (!pr.length) throw new Error(`Producto ${item.producto_id} no encontrado o inactivo`);
+        'SELECT precio_venta FROM productos WHERE id=$1 AND activo=true',
+        [item.producto_id]);
+      if (!pr.length)
+        throw new Error(`Producto ${item.producto_id} no encontrado o inactivo`);
 
       const { rows: inv } = await client.query(
         'SELECT stock_actual FROM inventario WHERE producto_id=$1 AND sucursal_id=$2',
@@ -80,9 +93,16 @@ router.post('/', auth, async (req, res) => {
       lineItems.push({ ...item, precio_unitario: precio, subtotal: sub });
     }
 
-    const impuesto = subtotal * 0.12;
-    const total    = subtotal + impuesto;
+    // ── Cálculo de impuesto e interés ──
+    const impuesto     = aplica_iva ? subtotal * 0.12 : 0;
+    const totalBase    = subtotal + impuesto;
+    const tasaNum      = parseFloat(tasa_interes) || 0;
+    const montoInteres = (metodo_pago === 'credito' && tasaNum > 0)
+                           ? totalBase * (tasaNum / 100)
+                           : 0;
+    const total        = totalBase + montoInteres;
 
+    // ── Número de factura ──
     const { rows: cfg } = await client.query(
       "SELECT valor FROM configuracion WHERE clave='factura_prefijo'");
     const prefijo = cfg[0]?.valor || 'F-';
@@ -95,20 +115,38 @@ router.post('/', auth, async (req, res) => {
     }
     const numero_factura = prefijo + String(nextNum).padStart(4, '0');
 
-    // Codificar fecha_vence en observaciones para recuperarla al finalizar
-    const obsFinal = metodo_pago === 'credito' && fecha_vence
-      ? (observaciones ? `${observaciones} [vence:${fecha_vence}]` : `[vence:${fecha_vence}]`)
-      : (observaciones || null);
+    // ── Construir observaciones con metadatos de crédito ──
+    const tags = [];
+    if (metodo_pago === 'credito' && fecha_vence)       tags.push(`[vence:${fecha_vence}]`);
+    if (metodo_pago === 'credito' && tasaNum > 0)        tags.push(`[interes:${tasaNum}%]`);
+    if (!aplica_iva)                                     tags.push(`[sin_iva]`);
+    const obsFinal = [observaciones, ...tags].filter(Boolean).join(' ') || null;
 
+    // ── Insertar venta ──
     const { rows: vr } = await client.query(
-      `INSERT INTO ventas (numero_factura, cliente_id, sucursal_id, usuario_id,
-         subtotal, impuesto, total, estado, metodo_pago, observaciones)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,'PENDING',$8,$9) RETURNING *`,
-      [numero_factura, cliente_id || null, sucursal_id, req.user.id,
-       subtotal.toFixed(2), impuesto.toFixed(2), total.toFixed(2),
-       metodo_pago, obsFinal]);
+      `INSERT INTO ventas
+         (numero_factura, cliente_id, sucursal_id, usuario_id,
+          subtotal, impuesto, total, estado, metodo_pago, observaciones,
+          tasa_interes, monto_interes, aplica_iva)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'PENDING',$8,$9,$10,$11,$12)
+       RETURNING *`,
+      [
+        numero_factura,
+        cliente_id || null,
+        sucursal_id,
+        req.user.id,
+        subtotal.toFixed(2),
+        impuesto.toFixed(2),
+        total.toFixed(2),
+        metodo_pago,
+        obsFinal,
+        tasaNum.toFixed(2),
+        montoInteres.toFixed(2),
+        aplica_iva,
+      ]);
     const venta = vr[0];
 
+    // ── Insertar detalle ──
     for (const li of lineItems) {
       await client.query(
         `INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio_unitario, subtotal)
@@ -142,6 +180,8 @@ router.patch('/:id/estado', auth, async (req, res) => {
       const { rows: items } = await client.query(
         'SELECT * FROM detalle_ventas WHERE venta_id=$1', [venta.id]);
       const sucId = venta.sucursal_id || 1;
+
+      // Descontar inventario
       for (const item of items) {
         const { rows: inv } = await client.query(
           'SELECT stock_actual FROM inventario WHERE producto_id=$1 AND sucursal_id=$2',
@@ -161,9 +201,12 @@ router.patch('/:id/estado', auth, async (req, res) => {
            item.cantidad, anterior, nuevo, 'Venta ' + venta.numero_factura]);
       }
 
+      // Crear cuenta por cobrar si es crédito
       if (venta.metodo_pago === 'credito' && venta.cliente_id) {
         let fechaVence = null;
         const obs = venta.observaciones || '';
+
+        // Leer fecha desde la columna o desde el tag en observaciones
         const match = obs.match(/\[vence:(\d{4}-\d{2}-\d{2})\]/);
         if (match) {
           fechaVence = match[1];
@@ -171,13 +214,16 @@ router.patch('/:id/estado', auth, async (req, res) => {
           const { rows: cli } = await client.query(
             'SELECT dias_credito FROM clientes WHERE id=$1', [venta.cliente_id]);
           const dias = cli[0]?.dias_credito || 30;
-          const d = new Date(); d.setDate(d.getDate() + dias);
+          const d = new Date();
+          d.setDate(d.getDate() + dias);
           fechaVence = d.toISOString().split('T')[0];
         }
 
         await client.query(
-          `INSERT INTO cuentas_cobrar (venta_id, cliente_id, monto_total, monto_pagado, fecha_vence, estado)
-           VALUES ($1,$2,$3,0,$4,'pendiente') ON CONFLICT DO NOTHING`,
+          `INSERT INTO cuentas_cobrar
+             (venta_id, cliente_id, monto_total, monto_pagado, fecha_vence, estado)
+           VALUES ($1,$2,$3,0,$4,'pendiente')
+           ON CONFLICT DO NOTHING`,
           [venta.id, venta.cliente_id, venta.total, fechaVence]);
       }
     }

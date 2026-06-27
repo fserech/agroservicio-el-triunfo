@@ -16,7 +16,7 @@ export class ClienteFormComponent implements OnInit {
   isEdit = false;
   clienteId: number | null = null;
   saving = signal(false);
-  form: Partial<Cliente> = { tipo: 'individual', credito_maximo: 0, dias_credito: 0, activo: true };
+  form: Partial<Cliente> = { tipo: 'individual',  activo: true };
 
   constructor(private api: ApiService, private toast: ToastService, private router: Router, private route: ActivatedRoute) {}
 

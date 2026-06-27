@@ -49,28 +49,19 @@
               </div>
             </div>
           </section>
-          <!-- Crédito -->
-          <section>
-            <h3 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 pb-2 border-b border-slate-100 mb-4">Crédito</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Crédito Máximo (Q)</label>
-                <input class="form-input" type="number" [(ngModel)]="form.credito_maximo" min="0">
+          <!-- Notas y estado -->
+            <section>
+              <div class="grid grid-cols-1 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Notas</label>
+                  <textarea class="form-input h-auto min-h-[64px] py-2" [(ngModel)]="form.notas" rows="3"></textarea>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="checkbox" id="activo" [(ngModel)]="form.activo" class="w-4 h-4 accent-primary">
+                  <label for="activo" class="text-xs font-medium text-slate-600 cursor-pointer">Cliente activo</label>
+                </div>
               </div>
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Días de Crédito</label>
-                <input class="form-input" type="number" [(ngModel)]="form.dias_credito" min="0">
-              </div>
-              <div class="md:col-span-2">
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Notas</label>
-                <textarea class="form-input h-auto min-h-[64px] py-2" [(ngModel)]="form.notas" rows="3"></textarea>
-              </div>
-              <div class="flex items-center gap-2">
-                <input type="checkbox" id="activo" [(ngModel)]="form.activo" class="w-4 h-4 accent-primary">
-                <label for="activo" class="text-xs font-medium text-slate-600 cursor-pointer">Cliente activo</label>
-              </div>
-            </div>
-          </section>
+            </section>
           <!-- Actions -->
           <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
             <a routerLink="/clientes" class="btn-secondary">Cancelar</a>
