@@ -1,0 +1,236 @@
+<div class="p-4">
+      <!-- KPIs -->
+      <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+        @for (kpi of kpis(); track kpi.label) { <app-kpi-card [kpi]="kpi" /> }
+      </div>
+
+      <div class="card">
+        <!-- Toolbar -->
+        <div class="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-slate-100">
+          <div class="relative">
+            <svg class="absolute left-2.5 top-2 w-3.5 h-3.5 text-slate-400 fill-current" viewBox="0 0 24 24">
+              <path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+            <input class="form-input pl-8 w-52" placeholder="Nombre o código..." [(ngModel)]="buscar" (keydown.enter)="load(1)">
+          </div>
+          <select class="form-select w-44" [(ngModel)]="catId" (ngModelChange)="load(1)">
+            <option value="">Todas las categorías</option>
+            @for (c of categorias(); track c.id) { <option [value]="c.id">{{ c.nombre }}</option> }
+          </select>
+          <select class="form-select w-28" [(ngModel)]="activo" (ngModelChange)="load(1)">
+            <option value="true">Activos</option>
+            <option value="false">Inactivos</option>
+            <option value="">Todos</option>
+          </select>
+          <div class="flex-1"></div>
+          <!-- Import Excel -->
+          <button class="btn-secondary" (click)="importModal.set(true)">
+            <svg class="w-3.5 h-3.5 fill-current text-emerald-600" viewBox="0 0 24 24">
+              <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM8 15h8v2H8zm0-4h8v2H8z"/>
+            </svg>
+            Importar Excel
+          </button>
+          <!-- Download Template -->
+          <button class="btn-secondary" (click)="downloadTemplate()">
+            <svg class="w-3.5 h-3.5 fill-current text-blue-500" viewBox="0 0 24 24">
+              <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+            </svg>
+            Plantilla
+          </button>
+          <a routerLink="/categorias" class="btn-secondary">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/></svg>
+            Categorías
+          </a>
+          <a routerLink="/productos/nuevo" class="btn-primary">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            Nuevo Producto
+          </a>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-slate-100">
+                <th class="table-th">Código</th>
+                <th class="table-th">Producto</th>
+                <th class="table-th">Categoría</th>
+                <th class="table-th">P. Compra</th>
+                <th class="table-th">P. Venta</th>
+                <th class="table-th">Margen</th>
+                <th class="table-th">Stock</th>
+                <th class="table-th text-right pr-4">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (loading()) {
+                @for (i of [1,2,3,4,5]; track i) {
+                  <tr><td colspan="8" class="table-td"><div class="skeleton h-4 rounded w-full"></div></td></tr>
+                }
+              } @else if (!productos().length) {
+                <tr><td colspan="8"><app-empty-state icon="📦" message="Sin productos — importa desde Excel o crea uno nuevo" /></td></tr>
+              } @else {
+                @for (p of productos(); track p.id) {
+                  <tr class="table-tr">
+                    <td class="table-td font-mono text-[11px] text-slate-400">{{ p.codigo || '—' }}</td>
+                    <td class="table-td">
+                      <div class="font-semibold text-xs text-slate-800">{{ p.nombre }}</div>
+                      <div class="text-[11px] text-slate-400">{{ p.unidad_medida }}</div>
+                    </td>
+                    <td class="table-td"><app-badge [label]="p.cat_nombre || 'Sin cat.'" variant="info" /></td>
+                    <td class="table-td font-mono text-xs text-slate-500">{{ fmtQ(p.precio_compra) }}</td>
+                    <td class="table-td font-mono text-xs font-semibold text-primary">{{ fmtQ(p.precio_venta) }}</td>
+                    <td class="table-td">
+                      <span class="text-xs font-bold px-2 py-0.5 rounded-full"
+                        [class.bg-emerald-100]="+(p.margen||0) >= 25" [class.text-emerald-700]="+(p.margen||0) >= 25"
+                        [class.bg-amber-100]="+(p.margen||0) >= 10 && +(p.margen||0) < 25" [class.text-amber-700]="+(p.margen||0) >= 10 && +(p.margen||0) < 25"
+                        [class.bg-red-100]="+(p.margen||0) < 10" [class.text-red-700]="+(p.margen||0) < 10">
+                        {{ (+(p.margen ?? 0)).toFixed(1) }}%
+                      </span>
+                    </td>
+                    <td class="table-td">
+                      <div class="flex items-center gap-1.5">
+                        <app-badge [label]="sLabel(p.estado_stock||'')" [variant]="sVariant(p.estado_stock||'')" />
+                        <span class="font-mono text-[11px] text-slate-400">{{ fmtN(p.stock_actual || 0) }}</span>
+                      </div>
+                    </td>
+                    <td class="table-td">
+                      <div class="flex items-center justify-end gap-1 pr-1">
+                        <app-action-buttons
+                          [buttons]="[{ label: 'Editar', type: 'edit', icon: 'edit', routerLink: ['/productos', p.id, 'editar'] }]"
+                          (action)="''" />
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+        <app-pagination [total]="total()" [page]="page()" [limit]="limit" (pageChange)="load($event)" />
+      </div>
+    </div>
+
+    <!-- ── IMPORT MODAL ─────────────────────────────────────────────────────── -->
+    @if (importModal()) {
+      <div class="fixed inset-0 bg-black/40 z-[1000] flex items-center justify-center p-4" (click)="closeImport()">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg" (click)="$event.stopPropagation()">
+          <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+            <div>
+              <h3 class="font-display font-bold text-slate-800">📥 Importar Productos desde Excel</h3>
+              <p class="text-[11px] text-slate-400 mt-0.5">Sube un archivo .xlsx con tu catálogo de productos</p>
+            </div>
+            <button class="btn-ghost" (click)="closeImport()">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+          </div>
+
+          <div class="p-5 space-y-4">
+            <!-- Step 1: Download template -->
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3.5">
+              <div class="flex items-start gap-3">
+                <span class="text-lg">1️⃣</span>
+                <div class="flex-1">
+                  <div class="text-xs font-bold text-blue-800">Descarga la plantilla</div>
+                  <div class="text-[11px] text-blue-600 mt-0.5 mb-2">Llena la plantilla Excel con tus productos. No cambies los encabezados.</div>
+                  <button class="inline-flex items-center gap-1.5 h-7 px-3 bg-blue-600 text-white text-[11px] font-semibold rounded-lg hover:bg-blue-700 transition-colors" (click)="downloadTemplate()">
+                    <svg class="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                    Descargar plantilla.xlsx
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2: Upload file -->
+            <div class="bg-slate-50 border-2 border-dashed rounded-xl p-4 text-center transition-colors"
+              [class.border-primary]="dragOver()"
+              [class.bg-primary-light]="dragOver()"
+              [class.border-slate-200]="!dragOver()"
+              (dragover)="$event.preventDefault(); dragOver.set(true)"
+              (dragleave)="dragOver.set(false)"
+              (drop)="onDrop($event)">
+              @if (selectedFile()) {
+                <div class="flex items-center justify-center gap-2">
+                  <svg class="w-5 h-5 fill-current text-emerald-500" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                  <span class="text-xs font-semibold text-slate-700">{{ selectedFile()!.name }}</span>
+                  <span class="text-[11px] text-slate-400">({{ (selectedFile()!.size / 1024).toFixed(1) }} KB)</span>
+                  <button class="text-red-400 hover:text-red-600 ml-1" (click)="selectedFile.set(null)">✕</button>
+                </div>
+              } @else {
+                <svg class="w-8 h-8 fill-current text-slate-300 mx-auto mb-2" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+                <div class="text-xs font-semibold text-slate-600 mb-1">Arrastra tu archivo aquí o</div>
+                <label class="inline-flex items-center gap-1.5 h-7 px-3 bg-slate-200 text-slate-700 text-[11px] font-semibold rounded-lg hover:bg-slate-300 transition-colors cursor-pointer">
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+                  Seleccionar archivo
+                  <input type="file" accept=".xlsx,.xls" class="hidden" (change)="onFileSelect($event)">
+                </label>
+                <div class="text-[11px] text-slate-400 mt-1">Solo .xlsx o .xls — máx 5MB</div>
+              }
+            </div>
+
+            <!-- Preview -->
+            @if (previewRows().length) {
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-semibold text-slate-600">Vista previa (primeras 5 filas)</span>
+                  <span class="text-[11px] text-slate-400">{{ previewRows().length }} filas detectadas</span>
+                </div>
+                <div class="overflow-x-auto rounded-lg border border-slate-200">
+                  <table class="w-full text-[11px]">
+                    <thead class="bg-slate-50">
+                      <tr>@for (h of previewHeaders(); track h) { <th class="px-2 py-1.5 text-left font-semibold text-slate-500 whitespace-nowrap">{{ h }}</th> }</tr>
+                    </thead>
+                    <tbody>
+                      @for (row of previewRows().slice(0,5); track $index) {
+                        <tr class="border-t border-slate-100">
+                          @for (h of previewHeaders(); track h) { <td class="px-2 py-1.5 text-slate-600 whitespace-nowrap">{{ row[h] || '—' }}</td> }
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            }
+
+            <!-- Import result -->
+            @if (importResult()) {
+              <div class="rounded-xl p-3"
+                [class.bg-emerald-50]="importResult()!.errors === 0"
+                [class.border-emerald-200]="importResult()!.errors === 0"
+                [class.border]="true"
+                [class.bg-amber-50]="importResult()!.errors > 0"
+                [class.border-amber-200]="importResult()!.errors > 0">
+                <div class="text-xs font-bold mb-1"
+                  [class.text-emerald-800]="importResult()!.errors === 0"
+                  [class.text-amber-800]="importResult()!.errors > 0">
+                  {{ importResult()!.errors === 0 ? '✅ Importación exitosa' : '⚠️ Importación con advertencias' }}
+                </div>
+                <div class="text-[11px]"
+                  [class.text-emerald-700]="importResult()!.errors === 0"
+                  [class.text-amber-700]="importResult()!.errors > 0">
+                  {{ importResult()!.created }} creados · {{ importResult()!.updated }} actualizados · {{ importResult()!.errors }} errores
+                </div>
+                @if (importResult()!.errorDetails?.length) {
+                  <div class="mt-2 text-[11px] text-red-600">
+                    @for (e of importResult()!.errorDetails!.slice(0,3); track $index) { <div>• {{ e }}</div> }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="flex gap-3 px-5 pb-5">
+            <button class="btn-secondary flex-1 justify-center" (click)="closeImport()">
+              {{ importResult() ? 'Cerrar' : 'Cancelar' }}
+            </button>
+            @if (!importResult()) {
+              <button class="btn-primary flex-1 justify-center" (click)="doImport()"
+                [disabled]="!selectedFile() || importing()">
+                @if (importing()) { <span class="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> }
+                {{ importing() ? 'Importando...' : 'Importar Productos' }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    }

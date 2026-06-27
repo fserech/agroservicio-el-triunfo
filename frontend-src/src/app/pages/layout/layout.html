@@ -1,0 +1,10 @@
+<div class="flex h-screen overflow-hidden bg-slate-50">
+      <app-sidebar [open]="sidebarOpen()" (closeEvent)="sidebarOpen.set(false)" />
+      <div class="flex flex-col flex-1 min-w-0 overflow-hidden">
+        <app-topbar (menuToggle)="sidebarOpen.update(v => !v)" />
+        <main class="flex-1 overflow-y-auto overflow-x-hidden">
+          <router-outlet />
+        </main>
+      </div>
+    </div>
+    <app-toast />

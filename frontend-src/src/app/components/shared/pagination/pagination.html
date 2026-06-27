@@ -1,0 +1,17 @@
+<div class="flex items-center justify-between gap-3 px-4 py-2.5 border-t border-slate-100 flex-wrap">
+      <span class="text-xs text-slate-400">
+        Mostrando <strong class="text-slate-700">{{ start }}–{{ end }}</strong> de <strong class="text-slate-700">{{ total }}</strong>
+      </span>
+      <div class="flex items-center gap-1">
+        <button class="pag-btn" (click)="go(1)" [disabled]="page === 1">«</button>
+        <button class="pag-btn" (click)="go(page - 1)" [disabled]="page === 1">‹</button>
+        @for (n of pages; track n) {
+          @if (n === -1) { <span class="px-1 text-slate-300 text-xs">…</span> }
+          @else {
+            <button class="pag-btn" [class.active]="n === page" (click)="go(n)">{{ n }}</button>
+          }
+        }
+        <button class="pag-btn" (click)="go(page + 1)" [disabled]="page === totalPages">›</button>
+        <button class="pag-btn" (click)="go(totalPages)" [disabled]="page === totalPages">»</button>
+      </div>
+    </div>

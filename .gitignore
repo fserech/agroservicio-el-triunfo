@@ -1,0 +1,18 @@
+# Secretos — NUNCA subir al repositorio
+.env
+backend/.env
+*.env
+
+# Docker volumes
+postgres_data/
+
+# Node
+node_modules/
+npm-debug.log
+
+# Build output (regenerar con ng build)
+frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db

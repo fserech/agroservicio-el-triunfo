@@ -1,0 +1,42 @@
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+      <!-- decorative circles -->
+      <div class="absolute w-96 h-96 bg-primary/10 rounded-full -top-20 -right-20 blur-3xl"></div>
+      <div class="absolute w-64 h-64 bg-blue-500/10 rounded-full -bottom-10 -left-10 blur-3xl"></div>
+
+      <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm relative z-10">
+        <!-- Logo -->
+        <div class="text-center mb-6">
+          <div class="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3 shadow-lg">🌱</div>
+          <h1 class="font-display font-bold text-slate-800 text-xl tracking-tight">Agroservicio El Triunfo</h1>
+          <p class="text-xs text-slate-400 mt-1">Sistema de Gestión Agrícola</p>
+        </div>
+
+        @if (error()) {
+          <div class="bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2.5 rounded-lg mb-4">
+            {{ error() }}
+          </div>
+        }
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Usuario</label>
+            <input class="form-input" type="text" [(ngModel)]="username" placeholder="admin" autocomplete="username">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Contraseña</label>
+            <input class="form-input" type="password" [(ngModel)]="password" placeholder="••••••••"
+              autocomplete="current-password" (keydown.enter)="doLogin()">
+          </div>
+          <button class="btn-primary w-full h-10 text-sm justify-center mt-2" (click)="doLogin()" [disabled]="loading()">
+            @if (loading()) {
+              <span class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              Ingresando...
+            } @else {
+              Ingresar →
+            }
+          </button>
+        </div>
+
+        <p class="text-center text-[11px] text-slate-300 mt-5">Demo: admin / Admin2026!</p>
+      </div>
+    </div>

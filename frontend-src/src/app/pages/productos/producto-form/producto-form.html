@@ -1,0 +1,83 @@
+<div class="p-4 max-w-3xl mx-auto">
+      <div class="card">
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
+          <h2 class="font-display font-bold text-slate-800">{{ isEdit ? 'Editar Producto' : 'Nuevo Producto' }}</h2>
+          <a routerLink="/productos" class="btn-secondary">← Regresar</a>
+        </div>
+        <div class="p-5 space-y-5">
+          <section>
+            <h3 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 pb-2 border-b border-slate-100 mb-4">Información del Producto</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">
+                  Código
+                  @if (!isEdit) {
+                    <span class="ml-1 text-[10px] font-normal text-slate-400">(se genera automáticamente si lo dejas vacío)</span>
+                  }
+                </label>
+                <div class="relative">
+                  <input class="form-input pr-20" [(ngModel)]="form.codigo"
+                    [placeholder]="isEdit ? 'Código del producto' : 'Ej: FERT-001 o dejar vacío'"
+                    [attr.readonly]="isEdit ? true : null">
+                  @if (!isEdit && form.codigo) {
+                    <button type="button"
+                      class="absolute right-2 top-1.5 text-[10px] text-red-400 hover:text-red-600 px-1.5 py-0.5 rounded"
+                      (click)="form.codigo = ''" title="Limpiar para generar automáticamente">
+                      ✕ limpiar
+                    </button>
+                  }
+                  @if (!isEdit && !form.codigo) {
+                    <span class="absolute right-2 top-2 text-[10px] text-primary font-semibold">
+                      🤖 auto
+                    </span>
+                  }
+                </div>
+              </div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">Categoría</label>
+                <select class="form-select" [(ngModel)]="form.categoria_id">
+                  <option [ngValue]="null">Sin categoría</option>
+                  @for (c of categorias(); track c.id) { <option [value]="c.id">{{ c.nombre }}</option> }
+                </select></div>
+              <div class="md:col-span-2"><label class="block text-xs font-semibold text-slate-600 mb-1">Nombre *</label>
+                <input class="form-input" [(ngModel)]="form.nombre" placeholder="Nombre del producto"></div>
+              <div class="md:col-span-2"><label class="block text-xs font-semibold text-slate-600 mb-1">Descripción</label>
+                <textarea class="form-input h-auto py-2 min-h-[56px]" [(ngModel)]="form.descripcion" rows="2"></textarea></div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">Precio Compra (Q)</label>
+                <input class="form-input" type="number" step="0.01" [(ngModel)]="form.precio_compra" (ngModelChange)="calcMargen()"></div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">Precio Venta (Q)</label>
+                <input class="form-input" type="number" step="0.01" [(ngModel)]="form.precio_venta" (ngModelChange)="calcMargen()"></div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">Unidad de Medida</label>
+                <select class="form-select" [(ngModel)]="form.unidad_medida">
+                  @for (u of unidades; track u) { <option>{{ u }}</option> }
+                </select></div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">Margen Estimado</label>
+                <div class="h-9 flex items-center px-3 bg-slate-50 rounded-lg text-sm font-bold"
+                  [class.text-emerald-600]="margen >= 25" [class.text-amber-600]="margen >= 10 && margen < 25" [class.text-red-600]="margen < 10 && margen > 0">
+                  {{ margen ? margen.toFixed(1) + '%' : '—' }}
+                </div></div>
+              @if (!isEdit) {
+                <div><label class="block text-xs font-semibold text-slate-600 mb-1">Stock Inicial</label>
+                  <input class="form-input" type="number" step="0.01" [(ngModel)]="form.stock_actual"></div>
+                <div><label class="block text-xs font-semibold text-slate-600 mb-1">Stock Mínimo</label>
+                  <input class="form-input" type="number" step="0.01" [(ngModel)]="form.stock_minimo"></div>
+                <div><label class="block text-xs font-semibold text-slate-600 mb-1">Stock Máximo</label>
+                  <input class="form-input" type="number" step="0.01" [(ngModel)]="form.stock_maximo"></div>
+                <div><label class="block text-xs font-semibold text-slate-600 mb-1">Ubicación Bodega</label>
+                  <input class="form-input" [(ngModel)]="form.ubicacion_bodega" placeholder="Pasillo A-1"></div>
+              }
+              <div class="flex items-center gap-2">
+                <input type="checkbox" id="activo" [(ngModel)]="form.activo" class="w-4 h-4 accent-primary">
+                <label for="activo" class="text-xs font-medium text-slate-600 cursor-pointer">Producto activo</label>
+              </div>
+            </div>
+          </section>
+          <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            <a routerLink="/productos" class="btn-secondary">Cancelar</a>
+            <button class="btn-primary h-9 px-5" (click)="save()" [disabled]="saving()">
+              @if (saving()) { <span class="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> }
+              {{ isEdit ? 'Actualizar' : 'Crear Producto' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>

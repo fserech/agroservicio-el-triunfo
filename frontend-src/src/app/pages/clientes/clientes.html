@@ -1,0 +1,98 @@
+<div class="p-4">
+      <!-- KPIs -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        @for (kpi of kpis(); track kpi.label) { <app-kpi-card [kpi]="kpi" /> }
+      </div>
+
+      <div class="card">
+        <!-- Toolbar -->
+        <div class="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-slate-100">
+          <div class="relative">
+            <svg class="absolute left-2.5 top-2 w-3.5 h-3.5 text-slate-400 fill-current" viewBox="0 0 24 24">
+              <path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+            <input class="form-input pl-8 w-52" placeholder="Nombre, NIT..." [(ngModel)]="buscar" (keydown.enter)="load(1)">
+          </div>
+          <select class="form-select w-40" [(ngModel)]="tipo" (ngModelChange)="load(1)">
+            <option value="">Todos los tipos</option>
+            <option value="individual">Individual</option>
+            <option value="empresa">Empresa</option>
+            <option value="cooperativa">Cooperativa</option>
+            <option value="finca">Finca</option>
+          </select>
+          <button class="btn-secondary" (click)="load(1)">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+            Actualizar
+          </button>
+          <div class="flex-1"></div>
+          <a routerLink="/clientes/nuevo" class="btn-primary">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            Nuevo Cliente
+          </a>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-slate-100">
+                <th class="table-th">Cliente</th>
+                <th class="table-th">Tipo</th>
+                <th class="table-th">Contacto</th>
+                <th class="table-th">Total Compras</th>
+                <th class="table-th">Saldo Pend.</th>
+                <th class="table-th text-right pr-4">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (loading()) {
+                @for (i of [1,2,3,4,5,6]; track i) {
+                  <tr><td colspan="6" class="table-td"><div class="skeleton h-4 rounded w-full"></div></td></tr>
+                }
+              } @else if (!clientes().length) {
+                <tr><td colspan="6"><app-empty-state icon="👥" message="Sin clientes registrados" /></td></tr>
+              } @else {
+                @for (c of clientes(); track c.id) {
+                  <tr class="table-tr">
+                    <td class="table-td">
+                      <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-full bg-primary/10 text-primary text-[11px] font-bold flex items-center justify-center flex-shrink-0">
+                          {{ c.nombre.charAt(0).toUpperCase() }}
+                        </div>
+                        <div>
+                          <div class="font-semibold text-xs text-slate-800">{{ c.nombre }}</div>
+                          <div class="text-[11px] text-slate-400">{{ c.email || c.departamento || '—' }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="table-td">
+                      <app-badge [label]="tipoLabel(c.tipo)" [variant]="tipoVariant(c.tipo)" />
+                    </td>
+                    <td class="table-td">
+                      <div class="text-xs text-slate-600">{{ c.telefono || '—' }}</div>
+                      <div class="text-[11px] text-slate-400 font-mono">{{ c.nit || '' }}</div>
+                    </td>
+                    <td class="table-td font-mono text-xs font-semibold text-primary">{{ fmtQ(c.total_compras) }}</td>
+                    <td class="table-td">
+                      <span class="font-mono text-xs font-semibold"
+                        [class.text-red-600]="+(c.saldo_pendiente||0) > 0"
+                        [class.text-slate-400]="+(c.saldo_pendiente||0) === 0">
+                        {{ fmtQ(c.saldo_pendiente) }}
+                      </span>
+                    </td>
+                    <td class="table-td">
+                      <div class="flex items-center justify-end gap-1 pr-1">
+                        <app-action-buttons
+                          [buttons]="[{ label: 'Editar', type: 'edit', icon: 'edit', routerLink: ['/clientes', c.id, 'editar'] }]"
+                          (action)="''" />
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+        <app-pagination [total]="total()" [page]="page()" [limit]="limit" (pageChange)="load($event)" />
+      </div>
+    </div>

@@ -1,0 +1,241 @@
+<header class="h-12 flex items-center justify-between px-4 bg-white border-b border-slate-200 flex-shrink-0">
+
+      <!-- Left -->
+      <div class="flex items-center gap-3">
+        <button class="btn-ghost lg:hidden" (click)="menuToggle.emit()">
+          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
+        <h1 class="font-display font-bold text-slate-800 text-[15px] tracking-tight">{{ title }}</h1>
+      </div>
+
+      <!-- Right: user button -->
+      <div class="relative">
+        <button class="flex items-center gap-2 pl-2.5 pr-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors"
+          (click)="toggleMenu()">
+          <div class="w-5 h-5 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
+            {{ userInitial }}
+          </div>
+          <span class="text-[11px] text-primary font-semibold hidden sm:block">{{ authService.user()?.username }}</span>
+          <svg class="w-3 h-3 fill-current text-primary transition-transform duration-200"
+            [class.rotate-180]="menuOpen()" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+        </button>
+
+        <!-- Dropdown -->
+        @if (menuOpen()) {
+          <div class="absolute right-0 top-full mt-1.5 w-64 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+
+            <!-- User info -->
+            <div class="px-4 py-3 border-b border-slate-100 bg-slate-50">
+              <div class="text-xs font-bold text-slate-800">{{ authService.user()?.nombre }}</div>
+              <div class="text-[11px] text-slate-400 capitalize mt-0.5">{{ authService.user()?.rol }}</div>
+            </div>
+
+            <!-- EXPORTAR -->
+            <div class="px-3 py-2 border-b border-slate-100">
+              <div class="text-[9px] font-bold uppercase tracking-widest text-slate-400 px-1 mb-1.5">
+                ⬇ Exportar / Backup
+              </div>
+
+              <button class="menu-item text-emerald-700 hover:bg-emerald-50" (click)="backup('json')" [disabled]="!!busy()">
+                <svg class="w-3.5 h-3.5 fill-current flex-shrink-0" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                <div class="flex-1">
+                  <div class="font-semibold text-xs">Exportar JSON</div>
+                  <div class="text-[10px] opacity-60">Backup completo restaurable</div>
+                </div>
+                @if (busy() === 'export-json') { <span class="spinner border-emerald-600"></span> }
+              </button>
+
+              <button class="menu-item text-blue-700 hover:bg-blue-50" (click)="backup('excel')" [disabled]="!!busy()">
+                <svg class="w-3.5 h-3.5 fill-current flex-shrink-0" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+                <div class="flex-1">
+                  <div class="font-semibold text-xs">Exportar Excel</div>
+                  <div class="text-[10px] opacity-60">Una hoja por tabla</div>
+                </div>
+                @if (busy() === 'export-excel') { <span class="spinner border-blue-600"></span> }
+              </button>
+
+              <button class="menu-item text-violet-700 hover:bg-violet-50" (click)="backup('sql')" [disabled]="!!busy()">
+                <svg class="w-3.5 h-3.5 fill-current flex-shrink-0" viewBox="0 0 24 24"><path d="M20 6c0-2.21-3.58-4-8-4S4 3.79 4 6v2c0 2.21 3.58 4 8 4s8-1.79 8-4V6zm-8 14c-4.42 0-8-1.79-8-4v3c0 2.21 3.58 4 8 4s8-1.79 8-4v-3c0 2.21-3.58 4-8 4zm0-5c-4.42 0-8-1.79-8-4v3c0 2.21 3.58 4 8 4s8-1.79 8-4v-3c0 2.21-3.58 4-8 4z"/></svg>
+                <div class="flex-1">
+                  <div class="font-semibold text-xs">Exportar SQL</div>
+                  <div class="text-[10px] opacity-60">Script restaurable en PostgreSQL</div>
+                </div>
+                @if (busy() === 'export-sql') { <span class="spinner border-violet-600"></span> }
+              </button>
+            </div>
+
+            <!-- IMPORTAR — solo admin -->
+            @if (isAdmin()) {
+              <div class="px-3 py-2 border-b border-slate-100">
+                <div class="text-[9px] font-bold uppercase tracking-widest text-slate-400 px-1 mb-1.5">
+                  ⬆ Importar / Restaurar
+                </div>
+
+                <button class="menu-item text-orange-700 hover:bg-orange-50" (click)="openRestore('json')" [disabled]="!!busy()">
+                  <svg class="w-3.5 h-3.5 fill-current flex-shrink-0" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+                  <div class="flex-1">
+                    <div class="font-semibold text-xs">Restaurar JSON</div>
+                    <div class="text-[10px] opacity-60">Sube un backup .json previo</div>
+                  </div>
+                  @if (busy() === 'restore-json') { <span class="spinner border-orange-600"></span> }
+                </button>
+
+                <button class="menu-item text-teal-700 hover:bg-teal-50" (click)="openRestore('excel')" [disabled]="!!busy()">
+                  <svg class="w-3.5 h-3.5 fill-current flex-shrink-0" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+                  <div class="flex-1">
+                    <div class="font-semibold text-xs">Restaurar Excel</div>
+                    <div class="text-[10px] opacity-60">Sube un backup .xlsx previo</div>
+                  </div>
+                  @if (busy() === 'restore-excel') { <span class="spinner border-teal-600"></span> }
+                </button>
+
+                <!-- Hidden file inputs -->
+                <input #fileJsonInput type="file" accept=".json" class="hidden" (change)="onFileSelected($event, 'json')">
+                <input #fileExcelInput type="file" accept=".xlsx,.xls" class="hidden" (change)="onFileSelected($event, 'excel')">
+              </div>
+            }
+
+            <!-- Cerrar sesión -->
+            <div class="px-3 py-2">
+              <button class="menu-item text-red-600 hover:bg-red-50" (click)="logout()">
+                <svg class="w-3.5 h-3.5 fill-current flex-shrink-0" viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+                <div class="flex-1">
+                  <div class="font-semibold text-xs">Cerrar Sesión</div>
+                  <div class="text-[10px] opacity-60">{{ authService.user()?.username }}</div>
+                </div>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </header>
+
+    <!-- ── RESTORE CONFIRM MODAL ─────────────────────────────────────────── -->
+    @if (restoreModal()) {
+      <div class="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+
+          <!-- Header -->
+          <div class="px-5 py-4 border-b border-slate-100">
+            <h3 class="font-display font-bold text-slate-800">
+              {{ restoreType() === 'json' ? '📥 Restaurar desde JSON' : '📥 Restaurar desde Excel' }}
+            </h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">Solo el Administrador puede realizar esta operación</p>
+          </div>
+
+          <div class="p-5 space-y-4">
+
+            <!-- Warning -->
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3.5">
+              <div class="flex items-start gap-2.5">
+                <svg class="w-4 h-4 fill-current text-amber-600 flex-shrink-0 mt-0.5" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                <div>
+                  <div class="text-xs font-bold text-amber-800">¡Atención! Esta acción reemplaza los datos actuales</div>
+                  <div class="text-[11px] text-amber-700 mt-1">
+                    Se borrarán los datos existentes de cada tabla y se reemplazarán con los del archivo.
+                    Los IDs se regeneran automáticamente. <strong>Exporta un backup antes de continuar.</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- File drop zone -->
+            @if (!restoreFile()) {
+              <div class="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center"
+                [class.border-primary]="restoreDrag()"
+                [class.bg-primary-light]="restoreDrag()"
+                (dragover)="$event.preventDefault(); restoreDrag.set(true)"
+                (dragleave)="restoreDrag.set(false)"
+                (drop)="onRestoreDrop($event)">
+                <svg class="w-8 h-8 fill-current text-slate-300 mx-auto mb-2" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+                <div class="text-xs font-semibold text-slate-600 mb-1">Arrastra el archivo de backup aquí o</div>
+                <label class="inline-flex items-center gap-1.5 h-7 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold rounded-lg cursor-pointer transition-colors">
+                  Seleccionar archivo
+                  <input type="file" [accept]="restoreType() === 'json' ? '.json' : '.xlsx,.xls'" class="hidden"
+                    (change)="onRestoreFileSelect($event)">
+                </label>
+                <div class="text-[11px] text-slate-400 mt-1">
+                  {{ restoreType() === 'json' ? 'Solo archivos .json' : 'Solo archivos .xlsx o .xls' }} — máx 50 MB
+                </div>
+              </div>
+            } @else {
+              <!-- File selected -->
+              <div class="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                <svg class="w-8 h-8 fill-current text-primary flex-shrink-0" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+                <div class="flex-1 min-w-0">
+                  <div class="text-xs font-semibold text-slate-800 truncate">{{ restoreFile()!.name }}</div>
+                  <div class="text-[11px] text-slate-400">{{ (restoreFile()!.size / 1024).toFixed(1) }} KB</div>
+                </div>
+                <button class="btn-ghost text-red-400" (click)="restoreFile.set(null)">
+                  <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                </button>
+              </div>
+            }
+
+            <!-- Result -->
+            @if (restoreResult()) {
+              <div class="rounded-xl border p-4 space-y-2"
+                [class.bg-emerald-50]="restoreResult()!.errores.length === 0"
+                [class.border-emerald-200]="restoreResult()!.errores.length === 0"
+                [class.bg-amber-50]="restoreResult()!.errores.length > 0"
+                [class.border-amber-200]="restoreResult()!.errores.length > 0">
+
+                <div class="text-xs font-bold"
+                  [class.text-emerald-800]="restoreResult()!.errores.length === 0"
+                  [class.text-amber-800]="restoreResult()!.errores.length > 0">
+                  {{ restoreResult()!.errores.length === 0 ? '✅ Restauración exitosa' : '⚠️ Restauración con advertencias' }}
+                </div>
+
+                <div class="text-[11px] text-slate-600 font-semibold">
+                  {{ restoreResult()!.total_filas }} filas restauradas en total
+                </div>
+
+                <!-- Table breakdown -->
+                <div class="grid grid-cols-2 gap-1">
+                  @for (entry of tableEntries(); track entry[0]) {
+                    <div class="flex items-center gap-1.5 text-[11px]">
+                      <span class="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                        [class.bg-emerald-500]="entry[1].omitidos === 0"
+                        [class.bg-amber-500]="entry[1].omitidos > 0"></span>
+                      <span class="text-slate-600 truncate">{{ entry[0] }}</span>
+                      <span class="ml-auto text-slate-400 font-mono">{{ entry[1].insertados }}</span>
+                    </div>
+                  }
+                </div>
+
+                @if (restoreResult()!.errores.length > 0) {
+                  <div class="text-[11px] text-red-600 space-y-0.5 pt-1 border-t border-amber-200">
+                    @for (e of restoreResult()!.errores.slice(0, 5); track $index) {
+                      <div>• {{ e }}</div>
+                    }
+                    @if (restoreResult()!.errores.length > 5) {
+                      <div class="text-slate-400">... y {{ restoreResult()!.errores.length - 5 }} más</div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Footer -->
+          <div class="flex gap-3 px-5 pb-5">
+            <button class="btn-secondary flex-1 justify-center" (click)="closeRestore()">
+              {{ restoreResult() ? 'Cerrar' : 'Cancelar' }}
+            </button>
+            @if (!restoreResult()) {
+              <button class="flex-1 h-8 inline-flex items-center justify-center gap-1.5 rounded-lg text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 transition-colors"
+                [disabled]="!restoreFile() || !!busy()"
+                (click)="doRestore()">
+                @if (busy()?.startsWith('restore')) {
+                  <span class="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  Restaurando...
+                } @else {
+                  <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+                  Restaurar Ahora
+                }
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    }
