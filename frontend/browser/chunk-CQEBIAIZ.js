@@ -1,0 +1,1 @@
+function n(t){return"Q "+parseFloat(t||0).toLocaleString("es-GT",{minimumFractionDigits:2,maximumFractionDigits:2})}function e(t){return parseFloat(t||0).toLocaleString("es-GT")}function r(t){if(!t)return"\u2014";let i=new Date(t);return isNaN(i.getTime())?"\u2014":i.toLocaleDateString("es-GT",{day:"2-digit",month:"2-digit",year:"numeric"})}export{n as a,e as b,r as c};

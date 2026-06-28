@@ -75,13 +75,10 @@ CREATE TABLE IF NOT EXISTS clientes (
 
 -- ─── MIGRACIÓN: limpiar columnas obsoletas en clientes ───────────────────────
 DO $$ BEGIN
-  -- Eliminar usuario_id si existe (columna obsoleta)
   ALTER TABLE clientes DROP COLUMN IF EXISTS usuario_id;
-  -- Asegurar que updated_at existe
   ALTER TABLE clientes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT NOW();
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
-
 
 -- ─── PRODUCTOS ───────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS productos (
@@ -102,12 +99,12 @@ CREATE INDEX IF NOT EXISTS idx_productos_nombre    ON productos(nombre);
 
 -- ─── INVENTARIO ──────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS inventario (
-  id              SERIAL PRIMARY KEY,
-  producto_id     INTEGER NOT NULL REFERENCES productos(id) ON DELETE CASCADE,
-  sucursal_id     INTEGER NOT NULL REFERENCES sucursales(id) ON DELETE CASCADE,
-  stock_actual    NUMERIC(12,2) NOT NULL DEFAULT 0,
-  stock_minimo    NUMERIC(12,2) NOT NULL DEFAULT 0,
-  stock_maximo    NUMERIC(12,2) NOT NULL DEFAULT 0,
+  id               SERIAL PRIMARY KEY,
+  producto_id      INTEGER NOT NULL REFERENCES productos(id) ON DELETE CASCADE,
+  sucursal_id      INTEGER NOT NULL REFERENCES sucursales(id) ON DELETE CASCADE,
+  stock_actual     NUMERIC(12,2) NOT NULL DEFAULT 0,
+  stock_minimo     NUMERIC(12,2) NOT NULL DEFAULT 0,
+  stock_maximo     NUMERIC(12,2) NOT NULL DEFAULT 0,
   ubicacion_bodega VARCHAR(100),
   updated_at       TIMESTAMP NOT NULL DEFAULT NOW(),
   UNIQUE(producto_id, sucursal_id)
@@ -127,7 +124,6 @@ CREATE TABLE IF NOT EXISTS movimientos_inventario (
   usuario_id     INTEGER REFERENCES usuarios(id),
   created_at     TIMESTAMP NOT NULL DEFAULT NOW()
 );
--- Add columns if table already exists (migration safety)
 DO $$ BEGIN
   ALTER TABLE movimientos_inventario ADD COLUMN IF NOT EXISTS stock_anterior NUMERIC(12,2);
   ALTER TABLE movimientos_inventario ADD COLUMN IF NOT EXISTS stock_nuevo    NUMERIC(12,2);
@@ -152,21 +148,33 @@ CREATE TABLE IF NOT EXISTS ventas (
   estado         VARCHAR(20) DEFAULT 'PENDING'
                  CHECK (estado IN ('PENDING','IN_PROCESS','FINALIZED','CANCEL')),
   observaciones  TEXT,
+  -- Campos para IVA opcional e interés de crédito
+  tasa_interes   NUMERIC(5,2)  NOT NULL DEFAULT 0,
+  monto_interes  NUMERIC(12,2) NOT NULL DEFAULT 0,
+  aplica_iva     BOOLEAN       NOT NULL DEFAULT TRUE,
   created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at     TIMESTAMP
 );
-CREATE INDEX IF NOT EXISTS idx_ventas_cliente ON ventas(cliente_id);
-CREATE INDEX IF NOT EXISTS idx_ventas_fecha   ON ventas(fecha);
-CREATE INDEX IF NOT EXISTS idx_ventas_estado  ON ventas(estado);
+CREATE INDEX IF NOT EXISTS idx_ventas_cliente      ON ventas(cliente_id);
+CREATE INDEX IF NOT EXISTS idx_ventas_fecha        ON ventas(fecha);
+CREATE INDEX IF NOT EXISTS idx_ventas_estado       ON ventas(estado);
+
+-- ─── MIGRACIÓN: agregar columnas de IVA e interés si la tabla ya existe ──────
+DO $$ BEGIN
+  ALTER TABLE ventas ADD COLUMN IF NOT EXISTS tasa_interes  NUMERIC(5,2)  NOT NULL DEFAULT 0;
+  ALTER TABLE ventas ADD COLUMN IF NOT EXISTS monto_interes NUMERIC(12,2) NOT NULL DEFAULT 0;
+  ALTER TABLE ventas ADD COLUMN IF NOT EXISTS aplica_iva    BOOLEAN       NOT NULL DEFAULT TRUE;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 
 -- ─── DETALLE VENTAS ──────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS detalle_ventas (
-  id             SERIAL PRIMARY KEY,
-  venta_id       INTEGER NOT NULL REFERENCES ventas(id) ON DELETE CASCADE,
-  producto_id    INTEGER NOT NULL REFERENCES productos(id),
-  cantidad       NUMERIC(12,2) NOT NULL,
+  id              SERIAL PRIMARY KEY,
+  venta_id        INTEGER NOT NULL REFERENCES ventas(id) ON DELETE CASCADE,
+  producto_id     INTEGER NOT NULL REFERENCES productos(id),
+  cantidad        NUMERIC(12,2) NOT NULL,
   precio_unitario NUMERIC(12,2) NOT NULL,
-  subtotal       NUMERIC(12,2) NOT NULL
+  subtotal        NUMERIC(12,2) NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_detalle_ventas_venta ON detalle_ventas(venta_id);
 
@@ -232,27 +240,24 @@ DO $$ BEGIN
   ALTER TABLE inventario ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT NOW();
 EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
-
 -- ─── CONFIGURACIÓN ───────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS configuracion (
-  id         SERIAL PRIMARY KEY,
-  clave      VARCHAR(100) NOT NULL UNIQUE,
-  valor      TEXT,
+  id          SERIAL PRIMARY KEY,
+  clave       VARCHAR(100) NOT NULL UNIQUE,
+  valor       TEXT,
   descripcion VARCHAR(200),
-  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
 INSERT INTO configuracion (clave, valor, descripcion) VALUES
-  ('factura_prefijo',  'F-2026-',   'Prefijo para número de factura'),
-  ('empresa_nombre',   'Agroservicio El Triunfo', 'Nombre de la empresa'),
-  ('empresa_nit',      'CF',        'NIT de la empresa'),
-  ('moneda_simbolo',   'Q',         'Símbolo de moneda'),
-  ('iva_porcentaje',   '12',        'Porcentaje de IVA')
+  ('factura_prefijo',  'F-2026-',                 'Prefijo para número de factura'),
+  ('empresa_nombre',   'Agroservicio El Triunfo',  'Nombre de la empresa'),
+  ('empresa_nit',      'CF',                       'NIT de la empresa'),
+  ('moneda_simbolo',   'Q',                        'Símbolo de moneda'),
+  ('iva_porcentaje',   '12',                       'Porcentaje de IVA')
 ON CONFLICT (clave) DO NOTHING;
-
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- ÍNDICES PARA ESCALABILIDAD
--- Cada índice reduce tiempos de consulta de O(n) a O(log n)
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ── Productos ────────────────────────────────────────────────────────────────
@@ -278,9 +283,9 @@ CREATE INDEX IF NOT EXISTS idx_ventas_fecha         ON ventas(fecha DESC);
 CREATE INDEX IF NOT EXISTS idx_ventas_estado        ON ventas(estado);
 CREATE INDEX IF NOT EXISTS idx_ventas_usuario       ON ventas(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_ventas_factura       ON ventas(numero_factura);
--- Índice compuesto para el dashboard (fecha + estado juntos)
 CREATE INDEX IF NOT EXISTS idx_ventas_fecha_estado  ON ventas(fecha DESC, estado);
 CREATE INDEX IF NOT EXISTS idx_ventas_mes           ON ventas(date_trunc('month', fecha), estado);
+CREATE INDEX IF NOT EXISTS idx_ventas_metodo_iva    ON ventas(metodo_pago, aplica_iva);
 
 -- ── Detalle Ventas ────────────────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_detalle_ventas_venta    ON detalle_ventas(venta_id);
@@ -318,7 +323,6 @@ CREATE INDEX IF NOT EXISTS idx_auditoria_fecha      ON auditoria(created_at DESC
 CREATE INDEX IF NOT EXISTS idx_configuracion_clave  ON configuracion(clave);
 
 -- ─── FUNCIÓN: sincronizar todas las secuencias automáticamente ───────────────
--- Se llama después de cualquier restauración de datos
 CREATE OR REPLACE FUNCTION sync_all_sequences() RETURNS void AS $$
 DECLARE
   r RECORD;

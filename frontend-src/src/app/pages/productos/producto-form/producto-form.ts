@@ -18,7 +18,7 @@ export class ProductoFormComponent implements OnInit {
   categorias = signal<Categoria[]>([]);
   margen = 0;
   form: Partial<Producto> = { activo: true, precio_compra: 0, precio_venta: 0, unidad_medida: 'unidad', stock_actual: 0, stock_minimo: 0, stock_maximo: 0 };
-  unidades = ['unidad','qq','lb','kg','lt','m','saco','caja','rollo','sobre','par'];
+  unidades = ['unidad','Quintal','Libra','Kilogramo','Litro','Metros','saco','caja','rollo','sobre','par'];
 
   constructor(private api: ApiService, private toast: ToastService, private router: Router, private route: ActivatedRoute) {}
 
