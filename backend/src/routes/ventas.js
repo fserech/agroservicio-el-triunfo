@@ -60,8 +60,10 @@ router.post('/', auth, async (req, res) => {
       observaciones,
       fecha_vence  = null,
       tasa_interes = 0,
-      aplica_iva   = true,
     } = req.body;
+
+    // Leer aplica_iva explícitamente — evita que false sea sobreescrito por default JS
+    const ivaActivo = req.body.aplica_iva === true;
 
     if (!items.length)
       return res.status(400).json({ error: 'Debe agregar productos' });
@@ -94,7 +96,7 @@ router.post('/', auth, async (req, res) => {
     }
 
     // ── Cálculo de impuesto e interés ──
-    const impuesto     = aplica_iva ? subtotal * 0.12 : 0;
+    const impuesto     = ivaActivo ? subtotal * 0.12 : 0;
     const totalBase    = subtotal + impuesto;
     const tasaNum      = parseFloat(tasa_interes) || 0;
     const montoInteres = (metodo_pago === 'credito' && tasaNum > 0)
@@ -115,11 +117,11 @@ router.post('/', auth, async (req, res) => {
     }
     const numero_factura = prefijo + String(nextNum).padStart(4, '0');
 
-    // ── Construir observaciones con metadatos de crédito ──
+    // ── Construir observaciones con metadatos ──
     const tags = [];
-    if (metodo_pago === 'credito' && fecha_vence)       tags.push(`[vence:${fecha_vence}]`);
-    if (metodo_pago === 'credito' && tasaNum > 0)        tags.push(`[interes:${tasaNum}%]`);
-    if (!aplica_iva)                                     tags.push(`[sin_iva]`);
+    if (metodo_pago === 'credito' && fecha_vence) tags.push(`[vence:${fecha_vence}]`);
+    if (metodo_pago === 'credito' && tasaNum > 0) tags.push(`[interes:${tasaNum}%]`);
+    if (!ivaActivo)                               tags.push(`[sin_iva]`);
     const obsFinal = [observaciones, ...tags].filter(Boolean).join(' ') || null;
 
     // ── Insertar venta ──
@@ -142,7 +144,7 @@ router.post('/', auth, async (req, res) => {
         obsFinal,
         tasaNum.toFixed(2),
         montoInteres.toFixed(2),
-        aplica_iva,
+        ivaActivo,
       ]);
     const venta = vr[0];
 
@@ -181,7 +183,6 @@ router.patch('/:id/estado', auth, async (req, res) => {
         'SELECT * FROM detalle_ventas WHERE venta_id=$1', [venta.id]);
       const sucId = venta.sucursal_id || 1;
 
-      // Descontar inventario
       for (const item of items) {
         const { rows: inv } = await client.query(
           'SELECT stock_actual FROM inventario WHERE producto_id=$1 AND sucursal_id=$2',
@@ -201,12 +202,9 @@ router.patch('/:id/estado', auth, async (req, res) => {
            item.cantidad, anterior, nuevo, 'Venta ' + venta.numero_factura]);
       }
 
-      // Crear cuenta por cobrar si es crédito
       if (venta.metodo_pago === 'credito' && venta.cliente_id) {
         let fechaVence = null;
         const obs = venta.observaciones || '';
-
-        // Leer fecha desde la columna o desde el tag en observaciones
         const match = obs.match(/\[vence:(\d{4}-\d{2}-\d{2})\]/);
         if (match) {
           fechaVence = match[1];
@@ -218,7 +216,6 @@ router.patch('/:id/estado', auth, async (req, res) => {
           d.setDate(d.getDate() + dias);
           fechaVence = d.toISOString().split('T')[0];
         }
-
         await client.query(
           `INSERT INTO cuentas_cobrar
              (venta_id, cliente_id, monto_total, monto_pagado, fecha_vence, estado)

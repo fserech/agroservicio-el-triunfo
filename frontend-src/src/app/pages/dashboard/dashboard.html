@@ -1,195 +1,220 @@
-<div class="p-4 space-y-4">
+<div class="p-3 sm:p-4 space-y-3 sm:space-y-4">
 
-  <!-- Header con refresh -->
+  <!-- Header -->
   <div class="flex items-center justify-between">
     <div>
       <h2 class="font-display font-bold text-slate-800 text-sm">Panel de Control</h2>
-      <p class="text-[11px] text-slate-400">Resumen en tiempo real del negocio</p>
+      <p class="text-[11px] text-slate-400 hidden sm:block">Resumen en tiempo real del negocio</p>
     </div>
     <button class="btn-secondary text-xs" (click)="refreshAll()">
       <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
         <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
       </svg>
-      Actualizar
+      <span class="hidden sm:inline">Actualizar</span>
     </button>
   </div>
 
-  <!-- ── KPIs ── -->
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-    @if (loadingKpis()) {
+  <!-- ── KPIs comparativos ── -->
+  @if (loadingKpis()) {
+    <div class="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3">
       @for (i of [1,2,3,4]; track i) {
-        <div class="kpi-card animate-pulse">
-          <div class="skeleton h-4 w-20 rounded mb-2"></div>
-          <div class="skeleton h-6 w-28 rounded mb-1"></div>
-          <div class="skeleton h-3 w-24 rounded"></div>
-        </div>
-      }
-    } @else {
-      @for (kpi of kpis(); track kpi.label) {
-        <app-kpi-card [kpi]="kpi" />
-      }
-    }
-  </div>
-
-  <!-- ── Gráfica + Top productos ── -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-    <!-- Gráfica de barras -->
-    <div class="card p-4">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h3 class="text-xs font-bold text-slate-700">Ventas Últimos 30 Días</h3>
-          <p class="text-[11px] text-slate-400 mt-0.5">Incluye pendientes, en proceso y finalizadas</p>
-        </div>
-      </div>
-
-      @if (loadingChart()) {
-        <div class="skeleton h-28 rounded-lg w-full"></div>
-      } @else if (!chartData().length) {
-        <div class="h-28 flex items-center justify-center text-xs text-slate-400">
-          Sin datos de ventas en los últimos 30 días
-        </div>
-      } @else {
-        <!-- Barras -->
-        <div class="flex items-end gap-[3px] h-28">
-          @for (bar of chartData(); track bar.dia) {
-            <div class="flex-1 flex flex-col items-center gap-0.5 group relative"
-              [title]="bar.dia + ': ' + fmtQ(bar.total) + ' (' + bar.count + ' transac.)'">
-              <!-- Tooltip -->
-              @if (bar.total > 0) {
-                <div class="absolute bottom-full mb-1 hidden group-hover:flex flex-col items-center z-10">
-                  <div class="bg-slate-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap shadow-lg">
-                    {{ bar.dia }}<br>{{ fmtQ(bar.total) }}<br>{{ bar.count }} transac.
-                  </div>
-                  <div class="w-1.5 h-1.5 bg-slate-800 rotate-45 -mt-0.5"></div>
-                </div>
-              }
-              <!-- Barra -->
-              <div class="w-full rounded-t transition-all duration-300"
-                [style.height.%]="bar.pct"
-                [class.bg-primary]="bar.total > 0"
-                [class.bg-slate-100]="bar.total === 0"
-                [class.hover:bg-primary-dark]="bar.total > 0">
-              </div>
-            </div>
-          }
-        </div>
-        <!-- Eje X — etiquetas de días -->
-        <div class="flex gap-[3px] mt-1">
-          @for (bar of chartData(); track bar.dia; let i = $index) {
-            <div class="flex-1 text-center">
-              @if (i % 5 === 0 || i === chartData().length - 1) {
-                <span class="text-[9px] text-slate-400">{{ bar.label }}</span>
-              }
-            </div>
-          }
-        </div>
-        <!-- Total del período -->
-        <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
-          <span class="text-[11px] text-slate-400">Total 30 días</span>
-          <span class="font-mono text-sm font-bold text-primary">
-            {{ fmtQ(chartTotal()) }}
-          </span>
+        <div class="card p-3 sm:p-4 animate-pulse">
+          <div class="skeleton h-3 w-16 rounded mb-2"></div>
+          <div class="skeleton h-5 w-24 rounded mb-2"></div>
+          <div class="skeleton h-3 w-20 rounded mb-3"></div>
+          <div class="skeleton h-32 rounded w-full"></div>
         </div>
       }
     </div>
+  } @else {
+    <div class="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3">
 
-    <!-- Top Productos -->
-    <div class="card p-4">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h3 class="text-xs font-bold text-slate-700">Top Productos del Mes</h3>
-          <p class="text-[11px] text-slate-400 mt-0.5">Ordenados por monto vendido</p>
+      <!-- Hoy vs Ayer -->
+      <div class="card p-3 sm:p-4 flex flex-col">
+        <div class="flex items-start justify-between mb-1">
+          <p class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400">Ventas Hoy</p>
+          <span class="text-[9px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded-full flex-shrink-0 ml-1"
+            [class.bg-emerald-100]="kpiData().ventas_hoy_pct >= 0"
+            [class.text-emerald-700]="kpiData().ventas_hoy_pct >= 0"
+            [class.bg-red-100]="kpiData().ventas_hoy_pct < 0"
+            [class.text-red-600]="kpiData().ventas_hoy_pct < 0">
+            {{ kpiData().ventas_hoy_pct >= 0 ? '▲' : '▼' }}{{ kpiData().ventas_hoy_pct | number:'1.1-1' }}%
+          </span>
         </div>
-        <a routerLink="/productos" class="text-[11px] text-primary hover:underline">Ver todos →</a>
+        <p class="font-display font-bold text-lg sm:text-xl text-slate-800 leading-tight mb-0.5">{{ fmtQ(kpiData().ventas_hoy) }}</p>
+        <p class="text-[9px] sm:text-[10px] text-slate-400 mb-2 leading-snug">
+          {{ kpiData().ventas_hoy_count }} transac.<br class="sm:hidden">
+          <span class="hidden sm:inline"> · </span>ayer {{ fmtQ(kpiData().ventas_ayer) }}
+        </p>
+        <div id="pie-hoy" class="w-full flex justify-center mt-auto"></div>
       </div>
 
+      <!-- 7 días -->
+      <div class="card p-3 sm:p-4 flex flex-col">
+        <div class="flex items-start justify-between mb-1">
+          <p class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400">Últ. 7 Días</p>
+          <span class="text-[9px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded-full flex-shrink-0 ml-1"
+            [class.bg-emerald-100]="kpiData().ventas_semana_pct >= 0"
+            [class.text-emerald-700]="kpiData().ventas_semana_pct >= 0"
+            [class.bg-red-100]="kpiData().ventas_semana_pct < 0"
+            [class.text-red-600]="kpiData().ventas_semana_pct < 0">
+            {{ kpiData().ventas_semana_pct >= 0 ? '▲' : '▼' }}{{ kpiData().ventas_semana_pct | number:'1.1-1' }}%
+          </span>
+        </div>
+        <p class="font-display font-bold text-lg sm:text-xl text-slate-800 leading-tight mb-0.5">{{ fmtQ(kpiData().ventas_semana) }}</p>
+        <p class="text-[9px] sm:text-[10px] text-slate-400 mb-2 leading-snug">
+          {{ kpiData().ventas_semana_count }} transac.<br class="sm:hidden">
+          <span class="hidden sm:inline"> · </span>sem. ant. {{ fmtQ(kpiData().ventas_semana_ant) }}
+        </p>
+        <div id="pie-semana" class="w-full flex justify-center mt-auto"></div>
+      </div>
+
+      <!-- Mes -->
+      <div class="card p-3 sm:p-4 flex flex-col">
+        <div class="flex items-start justify-between mb-1">
+          <p class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400">Ventas Mes</p>
+          <span class="text-[9px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded-full flex-shrink-0 ml-1"
+            [class.bg-emerald-100]="kpiData().ventas_mes_pct >= 0"
+            [class.text-emerald-700]="kpiData().ventas_mes_pct >= 0"
+            [class.bg-red-100]="kpiData().ventas_mes_pct < 0"
+            [class.text-red-600]="kpiData().ventas_mes_pct < 0">
+            {{ kpiData().ventas_mes_pct >= 0 ? '▲' : '▼' }}{{ kpiData().ventas_mes_pct | number:'1.1-1' }}%
+          </span>
+        </div>
+        <p class="font-display font-bold text-lg sm:text-xl text-slate-800 leading-tight mb-0.5">{{ fmtQ(kpiData().ventas_mes) }}</p>
+        <p class="text-[9px] sm:text-[10px] text-slate-400 mb-2 leading-snug">
+          {{ kpiData().ventas_mes_count }} transac.<br class="sm:hidden">
+          <span class="hidden sm:inline"> · </span>mes ant. {{ fmtQ(kpiData().ventas_mes_ant) }}
+        </p>
+        <div id="pie-mes" class="w-full flex justify-center mt-auto"></div>
+      </div>
+
+      <!-- Año -->
+      <div class="card p-3 sm:p-4 flex flex-col">
+        <div class="flex items-start justify-between mb-1">
+          <p class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400">Ventas Año</p>
+          <span class="text-[9px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded-full flex-shrink-0 ml-1"
+            [class.bg-emerald-100]="kpiData().ventas_anio_pct >= 0"
+            [class.text-emerald-700]="kpiData().ventas_anio_pct >= 0"
+            [class.bg-red-100]="kpiData().ventas_anio_pct < 0"
+            [class.text-red-600]="kpiData().ventas_anio_pct < 0">
+            {{ kpiData().ventas_anio_pct >= 0 ? '▲' : '▼' }}{{ kpiData().ventas_anio_pct | number:'1.1-1' }}%
+          </span>
+        </div>
+        <p class="font-display font-bold text-lg sm:text-xl text-slate-800 leading-tight mb-0.5">{{ fmtQ(kpiData().ventas_anio) }}</p>
+        <p class="text-[9px] sm:text-[10px] text-slate-400 mb-2 leading-snug">
+          {{ kpiData().ventas_anio_count }} transac.<br class="sm:hidden">
+          <span class="hidden sm:inline"> · </span>año ant. {{ fmtQ(kpiData().ventas_anio_ant) }}
+        </p>
+        <div id="pie-anio" class="w-full flex justify-center mt-auto"></div>
+      </div>
+
+    </div>
+  }
+
+  <!-- ── KPIs secundarios ── -->
+  <div class="grid grid-cols-2 gap-2 sm:gap-3">
+    @for (kpi of kpis(); track kpi.label) {
+      <app-kpi-card [kpi]="kpi" />
+    }
+  </div>
+
+  <!-- ── Gráfica línea tendencia — ancho completo ── -->
+  <div class="card p-3 sm:p-4">
+    <div class="flex items-center justify-between mb-3 sm:mb-4">
+      <div>
+        <h3 class="text-xs font-bold text-slate-700">Tendencia Últimos 30 Días</h3>
+        <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">
+          Total del período: <span class="font-bold text-primary">{{ fmtQ(chartTotal()) }}</span>
+        </p>
+      </div>
+    </div>
+    @if (loadingChart()) {
+      <div class="skeleton h-44 sm:h-56 rounded-lg w-full"></div>
+    } @else {
+      <div id="line-chart-30d"></div>
+    }
+  </div>
+
+  <!-- ── Top Productos + Actividad ── -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+
+    <!-- Top Productos -->
+    <div class="card p-3 sm:p-4">
+      <div class="flex items-center justify-between mb-3 sm:mb-4">
+        <div>
+          <h3 class="text-xs font-bold text-slate-700">Top Productos del Mes</h3>
+          <p class="text-[10px] text-slate-400 mt-0.5 hidden sm:block">Ordenados por monto vendido</p>
+        </div>
+        <a routerLink="/productos" class="text-[11px] text-primary hover:underline flex-shrink-0">Ver todos →</a>
+      </div>
       @if (loadingTop()) {
-        <div class="space-y-3">
-          @for (i of [1,2,3,4,5]; track i) {
-            <div class="skeleton h-8 rounded w-full"></div>
-          }
+        <div class="space-y-2 sm:space-y-3">
+          @for (i of [1,2,3,4,5]; track i) { <div class="skeleton h-8 rounded w-full"></div> }
         </div>
       } @else if (!topProductos().length) {
-        <div class="flex flex-col items-center justify-center py-8 text-xs text-slate-400">
-          <div class="text-3xl mb-2">📦</div>
-          Sin ventas registradas este mes
+        <div class="flex flex-col items-center justify-center py-6 text-xs text-slate-400">
+          <div class="text-3xl mb-2">📦</div>Sin ventas este mes
         </div>
       } @else {
-        <div class="space-y-2">
+        <div class="space-y-1.5 sm:space-y-2">
           @for (p of topProductos(); track p.nombre; let i = $index) {
-            <div class="flex items-center gap-3 py-1.5">
-              <!-- Ranking -->
+            <div class="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5">
               <div class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                [class.bg-amber-400]="i === 0" [class.text-white]="i === 0"
-                [class.bg-slate-200]="i === 1" [class.text-slate-700]="i === 1"
-                [class.bg-orange-300]="i === 2" [class.text-white]="i === 2"
-                [class.bg-slate-100]="i > 2"   [class.text-slate-500]="i > 2">
-                {{ i + 1 }}
-              </div>
-              <!-- Info -->
+                [class.bg-amber-400]="i===0" [class.text-white]="i===0"
+                [class.bg-slate-200]="i===1" [class.text-slate-700]="i===1"
+                [class.bg-orange-300]="i===2" [class.text-white]="i===2"
+                [class.bg-slate-100]="i>2"   [class.text-slate-500]="i>2">{{ i+1 }}</div>
               <div class="flex-1 min-w-0">
                 <div class="text-xs font-semibold text-slate-800 truncate">{{ p.nombre }}</div>
                 <div class="text-[10px] text-slate-400">{{ fmtN(p.total_vendido) }} {{ p.unidad_medida }}</div>
               </div>
-              <!-- Monto -->
               <span class="font-mono text-xs font-bold text-primary flex-shrink-0">{{ fmtQ(p.total_monto) }}</span>
             </div>
           }
         </div>
       }
     </div>
-  </div>
-
-  <!-- ── Actividad + Accesos Rápidos ── -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
     <!-- Actividad Reciente -->
-    <div class="card p-4">
-      <div class="flex items-center justify-between mb-4">
+    <div class="card p-3 sm:p-4">
+      <div class="flex items-center justify-between mb-3 sm:mb-4">
         <div>
           <h3 class="text-xs font-bold text-slate-700">Actividad Reciente</h3>
-          <p class="text-[11px] text-slate-400 mt-0.5">Ventas y órdenes de compra</p>
+          <p class="text-[10px] text-slate-400 mt-0.5 hidden sm:block">Ventas y órdenes de compra</p>
         </div>
       </div>
-
       @if (loadingAct()) {
-        <div class="space-y-3">
-          @for (i of [1,2,3,4,5]; track i) {
-            <div class="skeleton h-10 rounded w-full"></div>
-          }
+        <div class="space-y-2 sm:space-y-3">
+          @for (i of [1,2,3,4,5]; track i) { <div class="skeleton h-10 rounded w-full"></div> }
         </div>
       } @else if (!actividad().length) {
-        <div class="flex flex-col items-center justify-center py-8 text-xs text-slate-400">
-          <div class="text-3xl mb-2">📋</div>
-          Sin actividad reciente
+        <div class="flex flex-col items-center justify-center py-6 text-xs text-slate-400">
+          <div class="text-3xl mb-2">📋</div>Sin actividad reciente
         </div>
       } @else {
-        <div class="space-y-1">
+        <div class="space-y-0.5 sm:space-y-1">
           @for (a of actividad(); track a.ref) {
-            <div class="flex items-center gap-3 py-2 border-b border-slate-50 last:border-0">
-              <!-- Icono tipo -->
+            <div class="flex items-center gap-2 sm:gap-3 py-2 border-b border-slate-50 last:border-0">
               <div class="w-7 h-7 rounded-lg flex items-center justify-center text-sm flex-shrink-0"
-                [class.bg-primary\/10]="a.tipo === 'venta'"
-                [class.bg-violet-100]="a.tipo === 'compra'">
+                [class.bg-primary\/10]="a.tipo==='venta'"
+                [class.bg-violet-100]="a.tipo==='compra'">
                 {{ a.tipo === 'venta' ? '🛒' : '📋' }}
               </div>
-              <!-- Info -->
               <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                   <span class="text-xs font-mono font-semibold text-slate-800">{{ a.ref }}</span>
                   <span class="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
                     [class]="estadoColor(a.tipo, a.estado)"
-                    [class.bg-amber-50]="a.estado === 'PENDING' || a.estado === 'pendiente'"
-                    [class.bg-blue-50]="a.estado === 'IN_PROCESS' || a.estado === 'aprobada'"
-                    [class.bg-emerald-50]="a.estado === 'FINALIZED' || a.estado === 'recibida'"
-                    [class.bg-slate-50]="a.estado === 'CANCEL' || a.estado === 'cancelada'">
+                    [class.bg-amber-50]="a.estado==='PENDING'||a.estado==='pendiente'"
+                    [class.bg-blue-50]="a.estado==='IN_PROCESS'||a.estado==='aprobada'"
+                    [class.bg-emerald-50]="a.estado==='FINALIZED'||a.estado==='recibida'"
+                    [class.bg-slate-50]="a.estado==='CANCEL'||a.estado==='cancelada'">
                     {{ estadoLabel(a.tipo, a.estado) }}
                   </span>
                 </div>
-                <div class="text-[11px] text-slate-400 mt-0.5">{{ fmtDate(a.fecha) }}</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">{{ fmtDate(a.fecha) }}</div>
               </div>
-              <!-- Valor -->
               <span class="font-mono text-xs font-bold text-slate-700 flex-shrink-0">{{ fmtQ(a.valor) }}</span>
             </div>
           }
@@ -197,45 +222,6 @@
       }
     </div>
 
-    <!-- Accesos Rápidos -->
-    <div class="card p-4">
-      <div class="mb-4">
-        <h3 class="text-xs font-bold text-slate-700">Accesos Rápidos</h3>
-        <p class="text-[11px] text-slate-400 mt-0.5">Acciones frecuentes del sistema</p>
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <a routerLink="/ventas/nueva"
-          class="flex flex-col items-center gap-2 p-4 rounded-xl bg-primary text-white hover:bg-primary-dark transition-colors group">
-          <span class="text-2xl group-hover:scale-110 transition-transform">🛒</span>
-          <span class="text-xs font-bold">Nueva Venta</span>
-        </a>
-        <a routerLink="/clientes/nuevo"
-          class="flex flex-col items-center gap-2 p-4 rounded-xl bg-blue-500 text-white hover:bg-blue-600 transition-colors group">
-          <span class="text-2xl group-hover:scale-110 transition-transform">👥</span>
-          <span class="text-xs font-bold">Nuevo Cliente</span>
-        </a>
-        <a routerLink="/compras/nueva"
-          class="flex flex-col items-center gap-2 p-4 rounded-xl bg-violet-500 text-white hover:bg-violet-600 transition-colors group">
-          <span class="text-2xl group-hover:scale-110 transition-transform">📋</span>
-          <span class="text-xs font-bold">Orden Compra</span>
-        </a>
-        <a routerLink="/productos/nuevo"
-          class="flex flex-col items-center gap-2 p-4 rounded-xl bg-amber-500 text-white hover:bg-amber-600 transition-colors group">
-          <span class="text-2xl group-hover:scale-110 transition-transform">📦</span>
-          <span class="text-xs font-bold">Nuevo Producto</span>
-        </a>
-        <a routerLink="/inventario"
-          class="flex flex-col items-center gap-2 p-4 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors group">
-          <span class="text-2xl group-hover:scale-110 transition-transform">🏪</span>
-          <span class="text-xs font-bold">Inventario</span>
-        </a>
-        <a routerLink="/cuentas-cobrar"
-          class="flex flex-col items-center gap-2 p-4 rounded-xl bg-red-50 text-red-700 hover:bg-red-100 transition-colors group">
-          <span class="text-2xl group-hover:scale-110 transition-transform">💳</span>
-          <span class="text-xs font-bold">Por Cobrar</span>
-        </a>
-      </div>
-    </div>
   </div>
 
 </div>
