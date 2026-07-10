@@ -106,7 +106,20 @@ router.post('/', auth, async (req, res) => {
             unidad_medida, activo=true,
             stock_inicial=0, stock_minimo=0, stock_maximo=0, ubicacion_bodega } = req.body;
 
-    if (!nombre?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+    if (!nombre?.trim()) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'El nombre es requerido' });
+    }
+
+    // Verificar duplicado (case-insensitive, ignora espacios)
+    const dup = await client.query(
+      'SELECT id FROM productos WHERE LOWER(TRIM(nombre)) = LOWER(TRIM($1))',
+      [nombre]
+    );
+    if (dup.rows.length) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: `Ya existe un producto llamado "${nombre.trim()}"` });
+    }
 
     let codigo = req.body.codigo?.trim() || null;
     if (!codigo) codigo = await generarCodigo(pool, categoria_id);
@@ -138,6 +151,9 @@ router.post('/', auth, async (req, res) => {
     res.status(201).json(prod);
   } catch(e) {
     await client.query('ROLLBACK');
+    if (e.code === '23505') {
+      return res.status(400).json({ error: 'Ya existe un producto con ese nombre o código' });
+    }
     res.status(500).json({ error: e.message });
   } finally { client.release(); }
 });
@@ -147,6 +163,18 @@ router.put('/:id', auth, async (req, res) => {
   try {
     const { nombre, codigo, descripcion, categoria_id,
             precio_compra, precio_venta, unidad_medida, activo } = req.body;
+
+    if (!nombre?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+
+    // Verificar duplicado excluyendo el registro actual
+    const dup = await pool.query(
+      'SELECT id FROM productos WHERE LOWER(TRIM(nombre)) = LOWER(TRIM($1)) AND id != $2',
+      [nombre, req.params.id]
+    );
+    if (dup.rows.length) {
+      return res.status(400).json({ error: `Ya existe otro producto llamado "${nombre.trim()}"` });
+    }
+
     const { rows } = await pool.query(
       `UPDATE productos SET
          nombre=$1, codigo=$2, descripcion=$3, categoria_id=$4,
@@ -157,7 +185,12 @@ router.put('/:id', auth, async (req, res) => {
        precio_compra, precio_venta, unidad_medida, activo, req.params.id]);
     if (!rows.length) return res.status(404).json({ error: 'Producto no encontrado' });
     res.json(rows[0]);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) {
+    if (e.code === '23505') {
+      return res.status(400).json({ error: 'Ya existe un producto con ese nombre o código' });
+    }
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── DELETE /:id — Eliminar producto ─────────────────────────────────────
@@ -251,6 +284,9 @@ router.get('/plantilla-excel', auth, async (req, res) => {
 });
 
 // ─── POST /importar-excel ─────────────────────────────────────────────────
+// Nota: aquí la detección de duplicados por nombre/código YA existe (usa
+// LOWER(nombre)=LOWER($1)) y decide si actualizar en vez de crear, por lo
+// que "abono"/"ABONO" en el Excel se tratan como el mismo producto.
 router.post('/importar-excel', auth, upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No se recibió archivo' });
   const result = { created: 0, updated: 0, errors: 0, errorDetails: [] };
@@ -293,7 +329,7 @@ router.post('/importar-excel', auth, upload.single('file'), async (req, res) => 
         const unidad     = String(row['unidad_medida'] || 'unidad').trim();
         const descripcion = row['descripcion'] ? String(row['descripcion']).trim() : null;
 
-        // ¿Ya existe?
+        // ¿Ya existe? (comparación case-insensitive + trim)
         let existente = null;
         if (!esAuto) {
           const { rows: ex } = await client.query('SELECT id FROM productos WHERE codigo=$1', [codigo]);
@@ -301,7 +337,7 @@ router.post('/importar-excel', auth, upload.single('file'), async (req, res) => 
         }
         if (!existente) {
           const { rows: ex } = await client.query(
-            'SELECT id FROM productos WHERE LOWER(nombre)=LOWER($1)', [nombre]);
+            'SELECT id FROM productos WHERE LOWER(TRIM(nombre)) = LOWER(TRIM($1))', [nombre]);
           existente = ex[0] || null;
         }
 

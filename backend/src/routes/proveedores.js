@@ -57,6 +57,15 @@ router.post('/', auth, async (req, res) => {
             email, departamento, direccion, plazo_credito = 0, activo = true } = req.body;
     if (!nombre?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
 
+    // Verificar duplicado (case-insensitive, ignora espacios)
+    const dup = await pool.query(
+      'SELECT id FROM proveedores WHERE LOWER(TRIM(nombre)) = LOWER(TRIM($1))',
+      [nombre]
+    );
+    if (dup.rows.length) {
+      return res.status(400).json({ error: `Ya existe un proveedor llamado "${nombre.trim()}"` });
+    }
+
     const { rows } = await pool.query(
       `INSERT INTO proveedores (nombre,razon_social,nit,categoria,contacto,telefono,email,departamento,direccion,plazo_credito,activo)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
@@ -65,7 +74,12 @@ router.post('/', auth, async (req, res) => {
        direccion||null, plazo_credito, activo]);
 
     res.status(201).json(rows[0]);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) {
+    if (e.code === '23505') {
+      return res.status(400).json({ error: 'Ya existe un proveedor con ese nombre' });
+    }
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // PUT /:id
@@ -73,6 +87,18 @@ router.put('/:id', auth, async (req, res) => {
   try {
     const { nombre, razon_social, nit, categoria, contacto, telefono,
             email, departamento, direccion, plazo_credito, activo } = req.body;
+
+    if (!nombre?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+
+    // Verificar duplicado excluyendo el registro actual
+    const dup = await pool.query(
+      'SELECT id FROM proveedores WHERE LOWER(TRIM(nombre)) = LOWER(TRIM($1)) AND id != $2',
+      [nombre, req.params.id]
+    );
+    if (dup.rows.length) {
+      return res.status(400).json({ error: `Ya existe otro proveedor llamado "${nombre.trim()}"` });
+    }
+
     const { rows } = await pool.query(
       `UPDATE proveedores SET nombre=$1,razon_social=$2,nit=$3,categoria=$4,
          contacto=$5,telefono=$6,email=$7,departamento=$8,direccion=$9,
@@ -83,7 +109,12 @@ router.put('/:id', auth, async (req, res) => {
        direccion||null, plazo_credito, activo, req.params.id]);
     if (!rows.length) return res.status(404).json({ error: 'Proveedor no encontrado' });
     res.json(rows[0]);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) {
+    if (e.code === '23505') {
+      return res.status(400).json({ error: 'Ya existe un proveedor con ese nombre' });
+    }
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // DELETE /:id

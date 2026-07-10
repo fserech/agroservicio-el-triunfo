@@ -8,14 +8,9 @@ import { ConfirmModalComponent } from '../../components/shared/confirm-modal/con
 import { EmptyStateComponent } from '../../components/shared/empty-state/empty-state';
 import { ActionButtonsComponent, ActionButton } from '../../components/shared/action-buttons/action-buttons';
 import { KpiCardComponent } from '../../components/shared/kpi-card/kpi-card';
-import { KpiData } from '../../models';
+import { Categoria, KpiData } from '../../models';
 
-interface Categoria {
-  id: number;
-  nombre: string;
-  descripcion?: string;
-  productos_count?: number;
-}
+
 
 @Component({
   selector: 'app-categorias',

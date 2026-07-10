@@ -107,6 +107,15 @@ router.post('/', auth, async (req, res) => {
 
     if (!nombre?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
 
+    // Verificar duplicado (case-insensitive, ignora espacios)
+    const dup = await pool.query(
+      'SELECT id FROM clientes WHERE LOWER(TRIM(nombre)) = LOWER(TRIM($1))',
+      [nombre]
+    );
+    if (dup.rows.length) {
+      return res.status(400).json({ error: `Ya existe un cliente llamado "${nombre.trim()}"` });
+    }
+
     const { rows } = await pool.query(
       `INSERT INTO clientes
          (nombre, tipo, nit, cui, telefono, email, direccion,
@@ -118,7 +127,12 @@ router.post('/', auth, async (req, res) => {
        credito_maximo, dias_credito, notas || null, activo]);
 
     res.status(201).json(rows[0]);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) {
+    if (e.code === '23505') {
+      return res.status(400).json({ error: 'Ya existe un cliente con ese nombre' });
+    }
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // PUT /:id
@@ -127,6 +141,17 @@ router.put('/:id', auth, async (req, res) => {
     const { nombre, tipo, nit, cui, telefono, email, direccion,
             municipio, departamento, credito_maximo, dias_credito,
             notas, activo } = req.body;
+
+    if (!nombre?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+
+    // Verificar duplicado excluyendo el registro actual
+    const dup = await pool.query(
+      'SELECT id FROM clientes WHERE LOWER(TRIM(nombre)) = LOWER(TRIM($1)) AND id != $2',
+      [nombre, req.params.id]
+    );
+    if (dup.rows.length) {
+      return res.status(400).json({ error: `Ya existe otro cliente llamado "${nombre.trim()}"` });
+    }
 
     const { rows } = await pool.query(
       `UPDATE clientes SET
@@ -142,7 +167,12 @@ router.put('/:id', auth, async (req, res) => {
 
     if (!rows.length) return res.status(404).json({ error: 'Cliente no encontrado' });
     res.json(rows[0]);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) {
+    if (e.code === '23505') {
+      return res.status(400).json({ error: 'Ya existe un cliente con ese nombre' });
+    }
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // DELETE /:id

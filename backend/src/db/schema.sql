@@ -257,6 +257,33 @@ INSERT INTO configuracion (clave, valor, descripcion) VALUES
 ON CONFLICT (clave) DO NOTHING;
 
 -- ═══════════════════════════════════════════════════════════════════════════
+-- UNICIDAD CASE-INSENSITIVE (evita "Abono" / "ABONO" / "abono" duplicados)
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Estos índices únicos son el respaldo a nivel de base de datos de la
+-- validación que ya hacen los routers (categorias.js, productos.js,
+-- clientes.js, proveedores.js) con LOWER(TRIM(nombre)).
+--
+-- IMPORTANTE: si la base de datos ya tiene registros duplicados por
+-- mayúsculas/espacios (ej. "Abono" y "ABONO" ya existentes), la creación
+-- del índice fallará. En ese caso, primero limpia los duplicados; al final
+-- de este archivo se incluye un bloque opcional para hacerlo automáticamente.
+DO $$ BEGIN
+  CREATE UNIQUE INDEX idx_categorias_nombre_unico  ON categorias  (LOWER(TRIM(nombre)));
+EXCEPTION WHEN duplicate_table THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE UNIQUE INDEX idx_productos_nombre_unico   ON productos   (LOWER(TRIM(nombre)));
+EXCEPTION WHEN duplicate_table THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE UNIQUE INDEX idx_clientes_nombre_unico    ON clientes    (LOWER(TRIM(nombre)));
+EXCEPTION WHEN duplicate_table THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE UNIQUE INDEX idx_proveedores_nombre_unico ON proveedores (LOWER(TRIM(nombre)));
+EXCEPTION WHEN duplicate_table THEN NULL; END $$;
+
+-- ═══════════════════════════════════════════════════════════════════════════
 -- ÍNDICES PARA ESCALABILIDAD
 -- ═══════════════════════════════════════════════════════════════════════════
 
@@ -345,3 +372,52 @@ BEGIN
   END LOOP;
 END;
 $$ LANGUAGE plpgsql;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- (OPCIONAL) LIMPIEZA DE DUPLICADOS EXISTENTES
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Ejecuta este bloque UNA SOLA VEZ si el CREATE UNIQUE INDEX de arriba falló
+-- por duplicate key. Conserva el registro más antiguo (MIN(id)) de cada
+-- nombre repetido y reasigna las referencias antes de borrar los duplicados.
+-- Revísalo antes de correrlo: bórralo o coméntalo si no lo necesitas.
+/*
+DO $$
+DECLARE r RECORD; principal_id INTEGER;
+BEGIN
+  -- Categorías: reasigna productos y elimina duplicados
+  FOR r IN
+    SELECT LOWER(TRIM(nombre)) AS clave, array_agg(id ORDER BY id) AS ids
+    FROM categorias GROUP BY LOWER(TRIM(nombre)) HAVING COUNT(*) > 1
+  LOOP
+    principal_id := r.ids[1];
+    UPDATE productos SET categoria_id = principal_id WHERE categoria_id = ANY(r.ids[2:]);
+    DELETE FROM categorias WHERE id = ANY(r.ids[2:]);
+  END LOOP;
+
+  -- Proveedores: reasigna compras y elimina duplicados
+  FOR r IN
+    SELECT LOWER(TRIM(nombre)) AS clave, array_agg(id ORDER BY id) AS ids
+    FROM proveedores GROUP BY LOWER(TRIM(nombre)) HAVING COUNT(*) > 1
+  LOOP
+    principal_id := r.ids[1];
+    UPDATE compras SET proveedor_id = principal_id WHERE proveedor_id = ANY(r.ids[2:]);
+    DELETE FROM proveedores WHERE id = ANY(r.ids[2:]);
+  END LOOP;
+
+  -- Clientes: reasigna ventas y cuentas por cobrar, elimina duplicados
+  FOR r IN
+    SELECT LOWER(TRIM(nombre)) AS clave, array_agg(id ORDER BY id) AS ids
+    FROM clientes GROUP BY LOWER(TRIM(nombre)) HAVING COUNT(*) > 1
+  LOOP
+    principal_id := r.ids[1];
+    UPDATE ventas SET cliente_id = principal_id WHERE cliente_id = ANY(r.ids[2:]);
+    UPDATE cuentas_cobrar SET cliente_id = principal_id WHERE cliente_id = ANY(r.ids[2:]);
+    DELETE FROM clientes WHERE id = ANY(r.ids[2:]);
+  END LOOP;
+
+  -- Productos: NO se recomienda auto-fusionar (afecta inventario, ventas,
+  -- compras y movimientos con historial). Revísalos manualmente primero:
+  -- SELECT LOWER(TRIM(nombre)), array_agg(id) FROM productos
+  --   GROUP BY LOWER(TRIM(nombre)) HAVING COUNT(*) > 1;
+END $$;
+*/
