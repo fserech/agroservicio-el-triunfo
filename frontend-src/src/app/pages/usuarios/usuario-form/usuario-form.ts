@@ -68,7 +68,7 @@ export class UsuarioFormComponent implements OnInit {
 
   get canSave() {
     if (!this.form.nombre?.trim()) return false;
-    if (!this.isEdit && !this.username.trim()) return false;
+    if (!this.username.trim()) return false;
     if (!this.isEdit && !this.password) return false;
     if (this.password && this.password !== this.password2) return false;
     return true;
@@ -109,6 +109,7 @@ export class UsuarioFormComponent implements OnInit {
         rol:     u.rol     || 'vendedor',
         activo:  u.activo  ?? true,
       };
+      this.username         = u.username;
       this.originalUsername = u.username;
     } catch(e: any) {
       this.toast.error(e.message);
@@ -123,7 +124,7 @@ export class UsuarioFormComponent implements OnInit {
     if (!this.form.nombre?.trim()) {
       this.toast.warning('El nombre es requerido'); return;
     }
-    if (!this.isEdit && !this.username.trim()) {
+    if (!this.username.trim()) {
       this.toast.warning('El nombre de usuario es requerido'); return;
     }
     if (!this.isEdit && !this.password) {
@@ -138,8 +139,7 @@ export class UsuarioFormComponent implements OnInit {
 
     this.saving.set(true);
     try {
-      const body: any = { ...this.form };
-      if (!this.isEdit) body.username = this.username;
+      const body: any = { ...this.form, username: this.username };
       if (this.password) body.password = this.password;
 
       if (this.isEdit) {

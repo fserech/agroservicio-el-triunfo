@@ -42,21 +42,49 @@ router.post('/', auth, roles('admin'), async (req, res) => {
 router.put('/:id', auth, roles('admin'), async (req, res) => {
   const ip = getClientIP(req);
   try {
-    const { nombre, email, rol, activo } = req.body;
-    let q = 'UPDATE usuarios SET nombre=$1, email=$2, rol=$3, activo=$4, updated_at=NOW()';
-    const p = [nombre, email || null, rol, activo];
-    if (req.body.password) {
-      q += ', password_hash=$5 WHERE id=$6 RETURNING id, nombre, username, email, rol, activo';
-      p.push(await bcrypt.hash(req.body.password, 12), req.params.id);
-    } else {
-      q += ' WHERE id=$5 RETURNING id, nombre, username, email, rol, activo';
-      p.push(req.params.id);
+    const { nombre, email, rol, activo, username } = req.body;
+
+    // Si viene username, validar que no esté vacío y que no choque con otro usuario
+    if (username !== undefined) {
+      if (!username.trim()) {
+        return res.status(400).json({ error: 'El nombre de usuario es requerido' });
+      }
+      const dup = await pool.query(
+        'SELECT id FROM usuarios WHERE username = $1 AND id != $2',
+        [username.trim(), req.params.id]
+      );
+      if (dup.rows.length) {
+        return res.status(409).json({ error: `El nombre de usuario "${username.trim()}" ya está en uso` });
+      }
     }
+
+    const campos = ['nombre=$1', 'email=$2', 'rol=$3', 'activo=$4'];
+    const p = [nombre, email || null, rol, activo];
+    let idx = 5;
+
+    if (username !== undefined) {
+      campos.push(`username=$${idx}`);
+      p.push(username.trim());
+      idx++;
+    }
+    if (req.body.password) {
+      campos.push(`password_hash=$${idx}`);
+      p.push(await bcrypt.hash(req.body.password, 12));
+      idx++;
+    }
+
+    const q = `UPDATE usuarios SET ${campos.join(', ')}, updated_at=NOW()
+               WHERE id=$${idx} RETURNING id, nombre, username, email, rol, activo`;
+    p.push(req.params.id);
+
     const { rows } = await pool.query(q, p);
     if (!rows.length) return res.status(404).json({ error: 'Usuario no encontrado' });
     await auditLog(req.user.id, 'USUARIO_ACTUALIZADO', { id: req.params.id, ip }, ip);
     res.json(rows[0]);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) {
+    if (e.code === '23505') return res.status(409).json({ error: 'El nombre de usuario ya existe' });
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // DELETE — eliminar usuario
