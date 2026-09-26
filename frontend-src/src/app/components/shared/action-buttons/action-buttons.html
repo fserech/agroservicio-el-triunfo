@@ -1,0 +1,23 @@
+<div class="flex items-center gap-1">
+      @for (btn of buttons; track btn.type) {
+        @if (btn.routerLink) {
+          <a [routerLink]="btn.routerLink"
+            class="action-btn"
+            [ngClass]="btnClass(btn.type)"
+            [title]="btn.label">
+            <span class="btn-icon" [innerHTML]="svgIcon(btn.type)"></span>
+            <span class="btn-label">{{ btn.label }}</span>
+          </a>
+        } @else {
+          <button
+            class="action-btn"
+            [ngClass]="btnClass(btn.type)"
+            [title]="btn.label"
+            [disabled]="btn.disabled"
+            (click)="action.emit(btn.type)">
+            <span class="btn-icon" [innerHTML]="svgIcon(btn.type)"></span>
+            <span class="btn-label">{{ btn.label }}</span>
+          </button>
+        }
+      }
+    </div>

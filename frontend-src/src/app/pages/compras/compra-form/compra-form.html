@@ -1,0 +1,284 @@
+<div class="p-4 max-w-5xl mx-auto">
+  <div class="card">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
+      <div>
+        <h2 class="font-display font-bold text-slate-800">Nueva Orden de Compra</h2>
+        <p class="text-[11px] text-slate-400 mt-0.5">Registra una orden de compra a proveedor</p>
+      </div>
+      <a routerLink="/compras" class="btn-secondary">← Regresar</a>
+    </div>
+
+    <div class="p-5 space-y-5">
+
+      <!-- ── SECCIÓN 1: Datos ── -->
+      <section>
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-5 h-5 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">1</span>
+          <h3 class="text-xs font-bold uppercase tracking-widest text-slate-500">Datos de la Orden</h3>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Proveedor <span class="text-red-500">*</span></label>
+            <select class="form-select" [(ngModel)]="proveedorId">
+              <option value="">Seleccionar proveedor...</option>
+              @for (p of proveedores(); track p.id) {
+                <option [value]="p.id">{{ p.nombre }}{{ p.categoria ? ' — ' + p.categoria : '' }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Fecha Entrega Estimada</label>
+            <input class="form-input" type="date" [(ngModel)]="fechaEntrega" [min]="hoy">
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Observaciones</label>
+            <input class="form-input" [(ngModel)]="observaciones" placeholder="Condiciones de entrega, instrucciones...">
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECCIÓN 2: Productos ── -->
+      <section>
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-5 h-5 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">2</span>
+          <h3 class="text-xs font-bold uppercase tracking-widest text-slate-500">Seleccionar Productos</h3>
+          <span class="text-[11px] text-slate-400 ml-auto">
+            {{ prodsFiltrados().length }} de {{ allProductos().length }} productos
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+          <!-- Panel izquierdo: lista -->
+          <div class="border border-slate-200 rounded-xl overflow-hidden">
+            <!-- Buscador -->
+            <div class="p-3 border-b border-slate-100 bg-slate-50 space-y-2">
+              <div class="relative">
+                <svg class="absolute left-2.5 top-2 w-3.5 h-3.5 text-slate-400 fill-current pointer-events-none" viewBox="0 0 24 24">
+                  <path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                </svg>
+                <input class="form-input pl-8 bg-white text-xs"
+                  placeholder="Filtrar por nombre, código o categoría..."
+                  [ngModel]="buscarProd"
+                  (ngModelChange)="onBuscar($event)"
+                  autocomplete="off">
+                @if (buscarProd) {
+                  <button class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600"
+                    (click)="onBuscar('')">✕</button>
+                }
+              </div>
+              <!-- Filtro categoría -->
+              <select class="form-select text-xs" [(ngModel)]="filtroCategoria" (ngModelChange)="onFiltroCategoria()">
+                <option value="">Todas las categorías</option>
+                @for (cat of categorias(); track cat) {
+                  <option [value]="cat">{{ cat }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Lista productos con paginación de 10 -->
+            @if (loading()) {
+              <div class="flex items-center justify-center py-12 gap-2 text-xs text-slate-400">
+                <span class="inline-block w-4 h-4 border-2 border-slate-200 border-t-primary rounded-full animate-spin"></span>
+                Cargando productos...
+              </div>
+            } @else if (!prodsPagina().length) {
+              <div class="text-center py-10 text-xs text-slate-400">
+                <div class="text-3xl mb-2">📦</div>
+                @if (buscarProd) { Sin resultados para "{{ buscarProd }}" }
+                @else { No hay productos disponibles }
+              </div>
+            } @else {
+              <div class="divide-y divide-slate-50">
+                @for (p of prodsPagina(); track p.id) {
+                  <button type="button"
+                    class="w-full flex items-center gap-3 px-3 py-2.5 transition-colors text-left"
+                    [class.bg-primary\/5]="selProducto()?.id === p.id"
+                    [class.hover:bg-slate-50]="selProducto()?.id !== p.id"
+                    (click)="seleccionarProducto(p)">
+                    <div class="w-1.5 h-8 rounded-full flex-shrink-0"
+                      [class.bg-emerald-400]="p.stock_actual! > (p.stock_minimo || 0)"
+                      [class.bg-amber-400]="p.stock_actual! > 0 && p.stock_actual! <= (p.stock_minimo || 0)"
+                      [class.bg-red-400]="p.stock_actual! <= 0">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-baseline gap-1.5">
+                        <span class="text-xs font-semibold text-slate-800 truncate">{{ p.nombre }}</span>
+                        @if (p.codigo) {
+                          <span class="text-[10px] text-slate-400 font-mono flex-shrink-0">{{ p.codigo }}</span>
+                        }
+                      </div>
+                      <div class="flex items-center gap-2 mt-0.5">
+                        <span class="text-[10px] text-slate-400">{{ p.cat_nombre || 'Sin cat.' }}</span>
+                        <span class="text-[10px] text-slate-300">·</span>
+                        <span class="text-[10px]"
+                          [class.text-emerald-600]="p.stock_actual! > (p.stock_minimo || 0)"
+                          [class.text-amber-600]="p.stock_actual! > 0 && p.stock_actual! <= (p.stock_minimo || 0)"
+                          [class.text-red-500]="p.stock_actual! <= 0">
+                          Stock: {{ p.stock_actual }} {{ p.unidad_medida }}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                      <div class="text-xs font-bold font-mono text-primary">{{ fmtQ(p.precio_venta) }}</div>
+                      <div class="text-[10px] text-slate-400">/ {{ p.unidad_medida }}</div>
+                    </div>
+                    @if (isEnOrden(p.id)) {
+                      <div class="w-5 h-5 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">✓</div>
+                    } @else {
+                      <div class="w-5 h-5 rounded-full border-2 border-slate-200 flex-shrink-0"></div>
+                    }
+                  </button>
+                }
+              </div>
+              <!-- Paginación 10 en 10 -->
+              @if (totalPaginas() > 1) {
+                <div class="flex items-center justify-between px-3 py-2 bg-slate-50 border-t border-slate-200">
+                  <button class="btn-ghost text-xs px-2 h-7" (click)="pagina = pagina - 1"
+                    [disabled]="pagina === 1">‹ Ant.</button>
+                  <span class="text-[11px] text-slate-500">
+                    Página {{ pagina }} de {{ totalPaginas() }}
+                    ({{ prodsFiltrados().length }} productos)
+                  </span>
+                  <button class="btn-ghost text-xs px-2 h-7" (click)="pagina = pagina + 1"
+                    [disabled]="pagina >= totalPaginas()">Sig. ›</button>
+                </div>
+              }
+            }
+          </div>
+
+          <!-- Panel derecho: detalle + carrito -->
+          <div class="space-y-3">
+            @if (selProducto()) {
+              <div class="border-2 border-primary/40 rounded-xl p-4 space-y-3">
+                <div class="flex items-start gap-2">
+                  <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-base flex-shrink-0">📦</div>
+                  <div class="flex-1 min-w-0">
+                    <div class="text-xs font-bold text-slate-800">{{ selProducto()!.nombre }}</div>
+                    <div class="text-[11px] text-slate-500 mt-0.5">
+                      {{ selProducto()!.cat_nombre || '—' }} · {{ selProducto()!.codigo || 'Sin código' }}
+                    </div>
+                  </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                  <div class="bg-slate-50 rounded-lg p-2 border border-slate-100">
+                    <div class="text-[9px] text-slate-400 uppercase font-bold">P. Compra</div>
+                    <div class="text-xs font-mono font-semibold text-slate-600">{{ fmtQ(selProducto()!.precio_compra) }}</div>
+                  </div>
+                  <div class="bg-white rounded-lg p-2 border border-primary/20">
+                    <div class="text-[9px] text-primary uppercase font-bold">Precio Venta</div>
+                    <div class="text-xs font-mono font-bold text-primary">{{ fmtQ(selPrecio) }}</div>
+                  </div>
+                  <div class="bg-slate-50 rounded-lg p-2 border border-slate-100">
+                    <div class="text-[9px] text-slate-400 uppercase font-bold">Stock</div>
+                    <div class="text-xs font-mono font-semibold"
+                      [class.text-emerald-600]="selProducto()!.stock_actual! > 0"
+                      [class.text-red-500]="selProducto()!.stock_actual! <= 0">
+                      {{ selProducto()!.stock_actual }} {{ selProducto()!.unidad_medida }}
+                    </div>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-500 mb-1">CANTIDAD</label>
+                    <div class="flex items-center gap-1">
+                      <button type="button" class="w-7 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold transition-colors"
+                        (click)="selCantidad = Math.max(0.01, selCantidad - 1)">−</button>
+                      <input class="form-input text-center font-mono font-bold flex-1" type="number"
+                        [(ngModel)]="selCantidad" min="0.01" step="1">
+                      <button type="button" class="w-7 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold transition-colors"
+                        (click)="selCantidad = selCantidad + 1">+</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-500 mb-1">PRECIO (Q)</label>
+                    <input class="form-input text-right font-mono" type="number"
+                      [(ngModel)]="selPrecio" min="0.01" step="0.01">
+                  </div>
+                </div>
+                <div class="flex items-center justify-between bg-slate-50 rounded-lg border border-slate-100 px-3 py-2">
+                  <span class="text-xs text-slate-500">Subtotal:</span>
+                  <span class="font-mono font-bold text-primary text-sm">{{ fmtQ(selCantidad * selPrecio) }}</span>
+                </div>
+                <button type="button" class="btn-primary w-full h-9 justify-center text-xs" (click)="agregarItem()">
+                  <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                  Agregar a la orden
+                </button>
+              </div>
+            } @else {
+              <div class="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center text-xs text-slate-400">
+                <div class="text-3xl mb-2">👈</div>
+                Selecciona un producto de la lista para agregarlo a la venta
+              </div>
+            }
+
+            <!-- Orden -->
+            @if (items().length) {
+              <div class="border border-slate-200 rounded-xl overflow-hidden">
+                <div class="bg-slate-50 px-3 py-2 border-b border-slate-200 flex items-center justify-between">
+                  <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                    Orden ({{ items().length }})
+                  </span>
+                  <button type="button" class="text-[11px] text-red-400 hover:text-red-600" (click)="items.set([])">
+                    Limpiar
+                  </button>
+                </div>
+                <div class="divide-y divide-slate-50 max-h-52 overflow-y-auto">
+                  @for (item of items(); track item.producto_id) {
+                    <div class="flex items-center gap-2 px-3 py-2">
+                      <div class="flex-1 min-w-0">
+                        <div class="text-xs font-semibold text-slate-700 truncate">{{ item.nombre }}</div>
+                        <div class="text-[11px] text-slate-400">
+                          {{ item.cantidad }} {{ item.unidad }} × {{ fmtQ(item.precio_unitario) }}
+                        </div>
+                      </div>
+                      <span class="font-mono text-xs font-bold text-primary flex-shrink-0">{{ fmtQ(item.subtotal) }}</span>
+                      <button type="button" class="btn-ghost text-red-400 flex-shrink-0" (click)="removeItem(item)">
+                        <svg class="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                      </button>
+                    </div>
+                  }
+                </div>
+                <div class="bg-slate-50 border-t border-slate-200 px-3 py-2.5 space-y-1">
+                  <div class="flex justify-between text-[11px] text-slate-500">
+                    <span>Subtotal</span><span class="font-mono">{{ fmtQ(subtotal) }}</span>
+                  </div>
+                  <div class="flex justify-between text-[11px] text-slate-500">
+                    <span>IVA 12%</span><span class="font-mono">{{ fmtQ(iva) }}</span>
+                  </div>
+                  <div class="flex justify-between text-sm font-bold text-slate-800 pt-1 border-t border-slate-300">
+                    <span>TOTAL</span>
+                    <span class="font-mono text-primary text-base">{{ fmtQ(total) }}</span>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Acciones ── -->
+      <div class="flex justify-between items-center pt-3 border-t border-slate-100">
+        <div class="text-[11px]"
+          [class.text-red-500]="!items().length"
+          [class.text-emerald-600]="items().length > 0">
+          @if (!proveedorId) { 🔴 Selecciona un proveedor } @else if (!items().length) { 🔴 Agrega al menos un producto }
+          @else { ✅ {{ items().length }} producto(s) · Total: {{ fmtQ(total) }} }
+        </div>
+        <div class="flex gap-2">
+          <a routerLink="/compras" class="btn-secondary">Cancelar</a>
+          <button class="btn-primary h-9 px-6" (click)="save()" [disabled]="saving() || !items().length || !proveedorId">
+            @if (saving()) {
+              <span class="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              Guardando...
+            } @else {
+              💾 Crear Orden de Compra
+            }
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

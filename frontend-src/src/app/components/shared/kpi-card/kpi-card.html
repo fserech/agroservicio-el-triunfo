@@ -1,0 +1,10 @@
+<div class="kpi-card">
+      <div class="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl" [style.background]="kpi.color"></div>
+      <div class="pl-2">
+        <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">{{ kpi.label }}</div>
+        <div class="text-xl font-bold text-slate-800 leading-none">{{ kpi.value }}</div>
+        @if (kpi.sub) {
+          <div class="text-[11px] text-slate-400 mt-1">{{ kpi.sub }}</div>
+        }
+      </div>
+    </div>

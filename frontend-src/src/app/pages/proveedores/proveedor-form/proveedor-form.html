@@ -1,0 +1,48 @@
+<div class="p-4 max-w-3xl mx-auto">
+      <div class="card">
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
+          <h2 class="font-display font-bold text-slate-800">{{ isEdit ? 'Editar Proveedor' : 'Nuevo Proveedor' }}</h2>
+          <a routerLink="/proveedores" class="btn-secondary">← Regresar</a>
+        </div>
+        <div class="p-5">
+          <section>
+            <h3 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 pb-2 border-b border-slate-100 mb-4">Datos del Proveedor</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div class="md:col-span-2"><label class="block text-xs font-semibold text-slate-600 mb-1">Nombre Comercial *</label>
+                <input class="form-input" [(ngModel)]="form.nombre" placeholder="Nombre del proveedor"></div>
+              <div class="md:col-span-2"><label class="block text-xs font-semibold text-slate-600 mb-1">Razón Social</label>
+                <input class="form-input" [(ngModel)]="form.razon_social" placeholder="Razón social legal"></div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">NIT</label>
+                <input class="form-input" [(ngModel)]="form.nit" placeholder="0000000-0"></div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">Categoría</label>
+                <select class="form-select" [(ngModel)]="form.categoria">
+                  @for (c of categorias; track c) { <option>{{ c }}</option> }
+                </select></div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">Contacto</label>
+                <input class="form-input" [(ngModel)]="form.contacto" placeholder="Nombre del contacto"></div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">Teléfono</label>
+                <input class="form-input" [(ngModel)]="form.telefono" placeholder="0000-0000"></div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">Email</label>
+                <input class="form-input" type="email" [(ngModel)]="form.email" placeholder="contacto@proveedor.com"></div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">Departamento</label>
+                <input class="form-input" [(ngModel)]="form.departamento" placeholder="Departamento"></div>
+              <div class="md:col-span-2"><label class="block text-xs font-semibold text-slate-600 mb-1">Dirección</label>
+                <input class="form-input" [(ngModel)]="form.direccion" placeholder="Dirección completa"></div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">Plazo de Crédito (días)</label>
+                <input class="form-input" type="number" [(ngModel)]="form.plazo_credito" min="0"></div>
+              <div class="flex items-center gap-2 mt-1">
+                <input type="checkbox" id="pv-activo" [(ngModel)]="form.activo" class="w-4 h-4 accent-primary">
+                <label for="pv-activo" class="text-xs font-medium text-slate-600 cursor-pointer">Proveedor activo</label>
+              </div>
+            </div>
+          </section>
+          <div class="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
+            <a routerLink="/proveedores" class="btn-secondary">Cancelar</a>
+            <button class="btn-primary h-9 px-5" (click)="save()" [disabled]="saving()">
+              @if (saving()) { <span class="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> }
+              {{ isEdit ? 'Actualizar' : 'Crear Proveedor' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
