@@ -1,11 +1,12 @@
 const router = require('express').Router();
 const pool   = require('../db/pool');
 const auth   = require('../middleware/auth');
+const roles  = require('../middleware/roles');
 
 // GET / — Listar clientes (query optimizado, sin N+1)
 router.get('/', auth, async (req, res) => {
   try {
-    const { buscar = '', tipo = '', page = 1, limit = 15 } = req.query;
+    const { buscar = '', tipo = '', activo = '', page = 1, limit = 15 } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     let where = 'WHERE 1=1';
     const p = [];
@@ -18,9 +19,13 @@ router.get('/', auth, async (req, res) => {
       p.push(tipo);
       where += ` AND c.tipo = $${p.length}`;
     }
+    if (activo !== '') {
+      p.push(activo === 'true');
+      where += ` AND c.activo = $${p.length}`;
+    }
 
     // Un solo query con LEFT JOIN en lugar de 4 subqueries por fila
-    const [cnt, { rows }] = await Promise.all([
+    const [cnt, { rows }, resumen] = await Promise.all([
       pool.query(`SELECT COUNT(*) FROM clientes c ${where}`, p),
       pool.query(`
         SELECT c.*,
@@ -50,14 +55,27 @@ router.get('/', auth, async (req, res) => {
         ${where}
         ORDER BY c.nombre
         LIMIT $${p.length + 1} OFFSET $${p.length + 2}`,
-        [...p, parseInt(limit), offset])
+        [...p, parseInt(limit), offset]),
+      // Totales sobre TODO el conjunto filtrado (no solo la página visible)
+      pool.query(`
+        SELECT COUNT(*)::int AS total,
+               COALESCE(SUM(r.total_compras),0)::float AS facturado,
+               COALESCE(SUM(cb.saldo),0)::float        AS por_cobrar,
+               (COUNT(*) FILTER (WHERE c.credito_maximo > 0))::int AS con_credito
+        FROM clientes c
+        LEFT JOIN (SELECT cliente_id, SUM(total) AS total_compras FROM ventas
+                   WHERE estado IN ('FINALIZED','IN_PROCESS','PENDING') GROUP BY cliente_id) r ON r.cliente_id = c.id
+        LEFT JOIN (SELECT cliente_id, SUM(saldo) AS saldo FROM cuentas_cobrar
+                   WHERE estado IN ('pendiente','parcial','vencida') GROUP BY cliente_id) cb ON cb.cliente_id = c.id
+        ${where}`, p),
     ]);
 
     res.json({
       data:  rows,
       total: parseInt(cnt.rows[0].count),
       page:  parseInt(page),
-      limit: parseInt(limit)
+      limit: parseInt(limit),
+      resumen: resumen.rows[0],
     });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
@@ -145,28 +163,37 @@ router.put('/:id', auth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// DELETE /:id
-router.delete('/:id', auth, async (req, res) => {
+// DELETE /:id — elimina si no tiene historial; si lo tiene responde 409 y ofrece desactivar
+//   DELETE /:id?desactivar=1  → marca activo=false (conserva ventas y cuentas por cobrar)
+router.delete('/:id', auth, roles('admin', 'supervisor'), async (req, res) => {
   try {
     const id = req.params.id;
+    const { rows: cli } = await pool.query('SELECT id, nombre, activo FROM clientes WHERE id=$1', [id]);
+    if (!cli.length) return res.status(404).json({ error: 'Cliente no encontrado' });
 
     const [ventas, cuentas] = await Promise.all([
-      pool.query('SELECT COUNT(*) FROM ventas WHERE cliente_id=$1', [id]),
-      pool.query("SELECT COUNT(*) FROM cuentas_cobrar WHERE cliente_id=$1 AND estado NOT IN ('pagada')", [id])
+      pool.query('SELECT COUNT(*)::int AS n FROM ventas WHERE cliente_id=$1', [id]),
+      pool.query("SELECT COUNT(*)::int AS n, COALESCE(SUM(saldo),0)::float AS saldo FROM cuentas_cobrar WHERE cliente_id=$1 AND estado <> 'pagada'", [id]),
     ]);
+    const nVentas = ventas.rows[0].n, nCuentas = cuentas.rows[0].n, saldo = cuentas.rows[0].saldo;
 
-    if (parseInt(ventas.rows[0].count) > 0)
-      return res.status(400).json({
-        error: `No se puede eliminar: tiene ${ventas.rows[0].count} venta(s) registrada(s)`
+    if (nVentas > 0 || nCuentas > 0) {
+      if (req.query.desactivar === '1') {
+        await pool.query('UPDATE clientes SET activo=false, updated_at=NOW() WHERE id=$1', [id]);
+        return res.json({ ok: true, accion: 'desactivado' });
+      }
+      const partes = [];
+      if (nVentas)  partes.push(`${nVentas} venta(s) registrada(s)`);
+      if (nCuentas) partes.push(`${nCuentas} cuenta(s) por cobrar con saldo de Q ${saldo.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+      return res.status(409).json({
+        error: `No se puede eliminar: tiene ${partes.join(' y ')}`,
+        code: 'HAS_HISTORY', puede_desactivar: true,
+        detalle: { ventas: nVentas, cuentas_pendientes: nCuentas, saldo },
       });
-    if (parseInt(cuentas.rows[0].count) > 0)
-      return res.status(400).json({
-        error: `No se puede eliminar: tiene ${cuentas.rows[0].count} cuenta(s) por cobrar pendiente(s)`
-      });
+    }
 
-    const { rowCount } = await pool.query('DELETE FROM clientes WHERE id=$1', [id]);
-    if (!rowCount) return res.status(404).json({ error: 'Cliente no encontrado' });
-    res.json({ ok: true });
+    await pool.query('DELETE FROM clientes WHERE id=$1', [id]);
+    res.json({ ok: true, accion: 'eliminado' });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

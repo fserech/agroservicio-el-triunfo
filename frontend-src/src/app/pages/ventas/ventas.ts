@@ -65,9 +65,9 @@ export class VentasComponent implements OnInit {
       if (this.hasta)  q += `&hasta=${this.hasta}`;
       const data = await this.api.get<any>(q);
       this.ventas.set(data.data); this.total.set(data.total);
-      const tot  = data.data.reduce((a: number, v: Venta) => a + +v.total, 0);
-      const fin  = data.data.filter((v: Venta) => v.estado === 'FINALIZED').length;
-      const proc = data.data.filter((v: Venta) => v.estado === 'IN_PROCESS' || v.estado === 'PENDING').length;
+      // Totales calculados por el servidor sobre TODAS las ventas filtradas (no solo la página visible)
+      const r = data.resumen || { monto_total: 0, en_proceso: 0, finalizadas: 0 };
+      const tot = r.monto_total, fin = r.finalizadas, proc = r.en_proceso;
       this.kpis.set([
         { label: 'Monto Total',   value: fmtQ(tot),   color: '#00C793' },
         { label: 'Registros',     value: data.total,  color: '#3887BF' },

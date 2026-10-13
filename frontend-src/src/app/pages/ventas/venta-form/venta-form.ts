@@ -75,7 +75,7 @@ export class VentaFormComponent implements OnInit {
     this.loading.set(true);
     try {
       const [cltsRes, prodsRes] = await Promise.all([
-        this.api.get<any>('/clientes?limit=500'),
+        this.api.get<any>('/clientes?limit=500&activo=true'),
         this.api.get<any>('/productos?limit=500&activo=true')
       ]);
       this.clientes.set(Array.isArray(cltsRes) ? cltsRes : (cltsRes.data || []));

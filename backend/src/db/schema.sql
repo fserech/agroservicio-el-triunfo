@@ -341,3 +341,39 @@ BEGIN
   END LOOP;
 END;
 $$ LANGUAGE plpgsql;
+
+-- ─── INTEGRIDAD: reparación de duplicados (idempotente) ──────────────────────
+-- Versiones anteriores del seed se ejecutaban en cada arranque y duplicaban
+-- clientes, proveedores y cuentas por cobrar. Se fusionan SOLO registros idénticos
+-- (mismo nombre, NIT, teléfono, tipo y municipio) conservando el de menor id.
+
+-- Clientes duplicados → reasignar referencias y borrar copias
+UPDATE ventas v SET cliente_id = k.keep_id
+FROM (SELECT id, MIN(id) OVER (PARTITION BY nombre, COALESCE(nit,''), COALESCE(telefono,''), COALESCE(tipo,''), COALESCE(municipio,'')) AS keep_id FROM clientes) k
+WHERE v.cliente_id = k.id AND k.id <> k.keep_id;
+
+UPDATE cuentas_cobrar c SET cliente_id = k.keep_id
+FROM (SELECT id, MIN(id) OVER (PARTITION BY nombre, COALESCE(nit,''), COALESCE(telefono,''), COALESCE(tipo,''), COALESCE(municipio,'')) AS keep_id FROM clientes) k
+WHERE c.cliente_id = k.id AND k.id <> k.keep_id;
+
+DELETE FROM clientes WHERE id IN (
+  SELECT id FROM (SELECT id, MIN(id) OVER (PARTITION BY nombre, COALESCE(nit,''), COALESCE(telefono,''), COALESCE(tipo,''), COALESCE(municipio,'')) AS keep_id FROM clientes) k
+  WHERE id <> keep_id);
+
+-- Proveedores duplicados
+UPDATE compras c SET proveedor_id = k.keep_id
+FROM (SELECT id, MIN(id) OVER (PARTITION BY nombre, COALESCE(nit,''), COALESCE(telefono,''), COALESCE(departamento,'')) AS keep_id FROM proveedores) k
+WHERE c.proveedor_id = k.id AND k.id <> k.keep_id;
+
+DELETE FROM proveedores WHERE id IN (
+  SELECT id FROM (SELECT id, MIN(id) OVER (PARTITION BY nombre, COALESCE(nit,''), COALESCE(telefono,''), COALESCE(departamento,'')) AS keep_id FROM proveedores) k
+  WHERE id <> keep_id);
+
+-- Una sola cuenta por cobrar por venta (se conserva la que tenga más pagos)
+DELETE FROM cuentas_cobrar WHERE id IN (
+  SELECT id FROM (
+    SELECT id, ROW_NUMBER() OVER (PARTITION BY venta_id ORDER BY monto_pagado DESC, id ASC) AS rn
+    FROM cuentas_cobrar WHERE venta_id IS NOT NULL
+  ) t WHERE rn > 1);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_cuentas_venta ON cuentas_cobrar(venta_id) WHERE venta_id IS NOT NULL;

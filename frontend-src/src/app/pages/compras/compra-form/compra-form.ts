@@ -78,7 +78,7 @@ export class CompraFormComponent implements OnInit {
     this.loading.set(true);
     try {
       const [provsRes, prodsRes] = await Promise.all([
-        this.api.get<any>('/proveedores'),
+        this.api.get<any>('/proveedores?activo=true'),
         this.api.get<any>('/productos?limit=500&activo=true')
       ]);
       this.proveedores.set(Array.isArray(provsRes) ? provsRes : (provsRes.data || []));

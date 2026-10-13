@@ -60,9 +60,9 @@ export class ComprasComponent implements OnInit {
       if (this.estado) q += `&estado=${this.estado}`;
       const data = await this.api.get<any>(q);
       this.compras.set(data.data); this.total.set(data.total);
-      const pend   = data.data.filter((c: Compra) => c.estado === 'pendiente').length;
-      const trans  = data.data.filter((c: Compra) => c.estado === 'en_transito' || c.estado === 'aprobada').length;
-      const montoT = data.data.reduce((a: number, c: Compra) => a + +c.total, 0);
+      // Totales calculados por el servidor sobre TODAS las órdenes filtradas (no solo la página visible)
+      const r = data.resumen || { pendientes: 0, en_proceso: 0, monto_total: 0 };
+      const pend = r.pendientes, trans = r.en_proceso, montoT = r.monto_total;
       this.kpis.set([
         { label: 'Órdenes',     value: data.total,    color: '#00C793' },
         { label: 'Pendientes',  value: pend,          color: '#f59e0b' },

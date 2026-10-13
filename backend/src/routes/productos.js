@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const pool   = require('../db/pool');
 const auth   = require('../middleware/auth');
+const roles  = require('../middleware/roles');
 const multer = require('multer');
 const XLSX   = require('xlsx');
 
@@ -54,6 +55,15 @@ router.get('/', auth, async (req, res) => {
     if (activo!==''){ p.push(activo==='true'); where += ` AND p.activo=$${p.length}`; }
 
     const cnt = await pool.query(`SELECT COUNT(*) FROM productos p ${where}`, p);
+    // Totales sobre TODO el conjunto filtrado (misma regla de stock crítico que Inventario)
+    const resumen = await pool.query(
+      `SELECT COUNT(*)::int AS total,
+              COALESCE(ROUND(AVG(CASE WHEN p.precio_venta > 0
+                THEN ((p.precio_venta - p.precio_compra) / p.precio_venta) * 100 ELSE 0 END), 1), 0)::float AS margen_prom,
+              (COUNT(*) FILTER (WHERE COALESCE(i.stock_actual,0) <= COALESCE(i.stock_minimo,0)))::int AS criticos
+       FROM productos p
+       LEFT JOIN inventario i ON i.producto_id = p.id AND i.sucursal_id = 1
+       ${where}`, p);
     const { rows } = await pool.query(
       `SELECT p.*, c.nombre AS cat_nombre,
          COALESCE(i.stock_actual,0)   AS stock_actual,
@@ -75,7 +85,7 @@ router.get('/', auth, async (req, res) => {
        ${where} ORDER BY p.nombre
        LIMIT $${p.length+1} OFFSET $${p.length+2}`,
       [...p, parseInt(limit), offset]);
-    res.json({ data: rows, total: parseInt(cnt.rows[0].count), page: parseInt(page) });
+    res.json({ data: rows, total: parseInt(cnt.rows[0].count), page: parseInt(page), resumen: resumen.rows[0] });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -161,40 +171,39 @@ router.put('/:id', auth, async (req, res) => {
 });
 
 // ─── DELETE /:id — Eliminar producto ─────────────────────────────────────
-router.delete('/:id', auth, async (req, res) => {
+// DELETE /:id — elimina si no tiene ventas, compras ni movimientos; si los tiene responde 409 y ofrece desactivar
+//   DELETE /:id?desactivar=1  → marca activo=false (conserva el historial y los reportes)
+router.delete('/:id', auth, roles('admin', 'supervisor'), async (req, res) => {
   try {
     const id = req.params.id;
+    const { rows: pr } = await pool.query('SELECT id FROM productos WHERE id=$1', [id]);
+    if (!pr.length) return res.status(404).json({ error: 'Producto no encontrado' });
 
-    // Verificar si tiene ventas
-    const { rows: dv } = await pool.query(
-      'SELECT COUNT(*) FROM detalle_ventas WHERE producto_id=$1', [id]);
-    if (parseInt(dv[0].count) > 0)
-      return res.status(400).json({
-        error: `No se puede eliminar: el producto aparece en ${dv[0].count} venta(s)`
+    const [dv, dc, mi] = await Promise.all([
+      pool.query('SELECT COUNT(*)::int AS n FROM detalle_ventas WHERE producto_id=$1', [id]),
+      pool.query('SELECT COUNT(*)::int AS n FROM detalle_compras WHERE producto_id=$1', [id]),
+      pool.query('SELECT COUNT(*)::int AS n FROM movimientos_inventario WHERE producto_id=$1', [id]),
+    ]);
+    const ventas = dv.rows[0].n, compras = dc.rows[0].n, movs = mi.rows[0].n;
+
+    if (ventas + compras + movs > 0) {
+      if (req.query.desactivar === '1') {
+        await pool.query('UPDATE productos SET activo=false, updated_at=NOW() WHERE id=$1', [id]);
+        return res.json({ ok: true, accion: 'desactivado' });
+      }
+      const partes = [];
+      if (ventas)  partes.push(`${ventas} venta(s)`);
+      if (compras) partes.push(`${compras} orden(es) de compra`);
+      if (movs)    partes.push(`${movs} movimiento(s) de inventario`);
+      return res.status(409).json({
+        error: `No se puede eliminar: el producto aparece en ${partes.join(', ')}`,
+        code: 'HAS_HISTORY', puede_desactivar: true, detalle: { ventas, compras, movimientos: movs },
       });
+    }
 
-    // Verificar si tiene compras
-    const { rows: dc } = await pool.query(
-      'SELECT COUNT(*) FROM detalle_compras WHERE producto_id=$1', [id]);
-    if (parseInt(dc[0].count) > 0)
-      return res.status(400).json({
-        error: `No se puede eliminar: el producto aparece en ${dc[0].count} orden(es) de compra`
-      });
-
-    // Verificar si tiene movimientos en inventario
-    const { rows: mi } = await pool.query(
-      'SELECT COUNT(*) FROM movimientos_inventario WHERE producto_id=$1', [id]);
-    if (parseInt(mi[0].count) > 0)
-      return res.status(400).json({
-        error: `No se puede eliminar: tiene ${mi[0].count} movimiento(s) de inventario registrado(s). Desactívalo en su lugar.`
-      });
-
-    // Eliminar inventario y luego producto
     await pool.query('DELETE FROM inventario WHERE producto_id=$1', [id]);
-    const { rowCount } = await pool.query('DELETE FROM productos WHERE id=$1', [id]);
-    if (!rowCount) return res.status(404).json({ error: 'Producto no encontrado' });
-
-    res.json({ ok: true, message: 'Producto eliminado correctamente' });
+    await pool.query('DELETE FROM productos WHERE id=$1', [id]);
+    res.json({ ok: true, accion: 'eliminado' });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

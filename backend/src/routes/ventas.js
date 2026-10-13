@@ -13,6 +13,13 @@ router.get('/', auth, async (req, res) => {
     if (hasta)      { p.push(hasta);      where += ` AND v.fecha::date<=$${p.length}`; }
     if (cliente_id) { p.push(cliente_id); where += ` AND v.cliente_id=$${p.length}`; }
     const cnt = await pool.query(`SELECT COUNT(*) FROM ventas v ${where}`, p);
+    // Totales sobre TODO el conjunto filtrado (no solo la página). Las anuladas no suman al monto,
+    // igual que en el dashboard, salvo que el filtro sea precisamente "anuladas".
+    const resumen = await pool.query(
+      `SELECT COALESCE(SUM(v.total) FILTER (WHERE ${estado === 'CANCEL' ? 'TRUE' : "v.estado <> 'CANCEL'"}),0)::float AS monto_total,
+              (COUNT(*) FILTER (WHERE v.estado IN ('IN_PROCESS','PENDING')))::int AS en_proceso,
+              (COUNT(*) FILTER (WHERE v.estado = 'FINALIZED'))::int AS finalizadas
+       FROM ventas v ${where}`, p);
     const { rows } = await pool.query(
       `SELECT v.*,
          c.nombre AS cliente_nombre, c.nit AS cliente_nit,
@@ -23,7 +30,7 @@ router.get('/', auth, async (req, res) => {
        ${where} ORDER BY v.fecha DESC
        LIMIT $${p.length+1} OFFSET $${p.length+2}`,
       [...p, parseInt(limit), offset]);
-    res.json({ data: rows, total: parseInt(cnt.rows[0].count), page: parseInt(page) });
+    res.json({ data: rows, total: parseInt(cnt.rows[0].count), page: parseInt(page), resumen: resumen.rows[0] });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

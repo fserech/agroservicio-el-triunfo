@@ -29,7 +29,11 @@ export class ApiService {
     let data: any;
     try { data = await r.json(); } catch { data = {}; }
 
-    if (!r.ok) throw new Error(data.error || `Error ${r.status}`);
+    if (!r.ok) {
+      const err: any = new Error(data.error || `Error ${r.status}`);
+      err.status = r.status; err.code = data.code; err.data = data;   // permite reaccionar a códigos (p. ej. HAS_HISTORY)
+      throw err;
+    }
     return data as T;
   }
 

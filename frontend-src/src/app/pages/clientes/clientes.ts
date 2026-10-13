@@ -9,13 +9,15 @@ import { BadgeComponent, tipoClienteVariant, tipoClienteLabel } from '../../comp
 import { PaginationComponent } from '../../components/shared/pagination/pagination';
 import { EmptyStateComponent } from '../../components/shared/empty-state/empty-state';
 import { ActionButtonsComponent } from '../../components/shared/action-buttons/action-buttons';
+import { EliminarDialogComponent } from '../../components/shared/eliminar-dialog/eliminar-dialog';
+import { AuthService } from '../../services/auth';
 import { Cliente, KpiData } from '../../models';
 import { fmtQ } from '../../utils/format';
 
 @Component({
   selector: 'app-clientes',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, KpiCardComponent, BadgeComponent, PaginationComponent, EmptyStateComponent, ActionButtonsComponent],
+  imports: [CommonModule, FormsModule, RouterModule, KpiCardComponent, BadgeComponent, PaginationComponent, EmptyStateComponent, ActionButtonsComponent, EliminarDialogComponent],
   templateUrl: './clientes.html',
 })
 export class ClientesComponent implements OnInit {
@@ -29,10 +31,27 @@ export class ClientesComponent implements OnInit {
   tipo     = '';
 
   fmtQ        = fmtQ;
+  botones(c: Cliente): any[] {
+    const b: any[] = [{ label: 'Editar', type: 'edit', icon: 'edit', routerLink: ['/clientes', c.id, 'editar'] }];
+    if (this.puedeEliminar) b.push({ label: 'Eliminar', type: 'delete', icon: 'delete' });
+    return b;
+  }
+  onAction(type: string, c: Cliente) { if (type === 'delete') this.pedirEliminar(c.id, c.nombre); }
   tipoVariant = tipoClienteVariant;
   tipoLabel   = tipoClienteLabel;
 
-  constructor(private api: ApiService, private toast: ToastService) {}
+  eliminando = signal<{ endpoint: string; nombre: string } | null>(null);
+  get puedeEliminar() { return ['admin', 'supervisor'].includes(this.auth.user()?.rol || ''); }
+
+  constructor(private api: ApiService, private toast: ToastService, private auth: AuthService) {}
+
+  pedirEliminar(id: number, nombre: string) { this.eliminando.set({ endpoint: `/clientes/${id}`, nombre }); }
+  async alEliminar(r: 'eliminado' | 'desactivado') {
+    const n = this.eliminando()?.nombre;
+    this.eliminando.set(null);
+    this.toast.success(r === 'eliminado' ? `"${n}" eliminado` : `"${n}" desactivado (se conserva su historial)`);
+    await this.load(this.page());
+  }
   ngOnInit() { this.load(1); }
 
   async load(p: number) {
@@ -44,9 +63,9 @@ export class ClientesComponent implements OnInit {
       const data = await this.api.get<any>(q);
       this.clientes.set(data.data);
       this.total.set(data.total);
-      const tot   = data.data.reduce((a: number, c: Cliente) => a + +(c.total_compras || 0), 0);
-      const saldo = data.data.reduce((a: number, c: Cliente) => a + +(c.saldo_pendiente || 0), 0);
-      const cc    = data.data.filter((c: Cliente) => +(c.credito_maximo || 0) > 0).length;
+      // Totales calculados por el servidor sobre TODOS los clientes (no solo la página visible)
+      const r = data.resumen || { facturado: 0, por_cobrar: 0, con_credito: 0 };
+      const tot = r.facturado, saldo = r.por_cobrar, cc = r.con_credito;
       this.kpis.set([
         { label: 'Total Clientes', value: data.total,    color: '#00C793' },
         { label: 'Facturado',      value: fmtQ(tot),     color: '#3887BF' },

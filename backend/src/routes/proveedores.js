@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const pool   = require('../db/pool');
 const auth   = require('../middleware/auth');
+const roles  = require('../middleware/roles');
 
 // GET / — Lista con totales de compras (optimizado)
 router.get('/', auth, async (req, res) => {
@@ -86,18 +87,28 @@ router.put('/:id', auth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// DELETE /:id
-router.delete('/:id', auth, async (req, res) => {
+// DELETE /:id — elimina si no tiene órdenes de compra; si las tiene responde 409 y ofrece desactivar
+//   DELETE /:id?desactivar=1  → marca activo=false (conserva el historial de compras)
+router.delete('/:id', auth, roles('admin', 'supervisor'), async (req, res) => {
   try {
-    const { rows: compras } = await pool.query(
-      'SELECT COUNT(*) FROM compras WHERE proveedor_id=$1', [req.params.id]);
-    if (parseInt(compras[0].count) > 0)
-      return res.status(400).json({
-        error: `No se puede eliminar: tiene ${compras[0].count} orden(es) de compra asociada(s)`
+    const id = req.params.id;
+    const { rows: pv } = await pool.query('SELECT id FROM proveedores WHERE id=$1', [id]);
+    if (!pv.length) return res.status(404).json({ error: 'Proveedor no encontrado' });
+
+    const { rows: c } = await pool.query('SELECT COUNT(*)::int AS n FROM compras WHERE proveedor_id=$1', [id]);
+    if (c[0].n > 0) {
+      if (req.query.desactivar === '1') {
+        await pool.query('UPDATE proveedores SET activo=false, updated_at=NOW() WHERE id=$1', [id]);
+        return res.json({ ok: true, accion: 'desactivado' });
+      }
+      return res.status(409).json({
+        error: `No se puede eliminar: tiene ${c[0].n} orden(es) de compra asociada(s)`,
+        code: 'HAS_HISTORY', puede_desactivar: true, detalle: { ordenes: c[0].n },
       });
-    const { rowCount } = await pool.query('DELETE FROM proveedores WHERE id=$1', [req.params.id]);
-    if (!rowCount) return res.status(404).json({ error: 'Proveedor no encontrado' });
-    res.json({ ok: true });
+    }
+
+    await pool.query('DELETE FROM proveedores WHERE id=$1', [id]);
+    res.json({ ok: true, accion: 'eliminado' });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

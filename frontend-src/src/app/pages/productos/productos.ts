@@ -9,13 +9,15 @@ import { BadgeComponent, stockVariant, stockLabel } from '../../components/share
 import { PaginationComponent } from '../../components/shared/pagination/pagination';
 import { EmptyStateComponent } from '../../components/shared/empty-state/empty-state';
 import { ActionButtonsComponent } from '../../components/shared/action-buttons/action-buttons';
+import { EliminarDialogComponent } from '../../components/shared/eliminar-dialog/eliminar-dialog';
+import { AuthService } from '../../services/auth';
 import { Producto, Categoria, KpiData } from '../../models';
 import { fmtQ, fmtN } from '../../utils/format';
 
 @Component({
   selector: 'app-productos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, KpiCardComponent, BadgeComponent, PaginationComponent, EmptyStateComponent, ActionButtonsComponent],
+  imports: [CommonModule, FormsModule, RouterModule, KpiCardComponent, BadgeComponent, PaginationComponent, EmptyStateComponent, ActionButtonsComponent, EliminarDialogComponent],
   templateUrl: './productos.html',
 })
 export class ProductosComponent implements OnInit {
@@ -36,9 +38,26 @@ export class ProductosComponent implements OnInit {
   importResult = signal<{ created: number; updated: number; errors: number; errorDetails?: string[] } | null>(null);
 
   fmtQ = fmtQ; fmtN = fmtN;
+  botones(p: Producto): any[] {
+    const b: any[] = [{ label: 'Editar', type: 'edit', icon: 'edit', routerLink: ['/productos', p.id, 'editar'] }];
+    if (this.puedeEliminar) b.push({ label: 'Eliminar', type: 'delete', icon: 'delete' });
+    return b;
+  }
+  onAction(type: string, p: Producto) { if (type === 'delete') this.pedirEliminar(p.id, p.nombre); }
   sVariant = stockVariant; sLabel = stockLabel;
 
-  constructor(private api: ApiService, private toast: ToastService) {}
+  eliminando = signal<{ endpoint: string; nombre: string } | null>(null);
+  get puedeEliminar() { return ['admin', 'supervisor'].includes(this.auth.user()?.rol || ''); }
+
+  constructor(private api: ApiService, private toast: ToastService, private auth: AuthService) {}
+
+  pedirEliminar(id: number, nombre: string) { this.eliminando.set({ endpoint: `/productos/${id}`, nombre }); }
+  async alEliminar(r: 'eliminado' | 'desactivado') {
+    const n = this.eliminando()?.nombre;
+    this.eliminando.set(null);
+    this.toast.success(r === 'eliminado' ? `"${n}" eliminado` : `"${n}" desactivado (se conserva su historial)`);
+    await this.load(this.page());
+  }
 
   async ngOnInit() {
     try { this.categorias.set(await this.api.get<Categoria[]>('/categorias')); } catch {}
@@ -53,9 +72,9 @@ export class ProductosComponent implements OnInit {
       if (this.catId)  q += `&categoria=${this.catId}`;
       const data = await this.api.get<any>(q);
       this.productos.set(data.data); this.total.set(data.total);
-      const m     = data.data.map((p: Producto) => +(p.margen || 0));
-      const mProm = m.length ? (m.reduce((a: number, b: number) => a + b, 0) / m.length).toFixed(1) : 0;
-      const crit  = data.data.filter((p: Producto) => p.estado_stock === 'critico' || p.estado_stock === 'sin_stock').length;
+      // Totales calculados por el servidor sobre TODOS los productos filtrados (no solo la página)
+      const r = data.resumen || { margen_prom: 0, criticos: 0 };
+      const mProm = (+r.margen_prom).toFixed(1), crit = r.criticos;
       this.kpis.set([
         { label: 'Productos',     value: data.total,  color: '#00C793' },
         { label: 'Margen Prom.',  value: mProm + '%', color: '#f59e0b' },

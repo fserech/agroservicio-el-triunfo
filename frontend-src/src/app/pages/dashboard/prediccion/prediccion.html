@@ -1,0 +1,395 @@
+<div class="space-y-4">
+
+  <!-- ══ Barra de control ══ -->
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h3 class="text-sm font-bold text-slate-800">¿Qué productos se van a vender más?</h3>
+      <p class="text-[11px] text-slate-400 mt-0.5">Proyección de demanda a 30 días basada en el historial real de ventas</p>
+    </div>
+    <div class="flex items-center gap-2 text-[11px] text-slate-500">
+      Historial analizado
+      <div class="inline-flex p-0.5 bg-slate-100 rounded-lg">
+        @for (s of [12, 16, 26]; track s) {
+          <button class="px-2.5 py-1 rounded-md font-semibold transition-all"
+            [class]="semanas() === s ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+            (click)="semanas.set(s)">{{ s }} sem</button>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="px-3 py-2 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700">⚠️ {{ error() }}</div>
+  }
+
+  @if (advertenciaHistorial()) {
+    <div class="flex items-start gap-2.5 px-3.5 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800">
+      <span class="text-base leading-none">⏳</span>
+      <div><b>Historial corto.</b> {{ advertenciaHistorial() }}</div>
+    </div>
+  }
+
+  <!-- ══ Hallazgos ══ -->
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+    @if (loading()) {
+      @for (i of [1,2,3,4]; track i) { <div class="skeleton h-28 rounded-xl"></div> }
+    } @else if (data()) {
+
+      <!-- Mayor demanda -->
+      <button class="text-left bg-white border border-slate-200 rounded-xl p-3.5 hover:shadow-md hover:border-slate-300 transition-all relative overflow-hidden"
+        (click)="masDemanda() && sel.set(masDemanda())">
+        <div class="absolute left-0 inset-y-0 w-1 bg-amber-400"></div>
+        <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">🏆 Mayor demanda proyectada</div>
+        @if (masDemanda(); as p) {
+          <div class="mt-1.5 text-sm font-bold text-slate-800 truncate">{{ p.nombre }}</div>
+          <div class="mt-0.5 text-xl font-bold text-slate-800 tabular-nums">{{ fmtQk(p.ingreso_proy_30d) }}</div>
+          <div class="text-[11px] text-slate-400">≈ {{ r0(p.demanda_30d) }} {{ p.unidad }} en 30 días</div>
+        } @else { <div class="mt-2 text-xs text-slate-400">Sin datos</div> }
+      </button>
+
+      <!-- Mayor impulso -->
+      <button class="text-left bg-white border border-slate-200 rounded-xl p-3.5 hover:shadow-md hover:border-slate-300 transition-all relative overflow-hidden"
+        (click)="mayorImpulso() && sel.set(mayorImpulso())">
+        <div class="absolute left-0 inset-y-0 w-1 bg-emerald-500"></div>
+        <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">🚀 Mayor impulso</div>
+        @if (mayorImpulso(); as p) {
+          <div class="mt-1.5 text-sm font-bold text-slate-800 truncate">{{ p.nombre }}</div>
+          <div class="mt-0.5 text-xl font-bold text-emerald-600 tabular-nums">{{ fmtDelta(p.tendencia_pct) }}</div>
+          <div class="text-[11px] text-slate-400">últimas 4 semanas vs 4 previas</div>
+        } @else { <div class="mt-2 text-xs text-slate-400">Ningún producto en crecimiento</div> }
+      </button>
+
+      <!-- Riesgo de quiebre -->
+      <button class="text-left bg-white border border-slate-200 rounded-xl p-3.5 hover:shadow-md hover:border-slate-300 transition-all relative overflow-hidden"
+        (click)="fRiesgo.set('alerta'); sortKey.set('score')">
+        <div class="absolute left-0 inset-y-0 w-1 bg-rose-500"></div>
+        <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">⚠️ Riesgo de quiebre</div>
+        <div class="mt-1.5 text-xl font-bold tabular-nums" [class]="enRiesgo().length ? 'text-rose-600' : 'text-emerald-600'">
+          {{ enRiesgo().length }} <span class="text-xs font-medium text-slate-400">productos</span>
+        </div>
+        <div class="text-[11px] text-slate-400 truncate">
+          @if (enRiesgo().length) { Prioridad: {{ enRiesgo()[0].nombre }} } @else { Stock sano para el mes }
+        </div>
+      </button>
+
+      <!-- Inversión sugerida -->
+      <div class="bg-white border border-slate-200 rounded-xl p-3.5 relative overflow-hidden">
+        <div class="absolute left-0 inset-y-0 w-1 bg-violet-500"></div>
+        @if (data()!.puede_ver_margen) {
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">🛒 Inversión sugerida en compras</div>
+          <div class="mt-1.5 text-xl font-bold text-slate-800 tabular-nums">{{ fmtQk(data()!.resumen.inversion_sugerida) }}</div>
+          <div class="text-[11px] text-slate-400">para cubrir 30 días + stock mínimo</div>
+        } @else {
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">📦 Inventario inmovilizado</div>
+          <div class="mt-1.5 text-xl font-bold text-slate-800 tabular-nums">{{ inmovilizado().length }} <span class="text-xs font-medium text-slate-400">productos</span></div>
+          <div class="text-[11px] text-slate-400">con exceso o sin rotación</div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- ══ Gráficas ══ -->
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+    <section class="card p-4">
+      <header class="mb-3">
+        <h3 class="text-xs font-bold text-slate-700">Cambio de demanda proyectado</h3>
+        <p class="text-[11px] text-slate-400 mt-0.5">Próximas 4 semanas vs últimas 4 · productos con mejor score</p>
+      </header>
+      @if (loading()) { <div class="skeleton h-80 rounded-lg"></div> }
+      @else if (!cambioCfg()) { <div class="h-80 flex items-center justify-center text-xs text-slate-400">Sin datos suficientes</div> }
+      @else { <div class="h-80"><app-chart [config]="cambioCfg()" /></div> }
+    </section>
+
+    <section class="card p-4">
+      <header class="mb-3">
+        <h3 class="text-xs font-bold text-slate-700">Matriz de oportunidad</h3>
+        <p class="text-[11px] text-slate-400 mt-0.5">
+          Arriba a la derecha = crecen y dejan buen margen · tamaño = ventas proyectadas · clic para ver detalle
+        </p>
+      </header>
+      @if (loading()) { <div class="skeleton h-80 rounded-lg"></div> }
+      @else if (!burbujaCfg()) { <div class="h-80 flex items-center justify-center text-xs text-slate-400">Sin datos suficientes</div> }
+      @else { <div class="h-80"><app-chart [config]="burbujaCfg()" /></div> }
+    </section>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+    <section class="card p-4 xl:col-span-2">
+      <header class="flex items-start justify-between gap-2 mb-3">
+        <div>
+          <h3 class="text-xs font-bold text-slate-700">Análisis Pareto (ABC)</h3>
+          <p class="text-[11px] text-slate-400 mt-0.5">Pocos productos generan la mayor parte de las ventas · top 15</p>
+        </div>
+        <div class="hidden sm:flex items-center gap-3 text-[10px] text-slate-500">
+          <span class="flex items-center gap-1"><i class="w-2 h-2 rounded-sm bg-[#00C793]"></i>A</span>
+          <span class="flex items-center gap-1"><i class="w-2 h-2 rounded-sm bg-[#3887BF]"></i>B</span>
+          <span class="flex items-center gap-1"><i class="w-2 h-2 rounded-sm bg-slate-300"></i>C</span>
+          <span class="flex items-center gap-1"><i class="w-3 h-0.5 bg-amber-500"></i>% acumulado</span>
+        </div>
+      </header>
+      @if (loading()) { <div class="skeleton h-72 rounded-lg"></div> }
+      @else if (!paretoCfg()) { <div class="h-72 flex items-center justify-center text-xs text-slate-400">Sin ventas en el periodo</div> }
+      @else { <div class="h-72"><app-chart [config]="paretoCfg()" /></div> }
+    </section>
+
+    <section class="card p-4">
+      <header class="mb-3">
+        <h3 class="text-xs font-bold text-slate-700">Clasificación del catálogo</h3>
+        <p class="text-[11px] text-slate-400 mt-0.5">Haz clic en una clase para filtrar la tabla</p>
+      </header>
+      @if (loading()) { <div class="skeleton h-72 rounded-lg"></div> } @else {
+        <ul class="space-y-1.5">
+          @for (c of clasesResumen(); track c.k) {
+            <li>
+              <button class="w-full flex items-center gap-2.5 p-2 rounded-lg hover:bg-slate-50 transition-colors text-left"
+                [class.bg-slate-50]="fClase() === c.k" (click)="fClase.set(fClase() === c.k ? '' : c.k)">
+                <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" [style.background]="c.color"></span>
+                <span class="flex-1 min-w-0">
+                  <span class="block text-xs font-semibold text-slate-700">{{ c.label }}</span>
+                  <span class="block text-[10px] text-slate-400 truncate">{{ c.desc }}</span>
+                </span>
+                <span class="text-sm font-bold text-slate-700 tabular-nums">{{ c.n }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+        <div class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-3 gap-2 text-center">
+          @for (a of abcResumen(); track a.k) {
+            <div class="rounded-lg bg-slate-50 py-2">
+              <div class="text-[10px] font-semibold text-slate-400">Clase {{ a.k }}</div>
+              <div class="text-sm font-bold text-slate-700 tabular-nums">{{ a.n }}</div>
+              <div class="text-[10px] text-slate-400">{{ fmtPct(a.pct, 0) }} ventas</div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  </div>
+
+  <!-- ══ Tabla de ranking ══ -->
+  <section class="card">
+    <header class="p-4 pb-3 flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h3 class="text-xs font-bold text-slate-700">Ranking de productos y plan de reposición</h3>
+        <p class="text-[11px] text-slate-400 mt-0.5">
+          {{ filtrados().length }} de {{ productos().length }} productos · haz clic en una fila para ver su proyección
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <input class="form-input !w-48" type="search" placeholder="Buscar producto o código…"
+          [value]="q()" (input)="q.set($any($event.target).value)" />
+        <select class="form-select !w-40" [value]="fCategoria()" (change)="fCategoria.set($any($event.target).value)">
+          <option value="">Todas las categorías</option>
+          @for (c of categorias(); track c) { <option [value]="c">{{ c }}</option> }
+        </select>
+        <select class="form-select !w-36" [value]="fClase()" (change)="fClase.set($any($event.target).value)">
+          <option value="">Todas las clases</option>
+          @for (c of clasesLista; track c) { <option [value]="c" [selected]="fClase() === c">{{ CLASES[c].label }}</option> }
+        </select>
+        <select class="form-select !w-40" [value]="fRiesgo()" (change)="fRiesgo.set($any($event.target).value)">
+          <option value="">Todo el stock</option>
+          <option value="alerta" [selected]="fRiesgo() === 'alerta'">⚠️ Requieren reposición</option>
+          <option value="exceso">Exceso / lento</option>
+          <option value="ok">Saludable</option>
+        </select>
+        @if (hayFiltros()) { <button class="btn-secondary" (click)="limpiar()">Limpiar</button> }
+      </div>
+    </header>
+
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[1000px]">
+        <thead>
+          <tr>
+            <th class="table-th w-10 text-center">#</th>
+            <th class="table-th cursor-pointer select-none" (click)="ordenar('nombre')">Producto {{ flecha('nombre') }}</th>
+            <th class="table-th cursor-pointer select-none w-36" (click)="ordenar('score')"
+              title="Potencial 0–100: demanda proyectada, tendencia, margen y constancia">Score {{ flecha('score') }}</th>
+            <th class="table-th">Clase</th>
+            <th class="table-th cursor-pointer select-none" (click)="ordenar('tendencia_pct')">Tendencia {{ flecha('tendencia_pct') }}</th>
+            <th class="table-th w-32">Ventas semanales</th>
+            <th class="table-th cursor-pointer select-none text-right" (click)="ordenar('demanda_30d')">Demanda 30 d {{ flecha('demanda_30d') }}</th>
+            <th class="table-th cursor-pointer select-none text-right" (click)="ordenar('cobertura_dias')">Stock · cobertura {{ flecha('cobertura_dias') }}</th>
+            <th class="table-th">Estado</th>
+            <th class="table-th cursor-pointer select-none text-right" (click)="ordenar('sugerido')">Reponer {{ flecha('sugerido') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (i of [1,2,3,4,5,6]; track i) {
+              <tr><td class="table-td" colspan="10"><div class="skeleton h-8 w-full"></div></td></tr>
+            }
+          } @else if (!visibles().length) {
+            <tr><td class="table-td text-center py-10 text-slate-400" colspan="10">
+              <div class="text-2xl mb-1">🔍</div>Ningún producto coincide con los filtros
+            </td></tr>
+          } @else {
+            @for (p of visibles(); track p.id) {
+              @let ex = extra().get(p.id)!;
+              <tr class="table-tr cursor-pointer" tabindex="0" (click)="sel.set(p)" (keydown.enter)="sel.set(p)">
+                <td class="table-td text-center text-slate-400 font-mono">{{ ex.rank }}</td>
+                <td class="table-td">
+                  <div class="flex items-center gap-2">
+                    <div class="min-w-0">
+                      <div class="font-semibold text-slate-800 truncate max-w-[220px]">{{ p.nombre }}</div>
+                      <div class="text-[10px] text-slate-400">{{ p.codigo }} · {{ p.categoria }}</div>
+                    </div>
+                    @if (p.abc) {
+                      <span class="px-1.5 py-0.5 rounded text-[9px] font-bold flex-shrink-0"
+                        [class]="p.abc === 'A' ? 'bg-emerald-50 text-emerald-700' : p.abc === 'B' ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-500'">{{ p.abc }}</span>
+                    }
+                  </div>
+                </td>
+                <td class="table-td">
+                  <div class="flex items-center gap-2">
+                    <div class="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                      <div class="h-full rounded-full" [style.width.%]="p.score"
+                        [style.background]="p.score >= 70 ? '#00C793' : p.score >= 45 ? '#3887BF' : '#cbd5e1'"></div>
+                    </div>
+                    <span class="w-6 text-right font-bold text-slate-700 tabular-nums">{{ p.score }}</span>
+                  </div>
+                </td>
+                <td class="table-td">
+                  <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold ring-1 ring-inset whitespace-nowrap" [class]="CLASES[p.clase].badge">{{ CLASES[p.clase].label }}</span>
+                </td>
+                <td class="table-td tabular-nums font-semibold whitespace-nowrap"
+                  [class]="p.clase === 'sin_rotacion' ? 'text-slate-300' : p.tendencia_pct >= 5 ? 'text-emerald-600' : p.tendencia_pct <= -5 ? 'text-rose-600' : 'text-slate-500'">
+                  @if (p.clase === 'sin_rotacion') { — } @else {
+                    {{ p.tendencia_pct >= 5 ? '▲' : p.tendencia_pct <= -5 ? '▼' : '■' }} {{ fmtDelta(p.tendencia_pct) }}
+                  }
+                </td>
+                <td class="table-td">
+                  <div class="w-28 h-7"><app-sparkline [values]="p.serie" [forecast]="ex.fc" [color]="CLASES[p.clase].color" /></div>
+                </td>
+                <td class="table-td text-right">
+                  <div class="font-bold text-slate-800 tabular-nums">{{ r0(p.demanda_30d) }} <span class="text-[10px] font-normal text-slate-400">{{ p.unidad }}</span></div>
+                  <div class="text-[10px] text-slate-400 tabular-nums">{{ r0(p.demanda_min) }}–{{ r0(p.demanda_max) }}</div>
+                </td>
+                <td class="table-td text-right">
+                  <div class="font-semibold text-slate-700 tabular-nums">{{ r0(p.stock) }}</div>
+                  <div class="text-[10px] tabular-nums"
+                    [class]="p.cobertura_dias !== null && p.cobertura_dias < 14 ? 'text-rose-500 font-semibold' : 'text-slate-400'">
+                    {{ p.cobertura_dias === null ? 'sin demanda' : p.cobertura_dias + ' días' }}
+                  </div>
+                </td>
+                <td class="table-td">
+                  <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold ring-1 ring-inset whitespace-nowrap" [class]="RIESGOS[p.riesgo].badge">{{ RIESGOS[p.riesgo].label }}</span>
+                </td>
+                <td class="table-td text-right">
+                  @if (p.sugerido > 0) {
+                    <div class="font-bold text-slate-800 tabular-nums">{{ r0(p.sugerido) }} <span class="text-[10px] font-normal text-slate-400">{{ p.unidad }}</span></div>
+                    @if (p.inversion_sugerida !== null) { <div class="text-[10px] text-slate-400 tabular-nums">{{ fmtQk(p.inversion_sugerida) }}</div> }
+                  } @else { <span class="text-slate-300">—</span> }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (filtrados().length > limit()) {
+      <div class="p-3 border-t border-slate-100 flex items-center justify-center gap-2">
+        <button class="btn-secondary" (click)="limit.set(limit() + 15)">Ver 15 más</button>
+        <button class="btn-ghost !w-auto px-2 text-[11px]" (click)="limit.set(9999)">Ver todos ({{ filtrados().length }})</button>
+      </div>
+    }
+  </section>
+
+  <!-- ══ Metodología ══ -->
+  <section class="card">
+    <button class="w-full flex items-center justify-between p-4 text-left" (click)="metodoAbierto.set(!metodoAbierto())">
+      <span class="text-xs font-bold text-slate-700">ℹ️ ¿Cómo se calcula la predicción?</span>
+      <span class="text-slate-400 text-xs transition-transform" [class.rotate-180]="metodoAbierto()">▼</span>
+    </button>
+    @if (metodoAbierto()) {
+      <div class="px-4 pb-4 grid md:grid-cols-2 gap-x-8 gap-y-3 text-[11px] leading-relaxed text-slate-500 border-t border-slate-100 pt-3">
+        <p><b class="text-slate-700">Proyección de demanda.</b> Se agrupan las unidades vendidas por semana móvil (7 días terminando hoy) y se aplica
+          <i>suavizado exponencial doble con tendencia amortiguada</i> (Holt). Proyecta 4 semanas; el rango es ±1.28 desviaciones del error histórico (~80 % de probabilidad).</p>
+        <p><b class="text-slate-700">Score de potencial (0–100).</b> 40 % ventas proyectadas · 25 % impulso (tendencia 4 sem vs 4 previas) · 15 % margen · 20 % constancia (semanas con ventas).
+          Cada factor se compara contra el resto del catálogo.</p>
+        <p><b class="text-slate-700">Reposición.</b> Cobertura = stock ÷ demanda diaria proyectada. Sugerido = demanda 30 d + stock mínimo − stock actual.
+          «Riesgo de quiebre» si la cobertura es menor a 14 días o el stock está en su mínimo; «Exceso» si supera 120 días o no rota.</p>
+        <p><b class="text-slate-700">Clasificación ABC.</b> A = productos que suman el primer 80 % de las ventas, B = hasta 95 %, C = el resto.</p>
+        <p class="md:col-span-2 text-slate-400"><b class="text-slate-500">Limitaciones:</b> son métodos estadísticos, no certezas. No incluyen estacionalidad anual (siembras, lluvias) hasta tener ≥ 12 meses de historial,
+          ni promociones, precios de la competencia o clima. El margen usa el costo de compra actual de cada producto.</p>
+      </div>
+    }
+  </section>
+</div>
+
+<!-- ══ Panel de detalle ══ -->
+@if (sel(); as p) {
+  <div class="fixed inset-0 z-50 flex justify-end">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px]" (click)="cerrar()"></div>
+    <aside class="drawer-enter relative w-full max-w-lg h-full bg-white shadow-2xl overflow-y-auto">
+      <header class="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-slate-100 p-4 flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <h3 class="text-sm font-bold text-slate-800 leading-tight">{{ p.nombre }}</h3>
+          <p class="text-[11px] text-slate-400 mt-0.5">{{ p.codigo }} · {{ p.categoria }}</p>
+          <div class="mt-2 flex flex-wrap gap-1.5">
+            <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold ring-1 ring-inset" [class]="CLASES[p.clase].badge">{{ CLASES[p.clase].label }}</span>
+            <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold ring-1 ring-inset" [class]="RIESGOS[p.riesgo].badge">{{ RIESGOS[p.riesgo].label }}</span>
+            @if (p.abc) { <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600">Clase {{ p.abc }}</span> }
+          </div>
+        </div>
+        <button class="btn-ghost flex-shrink-0" (click)="cerrar()" aria-label="Cerrar">✕</button>
+      </header>
+
+      <div class="p-4 space-y-4">
+        <div class="grid grid-cols-3 gap-2">
+          <div class="rounded-lg bg-slate-50 p-2.5">
+            <div class="text-[10px] text-slate-400">Score</div>
+            <div class="text-lg font-bold text-slate-800 tabular-nums">{{ p.score }}<span class="text-[10px] font-normal text-slate-400">/100</span></div>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-2.5">
+            <div class="text-[10px] text-slate-400">Tendencia</div>
+            <div class="text-lg font-bold tabular-nums" [class]="p.tendencia_pct >= 0 ? 'text-emerald-600' : 'text-rose-600'">{{ fmtDelta(p.tendencia_pct) }}</div>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-2.5">
+            <div class="text-[10px] text-slate-400">Confianza</div>
+            <div class="text-lg font-bold capitalize" [class]="confianzaClase(p.confianza)">{{ p.confianza }}</div>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-2.5">
+            <div class="text-[10px] text-slate-400">Demanda 30 d</div>
+            <div class="text-sm font-bold text-slate-800 tabular-nums">{{ r0(p.demanda_30d) }} {{ p.unidad }}</div>
+            <div class="text-[10px] text-slate-400 tabular-nums">{{ r0(p.demanda_min) }}–{{ r0(p.demanda_max) }}</div>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-2.5">
+            <div class="text-[10px] text-slate-400">Stock · cobertura</div>
+            <div class="text-sm font-bold text-slate-800 tabular-nums">{{ r0(p.stock) }} {{ p.unidad }}</div>
+            <div class="text-[10px] text-slate-400">{{ p.cobertura_dias === null ? 'sin demanda' : p.cobertura_dias + ' días' }}</div>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-2.5">
+            <div class="text-[10px] text-slate-400">Reponer</div>
+            <div class="text-sm font-bold text-slate-800 tabular-nums">{{ r0(p.sugerido) }} {{ p.unidad }}</div>
+            @if (p.inversion_sugerida !== null) { <div class="text-[10px] text-slate-400">{{ fmtQ(p.inversion_sugerida) }}</div> }
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-bold text-slate-700 mb-0.5">Ventas semanales y proyección</h4>
+          <p class="text-[10px] text-slate-400 mb-2">Unidades · barras violetas = próximas 4 semanas (líneas punteadas = rango probable)</p>
+          <div class="h-60"><app-chart [config]="detalleCfg()" /></div>
+        </div>
+
+        <div class="rounded-xl border border-primary/30 bg-primary-light/60 p-3.5">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-primary-dark mb-1">Recomendación</div>
+          <p class="text-xs leading-relaxed text-slate-700">{{ recomendacion(p) }}</p>
+        </div>
+
+        <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px] border-t border-slate-100 pt-3">
+          <div class="flex justify-between"><dt class="text-slate-400">Ventas ({{ data()?.semanas }} sem)</dt><dd class="font-semibold text-slate-700 tabular-nums">{{ fmtQ(p.ingreso) }}</dd></div>
+          <div class="flex justify-between"><dt class="text-slate-400">Unidades vendidas</dt><dd class="font-semibold text-slate-700 tabular-nums">{{ r0(p.unidades) }}</dd></div>
+          <div class="flex justify-between"><dt class="text-slate-400">Facturas con este producto</dt><dd class="font-semibold text-slate-700 tabular-nums">{{ fmtN(p.ventas) }}</dd></div>
+          <div class="flex justify-between"><dt class="text-slate-400">Clientes distintos</dt><dd class="font-semibold text-slate-700 tabular-nums">{{ fmtN(p.clientes) }}</dd></div>
+          <div class="flex justify-between"><dt class="text-slate-400">Constancia</dt><dd class="font-semibold text-slate-700 tabular-nums">{{ p.consistencia }} % de semanas</dd></div>
+          <div class="flex justify-between"><dt class="text-slate-400">Última venta</dt><dd class="font-semibold text-slate-700">{{ p.ultima_venta ? fmtDate(p.ultima_venta + 'T12:00:00') : '—' }}</dd></div>
+          @if (p.margen_pct !== null) {
+            <div class="flex justify-between"><dt class="text-slate-400">Margen bruto</dt><dd class="font-semibold text-slate-700 tabular-nums">{{ fmtPct(p.margen_pct) }}</dd></div>
+            <div class="flex justify-between"><dt class="text-slate-400">Utilidad</dt><dd class="font-semibold text-slate-700 tabular-nums">{{ fmtQ(p.utilidad) }}</dd></div>
+          }
+        </dl>
+      </div>
+    </aside>
+  </div>
+}

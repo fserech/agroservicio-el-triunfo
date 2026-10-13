@@ -97,8 +97,8 @@
                     <td class="table-td">
                       <div class="flex items-center justify-end gap-1 pr-1">
                         <app-action-buttons
-                          [buttons]="[{ label: 'Editar', type: 'edit', icon: 'edit', routerLink: ['/productos', p.id, 'editar'] }]"
-                          (action)="''" />
+                          [buttons]="botones(p)"
+                          (action)="onAction($event, p)" />
                       </div>
                     </td>
                   </tr>
@@ -234,3 +234,6 @@
         </div>
       </div>
     }
+
+<app-eliminar-dialog [visible]="!!eliminando()" [endpoint]="eliminando()?.endpoint ?? ''" entidad="producto"
+  [nombre]="eliminando()?.nombre ?? ''" (cerrado)="eliminando.set(null)" (hecho)="alEliminar($event)" />

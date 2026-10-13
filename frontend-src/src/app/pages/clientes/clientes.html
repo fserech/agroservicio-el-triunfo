@@ -60,7 +60,9 @@
                           {{ c.nombre.charAt(0).toUpperCase() }}
                         </div>
                         <div>
-                          <div class="font-semibold text-xs text-slate-800">{{ c.nombre }}</div>
+                          <div class="font-semibold text-xs text-slate-800">{{ c.nombre }}
+                            @if (!c.activo) { <span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-500">Inactivo</span> }
+                          </div>
                           <div class="text-[11px] text-slate-400">{{ c.email || c.departamento || '—' }}</div>
                         </div>
                       </div>
@@ -83,8 +85,8 @@
                     <td class="table-td">
                       <div class="flex items-center justify-end gap-1 pr-1">
                         <app-action-buttons
-                          [buttons]="[{ label: 'Editar', type: 'edit', icon: 'edit', routerLink: ['/clientes', c.id, 'editar'] }]"
-                          (action)="''" />
+                          [buttons]="botones(c)"
+                          (action)="onAction($event, c)" />
                       </div>
                     </td>
                   </tr>
@@ -96,3 +98,6 @@
         <app-pagination [total]="total()" [page]="page()" [limit]="limit" (pageChange)="load($event)" />
       </div>
     </div>
+
+<app-eliminar-dialog [visible]="!!eliminando()" [endpoint]="eliminando()?.endpoint ?? ''" entidad="cliente"
+  [nombre]="eliminando()?.nombre ?? ''" (cerrado)="eliminando.set(null)" (hecho)="alEliminar($event)" />

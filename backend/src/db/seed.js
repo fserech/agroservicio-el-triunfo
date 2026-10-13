@@ -16,6 +16,14 @@ const pool = new Pool({
 async function seed() {
   const client = await pool.connect();
   try {
+    // El servicio `seed` de docker-compose corre en CADA arranque. Si la base ya tiene
+    // datos NO se vuelve a sembrar (antes duplicaba clientes y pisaba stock y precios).
+    // Para forzarlo manualmente: node src/db/seed.js --force
+    const { rows: ya } = await client.query('SELECT COUNT(*)::int AS n FROM productos');
+    if (ya[0].n > 0 && !process.argv.includes('--force')) {
+      console.log('ℹ️  La base ya tiene datos: seed omitido (usa --force para sembrar de nuevo).');
+      return;
+    }
     console.log('🌱 Iniciando seed...');
     await client.query('BEGIN');
 

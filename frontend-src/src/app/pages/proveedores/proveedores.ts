@@ -9,13 +9,15 @@ import { BadgeComponent } from '../../components/shared/badge/badge';
 import { PaginationComponent } from '../../components/shared/pagination/pagination';
 import { EmptyStateComponent } from '../../components/shared/empty-state/empty-state';
 import { ActionButtonsComponent } from '../../components/shared/action-buttons/action-buttons';
+import { EliminarDialogComponent } from '../../components/shared/eliminar-dialog/eliminar-dialog';
+import { AuthService } from '../../services/auth';
 import { Proveedor, KpiData } from '../../models';
 import { fmtQ } from '../../utils/format';
 
 @Component({
   selector: 'app-proveedores',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, KpiCardComponent, BadgeComponent, PaginationComponent, EmptyStateComponent, ActionButtonsComponent],
+  imports: [CommonModule, FormsModule, RouterModule, KpiCardComponent, BadgeComponent, PaginationComponent, EmptyStateComponent, ActionButtonsComponent, EliminarDialogComponent],
   templateUrl: './proveedores.html',
 })
 export class ProveedoresComponent implements OnInit {
@@ -27,6 +29,15 @@ export class ProveedoresComponent implements OnInit {
   limit   = 15;
   buscar  = '';
   fmtQ    = fmtQ;
+  botones(p: Proveedor): any[] {
+    const b: any[] = [
+      { label: 'Editar',       type: 'edit',    icon: 'edit',    routerLink: ['/proveedores', p.id, 'editar'] },
+      { label: 'Nueva Compra', type: 'receive', icon: 'receive', routerLink: ['/compras/nueva'] },
+    ];
+    if (this.puedeEliminar) b.push({ label: 'Eliminar', type: 'delete', icon: 'delete' });
+    return b;
+  }
+  onAction(type: string, p: Proveedor) { if (type === 'delete') this.pedirEliminar(p.id, p.nombre); }
 
   get pageItems() {
     return () => {
@@ -35,7 +46,18 @@ export class ProveedoresComponent implements OnInit {
     };
   }
 
-  constructor(private api: ApiService, private toast: ToastService) {}
+  eliminando = signal<{ endpoint: string; nombre: string } | null>(null);
+  get puedeEliminar() { return ['admin', 'supervisor'].includes(this.auth.user()?.rol || ''); }
+
+  constructor(private api: ApiService, private toast: ToastService, private auth: AuthService) {}
+
+  pedirEliminar(id: number, nombre: string) { this.eliminando.set({ endpoint: `/proveedores/${id}`, nombre }); }
+  async alEliminar(r: 'eliminado' | 'desactivado') {
+    const n = this.eliminando()?.nombre;
+    this.eliminando.set(null);
+    this.toast.success(r === 'eliminado' ? `"${n}" eliminado` : `"${n}" desactivado (se conserva su historial)`);
+    await this.load(this.page());
+  }
   ngOnInit() { this.load(1); }
 
   async load(p: number) {

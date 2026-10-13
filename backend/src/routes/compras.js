@@ -11,6 +11,12 @@ router.get('/', auth, async (req, res) => {
     if (estado)       { p.push(estado);       where += ` AND c.estado=$${p.length}`; }
     if (proveedor_id) { p.push(proveedor_id); where += ` AND c.proveedor_id=$${p.length}`; }
     const cnt = await pool.query(`SELECT COUNT(*) FROM compras c ${where}`, p);
+    // Totales sobre TODO el conjunto filtrado (no solo la página); las canceladas no suman al monto
+    const resumen = await pool.query(
+      `SELECT COALESCE(SUM(c.total) FILTER (WHERE ${estado === 'cancelada' ? 'TRUE' : "c.estado <> 'cancelada'"}),0)::float AS monto_total,
+              (COUNT(*) FILTER (WHERE c.estado = 'pendiente'))::int AS pendientes,
+              (COUNT(*) FILTER (WHERE c.estado IN ('en_transito','aprobada')))::int AS en_proceso
+       FROM compras c ${where}`, p);
     const { rows } = await pool.query(
       `SELECT c.*, pv.nombre AS prov_nombre, u.nombre AS creado_por
        FROM compras c
@@ -19,7 +25,7 @@ router.get('/', auth, async (req, res) => {
        ${where} ORDER BY c.fecha DESC
        LIMIT $${p.length+1} OFFSET $${p.length+2}`,
       [...p, parseInt(limit), offset]);
-    res.json({ data: rows, total: parseInt(cnt.rows[0].count), page: parseInt(page) });
+    res.json({ data: rows, total: parseInt(cnt.rows[0].count), page: parseInt(page), resumen: resumen.rows[0] });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

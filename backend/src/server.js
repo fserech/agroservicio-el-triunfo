@@ -63,6 +63,7 @@ app.use('/api/proveedores',    require('./routes/proveedores'));
 app.use('/api/compras',        require('./routes/compras'));
 app.use('/api/cuentas-cobrar', require('./routes/cuentas-cobrar'));
 app.use('/api/dashboard',      require('./routes/dashboard'));
+app.use('/api/analitica',      require('./routes/analitica'));
 app.use('/api/backup',         require('./routes/backup'));
 app.use('/api/sucursales',     require('./routes/sucursales'));
 
