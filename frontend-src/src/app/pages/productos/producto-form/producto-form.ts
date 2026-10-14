@@ -20,9 +20,11 @@ export class ProductoFormComponent implements OnInit {
   saving = signal(false);
   categorias = signal<Categoria[]>([]);
   margen = 0;
+  codigoPreview = signal('');          // código que se asignará al guardar (solo vista previa)
   unidades: Unidades[] = unidadesMedida;
 
   form: Partial<Producto> = {
+    categoria_id: null as any,
     activo: true,
     precio_compra: 0,
     precio_venta: 0,
@@ -45,6 +47,7 @@ export class ProductoFormComponent implements OnInit {
     } catch {}
 
     const id = this.route.snapshot.paramMap.get('id');
+    if (!id) await this.actualizarCodigo();
     if (id) {
       this.isEdit = true;
       this.id = +id;
@@ -56,6 +59,15 @@ export class ProductoFormComponent implements OnInit {
         this.router.navigate(['/productos']);
       }
     }
+  }
+
+  /** El código es siempre automático: se previsualiza según la categoría elegida. */
+  async actualizarCodigo() {
+    if (this.isEdit) return;
+    try {
+      const q = this.form.categoria_id ? `?categoria_id=${this.form.categoria_id}` : '';
+      this.codigoPreview.set((await this.api.get<{ codigo: string }>('/productos/siguiente-codigo' + q)).codigo);
+    } catch { this.codigoPreview.set(''); }
   }
 
   calcMargen() {
@@ -72,7 +84,8 @@ export class ProductoFormComponent implements OnInit {
 
     this.saving.set(true);
     try {
-      const body = { ...this.form };
+      const body: any = { ...this.form };
+      delete body.codigo;                    // nunca se envía: el servidor lo genera
       if (!this.isEdit) {
         (body as any).stock_inicial = body.stock_actual;
       }

@@ -3,6 +3,8 @@ const pool   = require('../db/pool');
 const bcrypt = require('bcryptjs');
 const auth   = require('../middleware/auth');
 const roles  = require('../middleware/roles');
+const jwt    = require('jsonwebtoken');
+const { revokeToken } = require('../middleware/auth');
 const { auditLog, getClientIP } = require('../utils/logger');
 
 // GET — listar usuarios
@@ -38,24 +40,60 @@ router.post('/', auth, roles('admin'), async (req, res) => {
   }
 });
 
-// PUT — actualizar usuario
+// PUT — actualizar usuario (nombre, usuario de acceso, correo, rol, estado y, opcionalmente, contraseña)
 router.put('/:id', auth, roles('admin'), async (req, res) => {
   const ip = getClientIP(req);
   try {
-    const { nombre, email, rol, activo } = req.body;
-    let q = 'UPDATE usuarios SET nombre=$1, email=$2, rol=$3, activo=$4, updated_at=NOW()';
-    const p = [nombre, email || null, rol, activo];
+    const id = parseInt(req.params.id);
+    const { rows: cur } = await pool.query('SELECT id, username, rol, activo FROM usuarios WHERE id=$1', [id]);
+    if (!cur.length) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    const nombre = String(req.body.nombre ?? '').trim();
+    if (nombre.length < 2) return res.status(400).json({ error: 'El nombre es requerido' });
+    const rol    = req.body.rol ?? cur[0].rol;
+    const activo = req.body.activo ?? cur[0].activo;
+    const email  = String(req.body.email ?? '').trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'El correo no es válido' });
+
+    // Usuario de acceso (login): editable, único y con formato válido
+    const username = req.body.username !== undefined ? String(req.body.username).trim().toLowerCase() : cur[0].username;
+    if (!/^[a-z0-9._-]{3,50}$/.test(username))
+      return res.status(400).json({ error: 'Usuario: 3 a 50 caracteres (letras, números, punto, guion o guion bajo)' });
+    if (username !== cur[0].username) {
+      const { rows: dup } = await pool.query('SELECT 1 FROM usuarios WHERE username=$1 AND id<>$2', [username, id]);
+      if (dup.length) return res.status(409).json({ error: 'Ese nombre de usuario ya existe' });
+    }
+
+    // No dejar el sistema sin ningún administrador activo
+    if (cur[0].rol === 'admin' && cur[0].activo && (rol !== 'admin' || !activo)) {
+      const { rows: n } = await pool.query("SELECT COUNT(*)::int AS n FROM usuarios WHERE rol='admin' AND activo=true AND id<>$1", [id]);
+      if (n[0].n === 0) return res.status(400).json({ error: 'Debe quedar al menos un administrador activo' });
+    }
+
+    const p = [nombre, username, email || null, rol, activo];
+    let q = 'UPDATE usuarios SET nombre=$1, username=$2, email=$3, rol=$4, activo=$5, updated_at=NOW()';
     if (req.body.password) {
-      q += ', password_hash=$5 WHERE id=$6 RETURNING id, nombre, username, email, rol, activo';
-      p.push(await bcrypt.hash(req.body.password, 12), req.params.id);
+      if (String(req.body.password).length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+      q += ', password_hash=$6 WHERE id=$7 RETURNING id, nombre, username, email, rol, activo';
+      p.push(await bcrypt.hash(req.body.password, 12), id);
     } else {
-      q += ' WHERE id=$5 RETURNING id, nombre, username, email, rol, activo';
-      p.push(req.params.id);
+      q += ' WHERE id=$6 RETURNING id, nombre, username, email, rol, activo';
+      p.push(id);
     }
     const { rows } = await pool.query(q, p);
-    if (!rows.length) return res.status(404).json({ error: 'Usuario no encontrado' });
-    await auditLog(req.user.id, 'USUARIO_ACTUALIZADO', { id: req.params.id, ip }, ip);
-    res.json(rows[0]);
+    await auditLog(req.user.id, 'USUARIO_ACTUALIZADO', {
+      id, ip, username_anterior: cur[0].username !== username ? cur[0].username : undefined }, ip);
+
+    // Si el administrador edita su PROPIA cuenta, su token (que lleva el usuario y el rol) queda desactualizado:
+    // se emite uno nuevo y se revoca el anterior.
+    const out = { ...rows[0] };
+    if (id === req.user.id) {
+      out.token = jwt.sign(
+        { id: rows[0].id, username: rows[0].username, nombre: rows[0].nombre, rol: rows[0].rol },
+        process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES || '8h' });
+      revokeToken(req.token);
+    }
+    res.json(out);
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

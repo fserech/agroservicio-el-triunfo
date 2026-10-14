@@ -2,6 +2,7 @@ const router = require('express').Router();
 const pool   = require('../db/pool');
 const auth   = require('../middleware/auth');
 const roles  = require('../middleware/roles');
+const { bloquearCodigos, siguienteCodigoProducto } = require('../utils/codigos');
 const multer = require('multer');
 const XLSX   = require('xlsx');
 
@@ -13,36 +14,6 @@ const upload = multer({
     cb(ok ? null : new Error('Solo archivos .xlsx o .xls'), ok);
   }
 });
-
-// ─── Helper: auto-código ──────────────────────────────────────────────────
-async function generarCodigo(pool, categoriaId) {
-  let prefijo = 'PROD';
-  if (categoriaId) {
-    const { rows } = await pool.query('SELECT nombre FROM categorias WHERE id=$1', [categoriaId]);
-    if (rows.length) {
-      const n = rows[0].nombre.toUpperCase();
-      if (n.includes('FERTILIZ'))                                 prefijo = 'FERT';
-      else if (n.includes('HERB') || n.includes('FUNGU') ||
-               n.includes('INSECT') || n.includes('AGROQU'))     prefijo = 'AGRQ';
-      else if (n.includes('SEMIL'))                               prefijo = 'SEM';
-      else if (n.includes('HERRAM'))                              prefijo = 'HER';
-      else if (n.includes('EQUIP'))                               prefijo = 'EQP';
-      else if (n.includes('RIEGO'))                               prefijo = 'RIE';
-      else if (n.includes('VET'))                                 prefijo = 'VET';
-      else if (n.includes('EMPAQ'))                               prefijo = 'EMP';
-      else prefijo = n.substring(0, 4).replace(/[^A-Z]/g, 'X');
-    }
-  }
-  const { rows } = await pool.query(
-    `SELECT codigo FROM productos WHERE codigo LIKE $1 ORDER BY codigo DESC LIMIT 1`,
-    [prefijo + '-%']);
-  let next = 1;
-  if (rows.length) {
-    const m = rows[0].codigo.split('-').pop();
-    next = (parseInt(m) || 0) + 1;
-  }
-  return `${prefijo}-${String(next).padStart(3,'0')}`;
-}
 
 // ─── GET / — Listar productos ─────────────────────────────────────────────
 router.get('/', auth, async (req, res) => {
@@ -89,6 +60,14 @@ router.get('/', auth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ─── GET /siguiente-codigo — vista previa del código que se asignará ─────
+router.get('/siguiente-codigo', auth, async (req, res) => {
+  try {
+    const codigo = await siguienteCodigoProducto(pool, req.query.categoria_id || null);
+    res.json({ codigo });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── GET /:id ─────────────────────────────────────────────────────────────
 router.get('/:id', auth, async (req, res) => {
   try {
@@ -111,15 +90,16 @@ router.get('/:id', auth, async (req, res) => {
 router.post('/', auth, async (req, res) => {
   const client = await pool.connect();
   try {
-    await client.query('BEGIN');
     const { nombre, descripcion, categoria_id, precio_compra, precio_venta,
             unidad_medida, activo=true,
             stock_inicial=0, stock_minimo=0, stock_maximo=0, ubicacion_bodega } = req.body;
 
     if (!nombre?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
 
-    let codigo = req.body.codigo?.trim() || null;
-    if (!codigo) codigo = await generarCodigo(pool, categoria_id);
+    await client.query('BEGIN');
+    // El código SIEMPRE se genera automáticamente (el candado evita repetidos si dos usuarios guardan a la vez)
+    await bloquearCodigos(client);
+    const codigo = await siguienteCodigoProducto(client, categoria_id || null);
 
     const { rows } = await client.query(
       `INSERT INTO productos (codigo,nombre,descripcion,categoria_id,precio_compra,precio_venta,unidad_medida,activo)
@@ -197,7 +177,7 @@ router.delete('/:id', auth, roles('admin', 'supervisor'), async (req, res) => {
       if (movs)    partes.push(`${movs} movimiento(s) de inventario`);
       return res.status(409).json({
         error: `No se puede eliminar: el producto aparece en ${partes.join(', ')}`,
-        code: 'HAS_HISTORY', puede_desactivar: true, detalle: { ventas, compras, movimientos: movs },
+        code: 'HAS_HISTORY', puede_desactivar: true, puede_forzar: false, detalle: { ventas, compras, movimientos: movs },
       });
     }
 
@@ -266,6 +246,7 @@ router.post('/importar-excel', auth, upload.single('file'), async (req, res) => 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    await bloquearCodigos(client);
     const wb   = XLSX.read(req.file.buffer, { type: 'buffer' });
     const ws   = wb.Sheets[wb.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(ws, { defval: null });
@@ -297,7 +278,7 @@ router.post('/importar-excel', auth, upload.single('file'), async (req, res) => 
 
         let rawCodigo = row['codigo'] ? String(row['codigo']).trim() : '';
         const esAuto  = !rawCodigo || rawCodigo.toLowerCase().includes('autom');
-        const codigo  = esAuto ? await generarCodigo(pool, categoriaId) : rawCodigo;
+        const codigo  = esAuto ? await siguienteCodigoProducto(client, categoriaId) : rawCodigo;
 
         const unidad     = String(row['unidad_medida'] || 'unidad').trim();
         const descripcion = row['descripcion'] ? String(row['descripcion']).trim() : null;

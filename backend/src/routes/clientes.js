@@ -163,19 +163,33 @@ router.put('/:id', auth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// DELETE /:id — elimina si no tiene historial; si lo tiene responde 409 y ofrece desactivar
-//   DELETE /:id?desactivar=1  → marca activo=false (conserva ventas y cuentas por cobrar)
+// DELETE /:id
+//   · sin historial            → se elimina
+//   · con historial            → 409 y se ofrece DESACTIVAR (?desactivar=1) o, solo admin y sin deuda,
+//                                ELIMINAR DEFINITIVAMENTE (?forzar=1): sus ventas y cuentas ya pagadas se
+//                                conservan, pero quedan sin cliente asociado.
 router.delete('/:id', auth, roles('admin', 'supervisor'), async (req, res) => {
   try {
     const id = req.params.id;
-    const { rows: cli } = await pool.query('SELECT id, nombre, activo FROM clientes WHERE id=$1', [id]);
+    const { rows: cli } = await pool.query('SELECT id, nombre FROM clientes WHERE id=$1', [id]);
     if (!cli.length) return res.status(404).json({ error: 'Cliente no encontrado' });
 
     const [ventas, cuentas] = await Promise.all([
       pool.query('SELECT COUNT(*)::int AS n FROM ventas WHERE cliente_id=$1', [id]),
-      pool.query("SELECT COUNT(*)::int AS n, COALESCE(SUM(saldo),0)::float AS saldo FROM cuentas_cobrar WHERE cliente_id=$1 AND estado <> 'pagada'", [id]),
+      pool.query("SELECT COUNT(*)::int AS n, COALESCE(SUM(saldo),0)::float AS saldo FROM cuentas_cobrar WHERE cliente_id=$1 AND estado <> 'pagada' AND saldo > 0", [id]),
     ]);
     const nVentas = ventas.rows[0].n, nCuentas = cuentas.rows[0].n, saldo = cuentas.rows[0].saldo;
+    const esAdmin = req.user.rol === 'admin';
+    const fmt = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    if (req.query.forzar === '1') {
+      if (!esAdmin) return res.status(403).json({ error: 'Solo un administrador puede eliminar definitivamente' });
+      if (saldo > 0.005) return res.status(409).json({
+        error: `No se puede eliminar definitivamente: el cliente debe Q ${fmt(saldo)} en ${nCuentas} cuenta(s). Cóbrala primero o desactívalo`,
+        code: 'HAS_DEBT', puede_desactivar: true, puede_forzar: false });
+      await pool.query('DELETE FROM clientes WHERE id=$1', [id]);   // ventas/cuentas: cliente_id → NULL
+      return res.json({ ok: true, accion: 'eliminado' });
+    }
 
     if (nVentas > 0 || nCuentas > 0) {
       if (req.query.desactivar === '1') {
@@ -184,10 +198,10 @@ router.delete('/:id', auth, roles('admin', 'supervisor'), async (req, res) => {
       }
       const partes = [];
       if (nVentas)  partes.push(`${nVentas} venta(s) registrada(s)`);
-      if (nCuentas) partes.push(`${nCuentas} cuenta(s) por cobrar con saldo de Q ${saldo.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+      if (nCuentas) partes.push(`${nCuentas} cuenta(s) por cobrar con saldo de Q ${fmt(saldo)}`);
       return res.status(409).json({
         error: `No se puede eliminar: tiene ${partes.join(' y ')}`,
-        code: 'HAS_HISTORY', puede_desactivar: true,
+        code: 'HAS_HISTORY', puede_desactivar: true, puede_forzar: esAdmin && saldo <= 0.005,
         detalle: { ventas: nVentas, cuentas_pendientes: nCuentas, saldo },
       });
     }

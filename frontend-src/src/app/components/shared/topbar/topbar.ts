@@ -5,6 +5,7 @@ import { filter } from 'rxjs/operators';
 import { AuthService } from '../../../services/auth';
 import { ToastService } from '../../../services/toast';
 import { ApiService } from '../../../services/api';
+import { PerfilDialogComponent } from '../perfil-dialog/perfil-dialog';
 
 const TITLES: Record<string, string> = {
   '/dashboard': 'Dashboard', '/ventas': 'Ventas', '/ventas/nueva': 'Nueva Venta',
@@ -27,7 +28,7 @@ interface RestoreResult {
 @Component({
   selector: 'app-topbar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, PerfilDialogComponent],
   templateUrl: './topbar.html',
   styleUrl: './topbar.scss',
 })
@@ -36,6 +37,7 @@ export class TopbarComponent {
 
   title       = 'Dashboard';
   menuOpen    = signal(false);
+  perfilOpen  = signal(false);
   busy        = signal<string | null>(null);
 
   // Restore modal state
@@ -170,6 +172,8 @@ export class TopbarComponent {
       this.toast.error('Error al restaurar: ' + e.message);
     } finally { this.busy.set(null); }
   }
+
+  abrirPerfil() { this.menuOpen.set(false); this.perfilOpen.set(true); }
 
   logout() {
     this.menuOpen.set(false);

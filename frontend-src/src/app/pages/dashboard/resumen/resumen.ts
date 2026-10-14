@@ -142,7 +142,7 @@ export class DashResumenComponent {
             callbacks: { label: (c: any) => ` ${c.dataset.label}: ${fmtQ(c.raw)}` },
           },
         },
-        scales: { x: ejeX({ maxTicksLimit: 12 }), y: ejeY((v) => fmtQk(v)) },
+        scales: { x: ejeX({ maxTicksLimit: 12 }), y: { ...ejeY((v) => fmtQk(v)), suggestedMax: 100 } },
       },
     };
   });

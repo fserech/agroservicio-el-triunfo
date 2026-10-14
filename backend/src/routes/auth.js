@@ -144,4 +144,53 @@ router.post('/cambiar-password',
   }
 );
 
+// ─── PUT /api/auth/perfil ────────────────────────────────────────────────────
+// El propio usuario edita su nombre, usuario de acceso y correo.
+// Cambiar el usuario de acceso exige la contraseña actual. Devuelve un token nuevo
+// (el JWT lleva el username) y revoca el anterior.
+router.put('/perfil', auth, async (req, res) => {
+  const ip = getClientIP(req);
+  try {
+    const nombre   = String(req.body.nombre ?? '').trim();
+    const username = String(req.body.username ?? '').trim().toLowerCase();
+    const email    = String(req.body.email ?? '').trim();
+    const { password_actual } = req.body;
+
+    if (nombre.length < 2 || nombre.length > 100)
+      return res.status(400).json({ error: 'El nombre debe tener entre 2 y 100 caracteres' });
+    if (!/^[a-z0-9._-]{3,50}$/.test(username))
+      return res.status(400).json({ error: 'Usuario: 3 a 50 caracteres (letras, números, punto, guion o guion bajo)' });
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      return res.status(400).json({ error: 'El correo no es válido' });
+
+    const { rows: cur } = await pool.query('SELECT username, password_hash FROM usuarios WHERE id = $1', [req.user.id]);
+    if (!cur.length) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    if (username !== cur[0].username) {
+      if (!password_actual || !(await bcrypt.compare(password_actual, cur[0].password_hash)))
+        return res.status(400).json({ error: 'Para cambiar el usuario de acceso escribe tu contraseña actual correcta' });
+      const { rows: dup } = await pool.query('SELECT 1 FROM usuarios WHERE username = $1 AND id <> $2', [username, req.user.id]);
+      if (dup.length) return res.status(409).json({ error: 'Ese nombre de usuario ya está en uso' });
+    }
+
+    const { rows } = await pool.query(
+      `UPDATE usuarios SET nombre=$1, username=$2, email=$3, updated_at=NOW()
+       WHERE id=$4 RETURNING id, nombre, username, email, rol`,
+      [nombre, username, email || null, req.user.id]);
+    const user = rows[0];
+
+    await auditLog(req.user.id, 'PERFIL_ACTUALIZADO', { ip, username_anterior: cur[0].username, username }, ip);
+
+    const token = jwt.sign(
+      { id: user.id, username: user.username, nombre: user.nombre, rol: user.rol },
+      process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES || '8h' });
+    require('../middleware/auth').revokeToken(req.token);
+
+    res.json({ ok: true, token, user });
+  } catch (err) {
+    log('ERROR', 'Error actualizando perfil', { error: err.message });
+    res.status(500).json({ error: 'Error de servidor' });
+  }
+});
+
 module.exports = router;

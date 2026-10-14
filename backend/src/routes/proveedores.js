@@ -87,23 +87,41 @@ router.put('/:id', auth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// DELETE /:id — elimina si no tiene órdenes de compra; si las tiene responde 409 y ofrece desactivar
-//   DELETE /:id?desactivar=1  → marca activo=false (conserva el historial de compras)
+// DELETE /:id
+//   · sin órdenes de compra    → se elimina
+//   · con órdenes              → 409 y se ofrece DESACTIVAR (?desactivar=1) o, solo admin y sin órdenes
+//                                abiertas, ELIMINAR DEFINITIVAMENTE (?forzar=1): las órdenes se conservan
+//                                pero quedan sin proveedor asociado.
 router.delete('/:id', auth, roles('admin', 'supervisor'), async (req, res) => {
   try {
     const id = req.params.id;
     const { rows: pv } = await pool.query('SELECT id FROM proveedores WHERE id=$1', [id]);
     if (!pv.length) return res.status(404).json({ error: 'Proveedor no encontrado' });
 
-    const { rows: c } = await pool.query('SELECT COUNT(*)::int AS n FROM compras WHERE proveedor_id=$1', [id]);
-    if (c[0].n > 0) {
+    const { rows: c } = await pool.query(
+      `SELECT COUNT(*)::int AS n,
+              (COUNT(*) FILTER (WHERE estado IN ('pendiente','aprobada','en_transito')))::int AS abiertas
+       FROM compras WHERE proveedor_id=$1`, [id]);
+    const n = c[0].n, abiertas = c[0].abiertas;
+    const esAdmin = req.user.rol === 'admin';
+
+    if (req.query.forzar === '1') {
+      if (!esAdmin) return res.status(403).json({ error: 'Solo un administrador puede eliminar definitivamente' });
+      if (abiertas > 0) return res.status(409).json({
+        error: `No se puede eliminar definitivamente: tiene ${abiertas} orden(es) de compra abierta(s). Recíbelas o cancélalas primero, o desactiva al proveedor`,
+        code: 'HAS_OPEN', puede_desactivar: true, puede_forzar: false });
+      await pool.query('DELETE FROM proveedores WHERE id=$1', [id]);   // compras: proveedor_id → NULL
+      return res.json({ ok: true, accion: 'eliminado' });
+    }
+
+    if (n > 0) {
       if (req.query.desactivar === '1') {
         await pool.query('UPDATE proveedores SET activo=false, updated_at=NOW() WHERE id=$1', [id]);
         return res.json({ ok: true, accion: 'desactivado' });
       }
       return res.status(409).json({
-        error: `No se puede eliminar: tiene ${c[0].n} orden(es) de compra asociada(s)`,
-        code: 'HAS_HISTORY', puede_desactivar: true, detalle: { ordenes: c[0].n },
+        error: `No se puede eliminar: tiene ${n} orden(es) de compra asociada(s)`,
+        code: 'HAS_HISTORY', puede_desactivar: true, puede_forzar: esAdmin && abiertas === 0, detalle: { ordenes: n, abiertas },
       });
     }
 

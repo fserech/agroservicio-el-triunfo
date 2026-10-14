@@ -66,9 +66,11 @@ export class UsuarioFormComponent implements OnInit {
     return ['', 'Débil', 'Regular', 'Buena', 'Fuerte'][this.passStrength] || '';
   }
 
+  get usernameCambio() { return this.isEdit && this.username !== this.originalUsername; }
+
   get canSave() {
     if (!this.form.nombre?.trim()) return false;
-    if (!this.isEdit && !this.username.trim()) return false;
+    if (this.username.trim().length < 3) return false;
     if (!this.isEdit && !this.password) return false;
     if (this.password && this.password !== this.password2) return false;
     return true;
@@ -110,6 +112,7 @@ export class UsuarioFormComponent implements OnInit {
         activo:  u.activo  ?? true,
       };
       this.originalUsername = u.username;
+      this.username = u.username;
     } catch(e: any) {
       this.toast.error(e.message);
       this.router.navigate(['/usuarios']);
@@ -123,8 +126,8 @@ export class UsuarioFormComponent implements OnInit {
     if (!this.form.nombre?.trim()) {
       this.toast.warning('El nombre es requerido'); return;
     }
-    if (!this.isEdit && !this.username.trim()) {
-      this.toast.warning('El nombre de usuario es requerido'); return;
+    if (this.username.trim().length < 3) {
+      this.toast.warning('El usuario debe tener al menos 3 caracteres'); return;
     }
     if (!this.isEdit && !this.password) {
       this.toast.warning('La contraseña es requerida'); return;
@@ -138,12 +141,13 @@ export class UsuarioFormComponent implements OnInit {
 
     this.saving.set(true);
     try {
-      const body: any = { ...this.form };
-      if (!this.isEdit) body.username = this.username;
+      const body: any = { ...this.form, username: this.username };
       if (this.password) body.password = this.password;
 
       if (this.isEdit) {
-        await this.api.put(`/usuarios/${this.id}`, body);
+        const r: any = await this.api.put(`/usuarios/${this.id}`, body);
+        // Si editaste tu propia cuenta, el servidor entrega una sesión nueva con los datos actualizados
+        if (r?.token) { const { token, ...u } = r; this.auth.setAuth(token, { ...(this.auth.user() as any), ...u }); }
         this.toast.success('Usuario actualizado correctamente');
       } else {
         await this.api.post('/usuarios', body);

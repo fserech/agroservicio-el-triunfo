@@ -13,7 +13,7 @@
           <button class="inline-flex items-center gap-1.5 h-8 px-3.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition-colors cursor-pointer border-none flex-1 justify-center disabled:opacity-60"
             (click)="eliminar()" [disabled]="trabajando()">{{ trabajando() ? 'Eliminando…' : 'Eliminar' }}</button>
         </div>
-      } @else {
+      } @else if (fase() === 'historial') {
         <div class="text-4xl text-center mb-3">🗂️</div>
         <h3 class="text-center font-display font-bold text-slate-800 text-base mb-1">Tiene historial registrado</h3>
         <p class="text-center text-xs text-slate-500 mb-3">{{ detalle() }}.</p>
@@ -25,6 +25,24 @@
         <div class="flex gap-3">
           <button class="btn-secondary flex-1 justify-center" (click)="cerrado.emit()" [disabled]="trabajando()">Cancelar</button>
           <button class="btn-primary flex-1 justify-center" (click)="desactivar()" [disabled]="trabajando()">{{ trabajando() ? 'Desactivando…' : 'Desactivar' }}</button>
+        </div>
+        @if (puedeForzar()) {
+          <button class="w-full mt-3 text-[11px] text-red-500 hover:text-red-700 underline bg-transparent border-none cursor-pointer"
+            (click)="fase.set('forzar')" [disabled]="trabajando()">Eliminar definitivamente…</button>
+        }
+      } @else {
+        <div class="text-4xl text-center mb-3">⚠️</div>
+        <h3 class="text-center font-display font-bold text-slate-800 text-base mb-1">Eliminar definitivamente</h3>
+        <p class="text-center text-xs text-slate-500 mb-3">Se eliminará <b class="text-slate-700">{{ nombre() }}</b> aunque tenga historial.</p>
+        <div class="rounded-lg bg-red-50 border border-red-200 p-3 mb-5 text-[11px] text-red-800 leading-relaxed">
+          Sus ventas u órdenes se <b>conservan</b>, pero quedarán <b>sin {{ entidad() }} asociado</b> y no se podrá
+          deshacer. Si solo quieres que deje de usarse, es mejor desactivarlo.
+        </div>
+        @if (error()) { <p class="text-center text-xs text-rose-600 mb-3">{{ error() }}</p> }
+        <div class="flex gap-3">
+          <button class="btn-secondary flex-1 justify-center" (click)="fase.set('historial')" [disabled]="trabajando()">Volver</button>
+          <button class="inline-flex items-center gap-1.5 h-8 px-3.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition-colors cursor-pointer border-none flex-1 justify-center disabled:opacity-60"
+            (click)="eliminarDefinitivo()" [disabled]="trabajando()">{{ trabajando() ? 'Eliminando…' : 'Sí, eliminar' }}</button>
         </div>
       }
     </div>
